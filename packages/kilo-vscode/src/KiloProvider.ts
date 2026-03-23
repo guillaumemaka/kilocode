@@ -15,8 +15,7 @@ import type {
 import { type KiloConnectionService, type KilocodeNotification, ServerStartupError } from "./services/cli-backend"
 import type { EditorContext } from "./services/cli-backend/types"
 import { FileIgnoreController } from "./services/autocomplete/shims/FileIgnoreController"
-import { handleChatCompletionRequest } from "./services/autocomplete/chat-autocomplete/handleChatCompletionRequest"
-import { handleChatCompletionAccepted } from "./services/autocomplete/chat-autocomplete/handleChatCompletionAccepted"
+import { ChatTextAreaAutocomplete } from "./services/autocomplete/chat-autocomplete/ChatTextAreaAutocomplete"
 import { buildWebviewHtml } from "./utils"
 import { TelemetryProxy, type TelemetryPropertiesProvider } from "./services/telemetry"
 import {
@@ -110,7 +109,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
   private pending = 0
   /** Cached notificationsLoaded payload */
   private cachedNotificationsMessage: unknown = null
-  private pendingReviewComments: unknown[][] = []
+  private pendingReviewComments: { comments: unknown[]; autoSend: boolean }[] = []
   private readyResolvers: (() => void)[] = []
   private trackedSessionIds: Set<string> = new Set()
   private syncedChildSessions: Set<string> = new Set()
@@ -139,6 +138,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
   private ignoreController: FileIgnoreController | null = null
   private ignoreControllerDir: string | null = null
   private marketplace: MarketplaceService | null = null
+  private chatAutocomplete: ChatTextAreaAutocomplete | null = null
   private projectDirectory: string | null | undefined
   private slimEditMetadata = true
 
@@ -622,13 +622,19 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
           }
           break
         }
-        case "requestChatCompletion":
-          void handleChatCompletionRequest(
+        case "requestChatCompletion": {
+          if (!this.chatAutocomplete) {
+            this.chatAutocomplete = new ChatTextAreaAutocomplete(this.connectionService)
+          }
+          void this.chatAutocomplete.handle(
             { type: "requestChatCompletion", text: message.text, requestId: message.requestId },
-            { postMessage: (msg) => this.postMessage(msg) },
-            this.connectionService,
+            {
+              postMessage: (msg: { type: "chatCompletionResult"; text: string; requestId: string }) =>
+                this.postMessage(msg),
+            },
           )
           break
+        }
         case "requestFileSearch": {
           const sdkClient = this.client
           if (sdkClient) {
@@ -657,7 +663,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
           break
         }
         case "chatCompletionAccepted":
-          handleChatCompletionAccepted({ type: "chatCompletionAccepted", suggestionLength: message.suggestionLength })
+          this.chatAutocomplete?.telemetry.captureAcceptSuggestion(message.suggestionLength)
           break
         case "deleteSession":
           await this.handleDeleteSession(message.sessionID)
@@ -2365,8 +2371,8 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
     })
   }
 
-  public async appendReviewComments(comments: unknown[]): Promise<void> {
-    this.pendingReviewComments.push(comments)
+  public async appendReviewComments(comments: unknown[], autoSend = false): Promise<void> {
+    this.pendingReviewComments.push({ comments, autoSend })
 
     if (!this.webview) {
       await vscode.commands.executeCommand(`${KiloProvider.viewType}.focus`)
@@ -2381,8 +2387,8 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
     const pending = this.pendingReviewComments
     this.pendingReviewComments = []
 
-    for (const comments of pending) {
-      this.postMessage({ type: "appendReviewComments", comments })
+    for (const entry of pending) {
+      this.postMessage({ type: "appendReviewComments", comments: entry.comments, autoSend: entry.autoSend })
     }
   }
 
@@ -2568,6 +2574,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
     this.sessionDirectories.clear()
     this.sessionStatusMap.clear()
     this.ignoreController?.dispose()
+    this.chatAutocomplete?.dispose()
     this.marketplace?.dispose()
   }
 }
