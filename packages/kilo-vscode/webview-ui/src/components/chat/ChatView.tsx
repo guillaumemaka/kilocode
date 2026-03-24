@@ -22,6 +22,8 @@ import { useServer } from "../../context/server"
 interface ChatViewProps {
   onSelectSession?: (id: string) => void
   readonly?: boolean
+  /** When true, show the "Continue in Worktree" button. Defaults to true in the sidebar. */
+  continueInWorktree?: boolean
 }
 
 export const ChatView: Component<ChatViewProps> = (props) => {
@@ -32,8 +34,8 @@ export const ChatView: Component<ChatViewProps> = (props) => {
   const server = useServer()
   // Show "Show Changes" only in the standalone sidebar, not inside Agent Manager
   const isSidebar = () => worktreeMode === undefined
-  // Show "Continue in Worktree" in sidebar or local Agent Manager sessions (not already in a worktree)
-  const canContinueInWorktree = () => worktreeMode === undefined || worktreeMode.mode() === "local"
+  // Show "Continue in Worktree": explicit prop, or default to true in sidebar
+  const canContinueInWorktree = () => props.continueInWorktree ?? isSidebar()
 
   const id = () => session.currentSessionID()
   const hasMessages = () => session.messages().length > 0

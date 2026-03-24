@@ -462,3 +462,4 @@ export type AgentManagerInMessage =
   | LoadMessagesIn
   | ClearSessionIn
   | AbortIn
+  | ContinueInWorktreeIn

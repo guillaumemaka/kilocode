@@ -68,7 +68,9 @@ export async function continueInWorktree(
   progress("transferring", "Transferring changes...")
   const applied = await applyGitState(snapshot, created.result.path, (...args) => ctx.log(...args))
   if (!applied.ok) {
-    ctx.log("Git state transfer failed, continuing with empty worktree:", applied.error)
+    ctx.log("Git state transfer failed:", applied.error)
+    progress("error", undefined, applied.error ?? "Failed to apply changes to worktree")
+    return
   }
 
   // 5. Fork session into worktree
