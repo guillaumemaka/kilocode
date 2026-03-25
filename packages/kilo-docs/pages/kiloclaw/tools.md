@@ -5,37 +5,38 @@ description: "Third-party tool integrations for your KiloClaw agent"
 
 # Tools
 
-## 1Password Integration for KiloClaw
+## 1Password Integration Guide
 
-Connect your KiloClaw agent to 1Password to securely manage credentials and automate vault lookups without exposing sensitive keys in plain text.
+Connect your KiloClaw agent to 1Password to securely manage credentials. This allows your agent to fetch API keys or passwords without ever seeing them in plain text.
 
-> ⚠️ **Warning:** This integration grants your agent read/write access to the vaults you specify. We strongly recommend creating a dedicated vault containing only the specific credentials your agent requires.
+### Step 1: Create a Dedicated Vault
 
-### Setup Instructions
+For maximum security, do not give the bot access to your personal vault.
 
-#### 1. Create a Service Account
+1. Log in to your 1Password account.
+2. Create a **New Vault** (e.g., name it `Kilo-Agent-Vault`).
+3. Move only the specific items/keys you want the bot to use into this vault.
 
-Visit the [1Password Developer Portal](https://developer.1password.com/) and create a new Service Account. This provides the secure bridge between 1Password and KiloClaw.
+### Step 2: Generate a Service Account Token
 
-#### 2. Scope to a Dedicated Vault
+1. Go to the [1Password Developer Portal](https://developer.1password.com/).
+2. Select **Service Accounts** and click **Create a Service Account**.
+3. **Important:** When prompted for permissions, select only the dedicated vault you created in Step 1.
+4. Copy the generated token (it will begin with `ops_`).
 
-Grant the Service Account access to a specific "Agent" vault. Do not use your primary personal or team vault. Ensure only the necessary items (API keys, passwords, etc.) are stored here.
+### Step 3: Configure KiloClaw
 
-#### 3. Copy the Token
+1. Navigate to your KiloClaw dashboard: [app.kilo.ai/claw](https://app.kilo.ai/claw).
+2. Go to **Settings > Tools** (or **Edit Files**).
+3. Paste your `ops_` token into the **1Password Setup** field.
+4. Click **Save**.
 
-Copy the generated Service Account token (it will begin with `ops_`). Navigate to your **KiloClaw Settings** and paste this token into the **1Password configuration** field.
+### Step 4: Activate the Integration
 
-#### 4. Save and Upgrade
+To apply the changes and inject the 1Password CLI into your environment:
 
-After saving the token, use **Redeploy** to apply the new secret. Only use **Upgrade & Redeploy** if you also need to move to the latest platform version.
-
-### Usage
-
-Once active, your agent can interact with the vault using the `op` CLI. Example command:
-
-```bash
-op item get "My Login"
-```
+1. Select **Upgrade to latest**.
+2. Perform a **Redeploy** to restart the agent with the new permissions active.
 
 ---
 
@@ -53,7 +54,7 @@ Go to [api.search.brave.com](https://api.search.brave.com) and sign in or create
 
 #### 2. Choose a Subscription Plan
 
-Brave offers a **Free Tier** (limited queries per month) for testing and paid tiers for high-volume production use. Select the plan that fits your needs.
+Brave Search API requires a paid subscription. Select the plan that fits your usage volume.
 
 #### 3. Create an API Key
 
@@ -71,7 +72,7 @@ Enable your KiloClaw agents to perform financial transactions by creating and ma
 
 > ⚠️ **Important:** This tool permits your agent to spend real money. Use extreme caution with budget limits. AgentCard is currently in Beta; card issuance may be limited or waitlisted.
 
-### Setup Instructions
+### AgentCard Setup
 
 #### 1. Create an AgentCard Account
 
