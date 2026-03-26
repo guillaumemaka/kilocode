@@ -10,6 +10,7 @@ import { SessionContext } from "../context/session"
 import Settings from "../components/settings/Settings"
 import ProvidersTab from "../components/settings/ProvidersTab"
 import AgentBehaviourTab from "../components/settings/AgentBehaviourTab"
+import ModeEditView from "../components/settings/ModeEditView"
 import type { AgentConfig, CommandConfig } from "../types/messages"
 
 const meta: Meta = {
@@ -209,6 +210,38 @@ export const AgentBehaviourWorkflowsEmpty: Story = {
       <StoryProviders sessionID="workflows-empty-story" status="idle">
         <SessionContext.Provider value={session as any}>
           <SubtabWrapper tab="workflows" />
+        </SessionContext.Provider>
+      </StoryProviders>
+    )
+  },
+}
+
+export const ModeEditExport: Story = {
+  name: "ModeEditView — export button",
+  render: () => {
+    const cfg: Record<string, AgentConfig> = {
+      reviewer: {
+        description: "Review code for quality and best practices",
+        prompt: "You are a code reviewer. Focus on code quality, best practices, and potential bugs.",
+        model: "anthropic/claude-sonnet-4-20250514",
+        temperature: 0.3,
+      },
+    }
+    const session = {
+      ...mockSessionValue({ id: "export-story", status: "idle" }),
+      agents: () => MOCK_AGENTS,
+      removeMode: noop,
+      removeMcp: noop,
+      skills: () => [],
+      refreshSkills: noop,
+      removeSkill: noop,
+    }
+    return (
+      <StoryProviders sessionID="export-story" status="idle" config={{ agent: cfg } as any}>
+        <SessionContext.Provider value={session as any}>
+          <div style={{ width: "420px", height: "700px", overflow: "auto" }}>
+            <ModeEditView name="reviewer" onBack={noop} onRemove={noop} />
+          </div>
         </SessionContext.Provider>
       </StoryProviders>
     )
