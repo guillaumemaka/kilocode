@@ -366,6 +366,7 @@ export const dict = {
   "language.br": "Português (Brasil)",
   "language.bs": "Bosanski",
   "language.th": "ไทย",
+  "language.tr": "Türkçe",
 
   "toast.theme.title": "Tema byttet",
   "toast.scheme.title": "Fargevalg",
@@ -827,8 +828,11 @@ export const dict = {
   "session.delete.button": "Slett sesjon",
   "session.untitled": "Uten tittel",
   "session.recent": "Nylige",
+  "session.showHistory": "Vis historikk",
   "session.search.placeholder": "Søk i sesjoner...",
   "session.empty": "Ingen sesjoner ennå. Klikk + for å starte en ny samtale.",
+  "session.tab.local": "Local",
+  "session.tab.cloud": "Cloud",
   "session.cloud.repoOnly": "Kun dette repositoriet",
   "session.cloud.import": "Importer fra skyen",
   "feedback.button": "Tilbakemelding & støtte",
@@ -1049,6 +1053,30 @@ export const dict = {
     "Ingen ferdigheter funnet. Legg til ferdighetsmappestier eller URLer nedenfor for å gjøre ferdigheter tilgjengelige.",
   "settings.agentBehaviour.availableModes": "Tilgjengelige egendefinerte moduser",
   "settings.agentBehaviour.noModesFound": "Ingen moduser funnet.",
+  "settings.agentBehaviour.createMode": "Opprett ny modus",
+  "settings.agentBehaviour.createMode.name": "Navn",
+  "settings.agentBehaviour.createMode.name.placeholder": "f.eks. reviewer",
+  "settings.agentBehaviour.createMode.name.description":
+    "Unik identifikator for modusen. Bruk bare små bokstaver, tall og bindestreker.",
+  "settings.agentBehaviour.createMode.description": "Beskrivelse",
+  "settings.agentBehaviour.createMode.description.placeholder": "f.eks. Gjennomgår kode for kvalitet og beste praksis",
+  "settings.agentBehaviour.createMode.description.help": "Kort beskrivelse av hva denne modusen gjør.",
+  "settings.agentBehaviour.createMode.prompt": "Systemprompt",
+  "settings.agentBehaviour.createMode.prompt.placeholder":
+    "f.eks. Du er en kodeanmelder. Fokuser på kodekvalitet, beste praksis og potensielle feil.",
+  "settings.agentBehaviour.createMode.prompt.help": "Instruksjoner til AI-agenten ved bruk av denne modusen.",
+  "settings.agentBehaviour.createMode.button": "Opprett",
+  "settings.agentBehaviour.createMode.cancel": "Avbryt",
+  "settings.agentBehaviour.createMode.nameRequired": "Navn er påkrevd",
+  "settings.agentBehaviour.createMode.nameInvalid": "Navn kan bare inneholde små bokstaver, tall og bindestreker",
+  "settings.agentBehaviour.createMode.nameTaken": "En modus med dette navnet eksisterer allerede",
+  "settings.agentBehaviour.editMode": "Rediger modus",
+  "settings.agentBehaviour.editMode.description": "Beskrivelse",
+  "settings.agentBehaviour.editMode.prompt": "Systemprompt",
+  "settings.agentBehaviour.editMode.save": "Ferdig",
+  "settings.agentBehaviour.editMode.back": "Tilbake til listen",
+  "settings.agentBehaviour.editMode.native": "Innebygd modus (skrivebeskyttet definisjon)",
+  "settings.agentBehaviour.editMode.promptOverride": "Tilpasset prompt-overstyring for denne innebygde modusen",
   "settings.agentBehaviour.removeMode.title": "Fjern modus",
   "settings.agentBehaviour.removeMode.confirm":
     'Vil du fjerne modusen "{{name}}"? Dette vil deaktivere modusen ved å oppdatere konfigurasjonen din.',
@@ -1063,6 +1091,8 @@ export const dict = {
   "settings.agentBehaviour.removeSkill.confirm":
     'Vil du fjerne ferdigheten "{{name}}"? Dette vil slette ferdighetsfilene fra disken.',
   "settings.agentBehaviour.removeSkill.button": "Fjern",
+  "settings.agentBehaviour.rules.description":
+    "Regler er instruksjonsfiler som styrer agentens atferd. De inkluderes i systemprompten for hver samtale. Legg til filstier nedenfor for å inkludere ekstra regler.",
   "settings.agentBehaviour.instructionFiles": "Ekstra instruksjonsfiler",
   "settings.agentBehaviour.instructionFiles.description": "Stier til ekstra instruksjonsfiler i systemprompten",
   "settings.agentBehaviour.mcpEmpty":
@@ -1129,6 +1159,7 @@ export const dict = {
   "settings.providers.notSet": "Ikke angitt (bruk serverstandard)",
   "dialog.model.notSet": "Ikke angitt",
   "profile.personalAccount": "Personlig konto",
+  "profile.switchingAccount": "Bytter konto…",
   // Agent Manager strings live in webview-ui/agent-manager/i18n/no.ts
 
   "question.summary": "{{n}} av {{total}} spørsmål",
@@ -1199,4 +1230,8 @@ export const dict = {
   "settings.saveBar.warning.many": "Flere økter kjører og vil bli avbrutt",
   "settings.saveBar.saveAnyway": "Lagre uansett",
   "settings.saveBar.cancel": "Avbryt",
+  "notifications.action.previous": "Previous",
+  "notifications.action.next": "Next",
+  "notifications.action.close": "Close",
+  "notifications.action.tryModel": "Try model",
 } satisfies Partial<Record<Keys, string>>

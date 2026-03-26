@@ -365,6 +365,7 @@ export const dict = {
   "language.br": "Português (Brasil)",
   "language.bs": "Bosanski",
   "language.th": "ไทย",
+  "language.tr": "Türkçe",
 
   "toast.theme.title": "Тема переключена",
   "toast.scheme.title": "Цветовая схема",
@@ -830,8 +831,11 @@ export const dict = {
   "session.delete.button": "Удалить сессию",
   "session.untitled": "Без названия",
   "session.recent": "Недавние",
+  "session.showHistory": "Показать историю",
   "session.search.placeholder": "Поиск сессий...",
   "session.empty": "Сессий пока нет. Нажмите + чтобы начать новый разговор.",
+  "session.tab.local": "Local",
+  "session.tab.cloud": "Cloud",
   "session.cloud.repoOnly": "Только этот репозиторий",
   "session.cloud.import": "Импорт из облака",
   "feedback.button": "Отзывы и поддержка",
@@ -1052,6 +1056,32 @@ export const dict = {
     "Навыки не обнаружены. Добавьте пути к папкам навыков или URL-адреса ниже, чтобы сделать навыки доступными.",
   "settings.agentBehaviour.availableModes": "Доступные пользовательские режимы",
   "settings.agentBehaviour.noModesFound": "Режимы не найдены.",
+  "settings.agentBehaviour.createMode": "Создать новый режим",
+  "settings.agentBehaviour.createMode.name": "Название",
+  "settings.agentBehaviour.createMode.name.placeholder": "например, reviewer",
+  "settings.agentBehaviour.createMode.name.description":
+    "Уникальный идентификатор режима. Используйте только строчные буквы, цифры и дефисы.",
+  "settings.agentBehaviour.createMode.description": "Описание",
+  "settings.agentBehaviour.createMode.description.placeholder":
+    "например, Проверяет код на качество и соответствие лучшим практикам",
+  "settings.agentBehaviour.createMode.description.help": "Краткое описание того, что делает этот режим.",
+  "settings.agentBehaviour.createMode.prompt": "Системный промпт",
+  "settings.agentBehaviour.createMode.prompt.placeholder":
+    "например, Вы ревьюер кода. Сосредоточьтесь на качестве кода, лучших практиках и потенциальных ошибках.",
+  "settings.agentBehaviour.createMode.prompt.help": "Инструкции для ИИ-агента при использовании этого режима.",
+  "settings.agentBehaviour.createMode.button": "Создать",
+  "settings.agentBehaviour.createMode.cancel": "Отмена",
+  "settings.agentBehaviour.createMode.nameRequired": "Название обязательно",
+  "settings.agentBehaviour.createMode.nameInvalid": "Название может содержать только строчные буквы, цифры и дефисы",
+  "settings.agentBehaviour.createMode.nameTaken": "Режим с таким названием уже существует",
+  "settings.agentBehaviour.editMode": "Редактировать режим",
+  "settings.agentBehaviour.editMode.description": "Описание",
+  "settings.agentBehaviour.editMode.prompt": "Системный промпт",
+  "settings.agentBehaviour.editMode.save": "Готово",
+  "settings.agentBehaviour.editMode.back": "Вернуться к списку",
+  "settings.agentBehaviour.editMode.native": "Встроенный режим (определение только для чтения)",
+  "settings.agentBehaviour.editMode.promptOverride":
+    "Пользовательское переопределение промпта для этого встроенного режима",
   "settings.agentBehaviour.removeMode.title": "Удалить режим",
   "settings.agentBehaviour.removeMode.confirm":
     'Удалить режим "{{name}}"? Это отключит режим, обновив вашу конфигурацию.',
@@ -1065,6 +1095,8 @@ export const dict = {
   "settings.agentBehaviour.removeSkill.confirm":
     'Удалить навык "{{name}}"? Это приведет к удалению файлов навыка с диска.',
   "settings.agentBehaviour.removeSkill.button": "Удалить",
+  "settings.agentBehaviour.rules.description":
+    "Правила — это файлы инструкций, которые направляют поведение агента. Они включаются в системный промпт для каждого разговора. Добавьте пути к файлам ниже, чтобы включить дополнительные правила.",
   "settings.agentBehaviour.instructionFiles": "Дополнительные файлы инструкций",
   "settings.agentBehaviour.instructionFiles.description": "Пути к дополнительным файлам инструкций в системном промпте",
   "settings.agentBehaviour.mcpEmpty":
@@ -1133,6 +1165,7 @@ export const dict = {
   "settings.providers.notSet": "Не задано (использовать значение сервера по умолчанию)",
   "dialog.model.notSet": "Не задано",
   "profile.personalAccount": "Личный аккаунт",
+  "profile.switchingAccount": "Переключение аккаунта…",
   // Agent Manager strings live in webview-ui/agent-manager/i18n/ru.ts
 
   "question.summary": "{{n}} из {{total}} вопросов",
@@ -1205,4 +1238,8 @@ export const dict = {
   "settings.saveBar.warning.many": "Несколько сеансов выполняются и будут прерваны",
   "settings.saveBar.saveAnyway": "Сохранить в любом случае",
   "settings.saveBar.cancel": "Отмена",
+  "notifications.action.previous": "Previous",
+  "notifications.action.next": "Next",
+  "notifications.action.close": "Close",
+  "notifications.action.tryModel": "Try model",
 }

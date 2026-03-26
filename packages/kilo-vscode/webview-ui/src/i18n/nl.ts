@@ -823,8 +823,11 @@ export const dict = {
   "session.delete.button": "Verwijder sessie",
   "session.untitled": "Naamloos",
   "session.recent": "Recent",
+  "session.showHistory": "Geschiedenis weergeven",
   "session.search.placeholder": "Zoek sessies...",
   "session.empty": "Nog geen sessies. Klik op + om een nieuw gesprek te starten.",
+  "session.tab.local": "Local",
+  "session.tab.cloud": "Cloud",
   "session.cloud.repoOnly": "Alleen deze repository",
   "session.cloud.import": "Importeer uit de cloud",
   "feedback.button": "Feedback & Ondersteuning",
@@ -1067,6 +1070,8 @@ export const dict = {
   "settings.agentBehaviour.removeSkill.confirm":
     'Skill "{{name}}" verwijderen? Dit verwijdert de skill bestanden van schijf.',
   "settings.agentBehaviour.removeSkill.button": "Verwijderen",
+  "settings.agentBehaviour.rules.description":
+    "Regels zijn instructiebestanden die het gedrag van de agent sturen. Ze worden opgenomen in de systeemprompt voor elk gesprek. Voeg hieronder bestandspaden toe om aanvullende regels op te nemen.",
   "settings.agentBehaviour.instructionFiles": "Aanvullende Instructiebestanden",
   "settings.agentBehaviour.instructionFiles.description":
     "Paden naar aanvullende instructiebestanden die zijn opgenomen in de systeem prompt",
@@ -1156,6 +1161,7 @@ export const dict = {
   "dialog.model.notSet": "Niet ingesteld",
 
   "profile.personalAccount": "Persoonlijk Account",
+  "profile.switchingAccount": "Account wisselen…",
 
   // Agent Manager strings live in webview-ui/agent-manager/i18n/en.ts
 
@@ -1231,4 +1237,8 @@ export const dict = {
   "settings.saveBar.warning.many": "Meerdere sessies zijn actief en worden onderbroken",
   "settings.saveBar.saveAnyway": "Toch opslaan",
   "settings.saveBar.cancel": "Annuleren",
+  "notifications.action.previous": "Previous",
+  "notifications.action.next": "Next",
+  "notifications.action.close": "Close",
+  "notifications.action.tryModel": "Try model",
 }
