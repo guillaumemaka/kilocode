@@ -82,11 +82,14 @@ export namespace ConfigProtection {
       }
     }
 
-    // Check metadata.files[] (apply_patch file objects with absolute filePath)
+    // Check metadata.files[] (apply_patch file objects with absolute filePath/movePath)
     const files = request.metadata?.files
     if (Array.isArray(files)) {
       for (const file of files) {
-        if (typeof file?.filePath === "string" && isAbsolute(file.filePath)) return true
+        for (const key of ["filePath", "movePath"] as const) {
+          const val = file?.[key]
+          if (typeof val === "string" && (path.isAbsolute(val) ? isAbsolute(val) : isRelative(val))) return true
+        }
       }
     }
 
