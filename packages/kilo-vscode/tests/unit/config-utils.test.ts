@@ -32,6 +32,14 @@ describe("deepMerge", () => {
     const source: Partial<Config> = { instructions: ["c"] }
     expect(deepMerge(target, source)).toEqual({ instructions: ["c"] })
   })
+
+  it("preserves explicit false values in nested agent config", () => {
+    const target: Config = { agent: { code: { disable: true, hidden: true } } }
+    const source: Partial<Config> = { agent: { code: { disable: false, hidden: false } } }
+    const result = deepMerge(target, source)
+    expect(result.agent?.code?.disable).toBe(false)
+    expect(result.agent?.code?.hidden).toBe(false)
+  })
 })
 
 describe("stripNulls", () => {
@@ -98,6 +106,17 @@ describe("ConfigState", () => {
 
       expect(s.config.agent?.code?.steps).toBe(5)
       expect(s.config.agent?.code?.temperature).toBe(0.9)
+    })
+
+    it("preserves explicit false agent flags across configLoaded pushes", () => {
+      const s = new ConfigState()
+      s.handleConfigLoaded({ agent: { code: { disable: true, hidden: true } } })
+      s.updateConfig({ agent: { code: { disable: false, hidden: false } } })
+
+      s.handleConfigLoaded({ agent: { code: { disable: true, hidden: true } } })
+
+      expect(s.config.agent?.code?.disable).toBe(false)
+      expect(s.config.agent?.code?.hidden).toBe(false)
     })
   })
 
