@@ -497,6 +497,103 @@ export function createKiloRoutes(deps: KiloRoutesDeps) {
       },
     )
     .get(
+      "/claw/status",
+      describeRoute({
+        summary: "Get KiloClaw instance status",
+        description: "Fetch the user's KiloClaw instance status via the KiloClaw worker",
+        operationId: "kilo.claw.status",
+        responses: {
+          200: {
+            description: "Instance status",
+            content: {
+              "application/json": {
+                schema: resolver(z.unknown()),
+              },
+            },
+          },
+          ...errors(401, 502),
+        },
+      }),
+      async (c: any) => {
+        try {
+          const auth = await Auth.get("kilo")
+          if (!auth) return c.json({ error: "Not authenticated with Kilo Gateway" }, 401)
+          const token = auth.type === "api" ? auth.key : auth.type === "oauth" ? auth.access : undefined
+          if (!token) return c.json({ error: "No valid token found" }, 401)
+
+          const response = await fetch(`${KILO_API_BASE}/api/kiloclaw/status`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+
+          if (!response.ok) {
+            const text = await response.text()
+            return c.json({ error: `KiloClaw request failed: ${response.status} ${text}` }, response.status as any)
+          }
+
+          return c.json(await response.json())
+        } catch (err: any) {
+          console.error("[Kilo Gateway] claw/status: error", err?.message ?? err)
+          return c.json({ error: "Failed to reach KiloClaw" }, 502)
+        }
+      },
+    )
+    .get(
+      "/claw/chat-credentials",
+      describeRoute({
+        summary: "Get KiloClaw chat credentials",
+        description: "Fetch Stream Chat credentials for the user's KiloClaw instance",
+        operationId: "kilo.claw.chatCredentials",
+        responses: {
+          200: {
+            description: "Stream Chat credentials or null",
+            content: {
+              "application/json": {
+                schema: resolver(
+                  z
+                    .object({
+                      apiKey: z.string(),
+                      userId: z.string(),
+                      userToken: z.string(),
+                      channelId: z.string(),
+                    })
+                    .nullable(),
+                ),
+              },
+            },
+          },
+          ...errors(401, 502),
+        },
+      }),
+      async (c: any) => {
+        try {
+          const auth = await Auth.get("kilo")
+          if (!auth) return c.json({ error: "Not authenticated with Kilo Gateway" }, 401)
+          const token = auth.type === "api" ? auth.key : auth.type === "oauth" ? auth.access : undefined
+          if (!token) return c.json({ error: "No valid token found" }, 401)
+
+          const response = await fetch(`${KILO_API_BASE}/api/kiloclaw/chat-credentials`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+
+          if (!response.ok) {
+            const text = await response.text()
+            return c.json({ error: `KiloClaw request failed: ${response.status} ${text}` }, response.status as any)
+          }
+
+          return c.json(await response.json())
+        } catch (err: any) {
+          console.error("[Kilo Gateway] claw/chat-credentials: error", err?.message ?? err)
+          return c.json({ error: "Failed to reach KiloClaw" }, 502)
+        }
+      },
+    )
+    .get(
       "/cloud-sessions",
       describeRoute({
         summary: "Get cloud sessions",

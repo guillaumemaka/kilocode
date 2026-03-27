@@ -7,12 +7,15 @@
 import { createMemo } from "solid-js"
 import { useCommandDialog } from "@tui/component/dialog-command"
 import { useSync } from "@tui/context/sync"
+import { useRoute } from "@tui/context/route"
 import { useDialog } from "@tui/ui/dialog"
 import { useToast } from "@tui/ui/toast"
 import { DialogAlert } from "@tui/ui/dialog-alert"
 import type { Organization } from "@kilocode/kilo-gateway"
 import { DialogKiloTeamSelect } from "./components/dialog-kilo-team-select.js"
 import { DialogKiloProfile } from "./components/dialog-kilo-profile.js"
+import { DialogClawSetup } from "./components/dialog-claw-setup.js"
+import { DialogClawUpgrade } from "./components/dialog-claw-upgrade.js"
 
 // These types are OpenCode-internal and imported at runtime
 type UseSDK = any
@@ -27,6 +30,7 @@ type SDK = any
 export function registerKiloCommands(useSDK: () => UseSDK) {
   const command = useCommandDialog()
   const sync = useSync()
+  const route = useRoute()
   const dialog = useDialog()
   const sdk = useSDK()
   const toast = useToast()
@@ -37,6 +41,40 @@ export function registerKiloCommands(useSDK: () => UseSDK) {
   })
 
   command.register(() => [
+    // /kiloclaw command
+    {
+      value: "kilo.claw",
+      title: "KiloClaw",
+      description: "Open KiloClaw chat & dashboard",
+      category: "Kilo",
+      slash: { name: "kiloclaw", aliases: ["claw"] },
+      enabled: isKiloConnected(),
+      hidden: !isKiloConnected(),
+      onSelect: async () => {
+        // Check instance status first
+        const res = await sdk.client.kilo.claw.status().catch(() => null)
+
+        // No instance provisioned
+        if (!res?.data || !res.data.userId || res.error) {
+          dialog.replace(() => <DialogClawSetup />)
+          return
+        }
+
+        // Instance exists — check for chat credentials
+        const creds = await sdk.client.kilo.claw.chatCredentials().catch(() => null)
+
+        if (!creds?.data || creds.error) {
+          // Instance exists but no chat credentials — needs upgrade
+          dialog.replace(() => <DialogClawUpgrade />)
+          return
+        }
+
+        // Everything ready — navigate to full-screen chat view
+        route.navigate({ type: "kiloclaw" })
+        dialog.clear()
+      },
+    },
+
     // /remote command
     {
       value: "remote.toggle",
