@@ -10,6 +10,11 @@ import { useSession } from "../../context/session"
 import { useLanguage } from "../../context/language"
 import type { AgentConfig, AgentInfo } from "../../types/messages"
 import SettingsRow from "./SettingsRow"
+import {
+  selectedAgentNumberOverrideValue,
+  selectedAgentTextOverrideValue,
+  shouldClearDefaultAgentWhenAgentBecomesUnavailable,
+} from "./agent-behaviour-patches"
 import { buildExport } from "./mode-io"
 
 interface Props {
@@ -40,6 +45,16 @@ const ModeEditView: Component<Props> = (props) => {
         [props.name]: { ...current, ...partial },
       },
     })
+  }
+
+  const updateNumberOverride = (
+    key: "temperature" | "top_p" | "steps",
+    rawValue: string,
+    parse: (value: string) => number,
+  ) => {
+    const next = selectedAgentNumberOverrideValue(rawValue, parse)
+    if (rawValue.trim() !== "" && next === undefined) return
+    update({ [key]: next } as Pick<AgentConfig, typeof key>)
   }
 
   const exportMode = () => {
@@ -106,19 +121,16 @@ const ModeEditView: Component<Props> = (props) => {
         </Card>
       </Show>
 
-      {/* Description (full-width, custom modes only) */}
-      <Show when={!native()}>
-        <Card style={{ "margin-bottom": "12px" }}>
-          <div data-slot="settings-row-label-title" style={{ "margin-bottom": "8px" }}>
-            {language.t("settings.agentBehaviour.editMode.description")}
-          </div>
-          <TextField
-            value={cfg().description ?? ""}
-            placeholder={language.t("settings.agentBehaviour.createMode.description.placeholder")}
-            onChange={(val) => update({ description: val || undefined })}
-          />
-        </Card>
-      </Show>
+      <Card style={{ "margin-bottom": "12px" }}>
+        <div data-slot="settings-row-label-title" style={{ "margin-bottom": "8px" }}>
+          {language.t("settings.agentBehaviour.editMode.description")}
+        </div>
+        <TextField
+          value={cfg().description ?? ""}
+          placeholder={language.t("settings.agentBehaviour.createMode.description.placeholder")}
+          onChange={(val) => update({ description: selectedAgentTextOverrideValue(val) })}
+        />
+      </Card>
 
       {/* Prompt (full-width, auto-resizing) */}
       <Card style={{ "margin-bottom": "12px" }}>
@@ -131,7 +143,7 @@ const ModeEditView: Component<Props> = (props) => {
           value={cfg().prompt ?? ""}
           placeholder={language.t("settings.agentBehaviour.createMode.prompt.placeholder")}
           multiline
-          onChange={(val) => update({ prompt: val || undefined })}
+          onChange={(val) => update({ prompt: selectedAgentTextOverrideValue(val) })}
         />
       </Card>
 
@@ -144,7 +156,7 @@ const ModeEditView: Component<Props> = (props) => {
           <TextField
             value={cfg().model ?? ""}
             placeholder="e.g. anthropic/claude-sonnet-4-20250514"
-            onChange={(val) => update({ model: val || undefined })}
+            onChange={(val) => update({ model: selectedAgentTextOverrideValue(val) })}
           />
         </SettingsRow>
 
@@ -155,10 +167,7 @@ const ModeEditView: Component<Props> = (props) => {
           <TextField
             value={cfg().temperature?.toString() ?? ""}
             placeholder={language.t("common.default")}
-            onChange={(val) => {
-              const parsed = parseFloat(val)
-              update({ temperature: isNaN(parsed) ? undefined : parsed })
-            }}
+            onChange={(val) => updateNumberOverride("temperature", val, parseFloat)}
           />
         </SettingsRow>
 
@@ -169,10 +178,7 @@ const ModeEditView: Component<Props> = (props) => {
           <TextField
             value={cfg().top_p?.toString() ?? ""}
             placeholder={language.t("common.default")}
-            onChange={(val) => {
-              const parsed = parseFloat(val)
-              update({ top_p: isNaN(parsed) ? undefined : parsed })
-            }}
+            onChange={(val) => updateNumberOverride("top_p", val, parseFloat)}
           />
         </SettingsRow>
 
@@ -183,10 +189,7 @@ const ModeEditView: Component<Props> = (props) => {
           <TextField
             value={cfg().steps?.toString() ?? ""}
             placeholder={language.t("common.default")}
-            onChange={(val) => {
-              const parsed = parseInt(val, 10)
-              update({ steps: isNaN(parsed) ? undefined : parsed })
-            }}
+            onChange={(val) => updateNumberOverride("steps", val, (raw) => parseInt(raw, 10))}
           />
         </SettingsRow>
 
@@ -199,7 +202,7 @@ const ModeEditView: Component<Props> = (props) => {
             onChange={(val) => {
               update({ hidden: val })
               // Clear default_agent if hiding the current default
-              if (val && config().default_agent === props.name) {
+              if (shouldClearDefaultAgentWhenAgentBecomesUnavailable(val, config().default_agent, props.name)) {
                 updateConfig({ default_agent: null })
               }
             }}
@@ -219,7 +222,7 @@ const ModeEditView: Component<Props> = (props) => {
             onChange={(val) => {
               update({ disable: val })
               // Clear default_agent if disabling the current default
-              if (val && config().default_agent === props.name) {
+              if (shouldClearDefaultAgentWhenAgentBecomesUnavailable(val, config().default_agent, props.name)) {
                 updateConfig({ default_agent: null })
               }
             }}

@@ -189,6 +189,71 @@ describe("ConfigState", () => {
       expect(s.saving).toBe(false)
       expect(Object.keys(s.draft).length).toBe(0)
     })
+
+    it("preserves the null delete sentinel in the pending save payload", () => {
+      const s = new ConfigState()
+      s.handleConfigLoaded({ default_agent: "code" })
+      s.updateConfig({ default_agent: null })
+
+      expect(s.draft.default_agent).toBeNull()
+
+      s.saveConfig()
+
+      expect(s.saving).toBe(true)
+      expect(s.draft.default_agent).toBeNull()
+    })
+  })
+
+  describe("configSaved while a save is in-flight", () => {
+    it("clears the draft after a confirmed write even if merged refresh is pending", () => {
+      const s = new ConfigState()
+      s.handleConfigLoaded({ agent: { code: { prompt: "Review" } } })
+      s.updateConfig({ agent: { code: { prompt: null } } })
+      s.saveConfig()
+
+      s.handleConfigSaved()
+
+      expect(s.saving).toBe(false)
+      expect(s.dirty).toBe(false)
+      expect(Object.keys(s.draft).length).toBe(0)
+      expect(s.saved.agent?.code?.prompt).toBeUndefined()
+      expect(s.config.agent?.code?.prompt).toBeUndefined()
+    })
+  })
+
+  describe("configSaveFailed while a save is in-flight", () => {
+    it("preserves pending null-sentinel clears so the user can retry", () => {
+      const s = new ConfigState()
+      s.handleConfigLoaded({ agent: { code: { prompt: "Review", temperature: 0.7 } }, default_agent: "code" })
+      s.updateConfig({ agent: { code: { prompt: null, temperature: null } } })
+      s.updateConfig({ default_agent: null })
+      s.saveConfig()
+
+      s.handleConfigSaveFailed({ agent: { code: { prompt: "Review", temperature: 0.7 } }, default_agent: "code" })
+
+      expect(s.saving).toBe(false)
+      expect(s.dirty).toBe(true)
+      expect(s.draft.agent?.code?.prompt).toBeNull()
+      expect(s.draft.agent?.code?.temperature).toBeNull()
+      expect(s.draft.default_agent).toBeNull()
+      expect(s.config.agent?.code?.prompt).toBeUndefined()
+      expect(s.config.agent?.code?.temperature).toBeUndefined()
+      expect(s.config.default_agent).toBeUndefined()
+    })
+  })
+
+  it("ignores repeated save attempts while a save is already in-flight", () => {
+    const s = new ConfigState()
+    s.handleConfigLoaded({ snapshot: true })
+    s.updateConfig({ snapshot: false })
+
+    s.saveConfig()
+    s.saveConfig()
+    s.handleConfigUpdated({ snapshot: false })
+
+    expect(s.saving).toBe(false)
+    expect(s.dirty).toBe(false)
+    expect(s.config.snapshot).toBe(false)
   })
 
   it("configLoaded is ignored while save is in-flight", () => {

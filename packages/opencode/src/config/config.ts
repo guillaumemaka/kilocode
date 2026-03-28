@@ -819,12 +819,12 @@ export namespace Config {
         .string()
         .optional()
         .describe("Default model variant for this agent (applies only when using the agent's configured model)."),
-      temperature: z.number().optional(),
-      top_p: z.number().optional(),
-      prompt: z.string().optional(),
+      temperature: z.number().nullable().optional(), // kilocode_change - nullable for delete sentinel
+      top_p: z.number().nullable().optional(), // kilocode_change - nullable for delete sentinel
+      prompt: z.string().nullable().optional(), // kilocode_change - nullable for delete sentinel
       tools: z.record(z.string(), z.boolean()).optional().describe("@deprecated Use 'permission' field instead"),
       disable: z.boolean().optional(),
-      description: z.string().optional().describe("Description of when to use the agent"),
+      description: z.string().nullable().optional().describe("Description of when to use the agent"),
       mode: z.enum(["subagent", "primary", "all"]).optional(),
       hidden: z
         .boolean()
@@ -842,6 +842,7 @@ export namespace Config {
         .number()
         .int()
         .positive()
+        .nullable()
         .optional()
         .describe("Maximum number of agentic iterations before forcing text-only response"),
       maxSteps: z.number().int().positive().optional().describe("@deprecated Use 'steps' field instead."),

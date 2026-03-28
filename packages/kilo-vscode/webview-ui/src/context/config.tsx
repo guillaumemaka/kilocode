@@ -67,6 +67,22 @@ export const ConfigProvider: ParentComponent = (props) => {
       setSaved(message.config)
       return
     }
+    if (message.type === "configSaved") {
+      if (!saving) return
+      const confirmedConfig = config()
+      saving = false
+      setDraft({})
+      setIsDirty(false)
+      setSaved(confirmedConfig)
+      return
+    }
+    if (message.type === "configSaveFailed") {
+      if (!saving) return
+      saving = false
+      setSaved(message.config)
+      setConfig(resolveConfig(message.config, draft(), isDirty()))
+      return
+    }
   })
 
   onCleanup(unsubscribe)
@@ -101,7 +117,7 @@ export const ConfigProvider: ParentComponent = (props) => {
 
   function saveConfig() {
     const changes = draft()
-    if (Object.keys(changes).length === 0) return
+    if (saving || Object.keys(changes).length === 0) return
     // Don't clear draft/isDirty yet — wait for configUpdated confirmation.
     // If the write fails, the save bar stays visible so the user can retry.
     saving = true

@@ -321,14 +321,14 @@ export type PermissionConfig = Partial<Record<string, PermissionRule>>
 
 export interface AgentConfig {
   model?: string | null
-  prompt?: string
-  description?: string
+  prompt?: string | null
+  description?: string | null
   mode?: "subagent" | "primary" | "all"
   hidden?: boolean
   disable?: boolean
-  temperature?: number
-  top_p?: number
-  steps?: number
+  temperature?: number | null
+  top_p?: number | null
+  steps?: number | null
   permission?: PermissionConfig
 }
 
@@ -719,6 +719,15 @@ export interface ConfigLoadedMessage {
 
 export interface ConfigUpdatedMessage {
   type: "configUpdated"
+  config: Config
+}
+
+export interface ConfigSavedMessage {
+  type: "configSaved"
+}
+
+export interface ConfigSaveFailedMessage {
+  type: "configSaveFailed"
   config: Config
 }
 
@@ -1277,6 +1286,8 @@ export type ExtensionMessage =
   | BrowserSettingsLoadedMessage
   | ConfigLoadedMessage
   | ConfigUpdatedMessage
+  | ConfigSavedMessage
+  | ConfigSaveFailedMessage
   | GlobalConfigLoadedMessage
   | NotificationSettingsLoadedMessage
   | NotificationsLoadedMessage

@@ -15,6 +15,7 @@ import ModeEditView from "./ModeEditView"
 import ModeCreateView from "./ModeCreateView"
 import McpEditView from "./McpEditView"
 import WorkflowsTab from "./agent-behaviour/WorkflowsTab"
+import { selectedDefaultAgentValue } from "./agent-behaviour-patches"
 import { parseImport, MAX_IMPORT_SIZE } from "./mode-io"
 import type { ImportError } from "./mode-io"
 
@@ -274,7 +275,7 @@ const AgentBehaviourTab: Component = () => {
               label={(o) => o.label}
               onSelect={(o) => {
                 if (!o) return
-                const next = o.value || null
+                const next = selectedDefaultAgentValue(o.value)
                 if (next === (config().default_agent ?? null)) return
                 updateConfig({ default_agent: next })
               }}

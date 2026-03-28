@@ -1910,31 +1910,40 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
     // races with the async config.update() write on the CLI backend).
     this.pending++
     try {
-      await this.client.global.config.update({ config: partial }, { throwOnError: true })
+      try {
+        await this.client.global.config.update({ config: partial }, { throwOnError: true })
+      } catch (error) {
+        console.error("[Kilo New] KiloProvider: Failed to update config:", error)
+        this.postMessage({
+          type: "error",
+          message: getErrorMessage(error) || "Failed to update config",
+        })
+        this.postMessage({
+          type: "configSaveFailed",
+          config: (this.cachedConfigMessage as { config: unknown } | undefined)?.config ?? {},
+        })
+        return
+      }
 
-      // Re-fetch the full merged config (global + project + all layers) so the
-      // webview receives the complete resolved config, not just global-only data.
-      // Config.state is reset by updateGlobal (via Instance.resetStateEntry) so
-      // config.get() returns fresh data without a full dispose cycle.
-      const dir = this.getWorkspaceDirectory()
-      const { data: merged } = await this.client.config.get({ directory: dir }, { throwOnError: true })
+      try {
+        // Re-fetch the full merged config (global + project + all layers) so the
+        // webview receives the complete resolved config, not just global-only data.
+        // Config.state is reset by updateGlobal (via Instance.resetStateEntry) so
+        // config.get() returns fresh data without a full dispose cycle.
+        const dir = this.getWorkspaceDirectory()
+        const { data: merged } = await this.client.config.get({ directory: dir }, { throwOnError: true })
 
-      this.cachedConfigMessage = { type: "configLoaded", config: merged }
-      this.postMessage({ type: "configUpdated", config: merged })
+        this.cachedConfigMessage = { type: "configLoaded", config: merged }
+        this.postMessage({ type: "configUpdated", config: merged })
+      } catch (error) {
+        console.error("[Kilo New] KiloProvider: Failed to fetch merged config after update:", error)
+        // The write already succeeded; keep the optimistic state and wait for
+        // the SSE-driven refresh to deliver the authoritative merged config.
+        this.postMessage({ type: "configSaved" })
+      }
 
       if (refreshProviders) {
         await this.fetchAndSendProviders()
-      }
-    } catch (error) {
-      console.error("[Kilo New] KiloProvider: Failed to update config:", error)
-      this.postMessage({
-        type: "error",
-        message: getErrorMessage(error) || "Failed to update config",
-      })
-      // Send configUpdated with the last known good config so the webview
-      // clears its saving flag and reverts optimistic state.
-      if (this.cachedConfigMessage) {
-        this.postMessage({ type: "configUpdated", config: (this.cachedConfigMessage as { config: unknown }).config })
       }
     } finally {
       this.pending--
