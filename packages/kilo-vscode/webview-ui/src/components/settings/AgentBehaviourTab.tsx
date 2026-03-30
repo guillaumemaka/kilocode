@@ -6,6 +6,7 @@ import { Button } from "@kilocode/kilo-ui/button"
 import { IconButton } from "@kilocode/kilo-ui/icon-button"
 import { Dialog } from "@kilocode/kilo-ui/dialog"
 import { useDialog } from "@kilocode/kilo-ui/context/dialog"
+import { Switch } from "@kilocode/kilo-ui/switch"
 
 import { useConfig } from "../../context/config"
 import { useSession } from "../../context/session"
@@ -478,6 +479,31 @@ const AgentBehaviourTab: Component = () => {
       setExpanded((prev) => ({ ...prev, [name]: !prev[name] }))
     }
 
+    const statusColor = (name: string) => {
+      const s = session.mcpStatus()[name]?.status
+      if (s === "connected") return "var(--vscode-testing-iconPassed, #4caf50)"
+      if (s === "failed") return "var(--vscode-testing-iconFailed, #f44336)"
+      if (s === "needs_auth" || s === "needs_client_registration")
+        return "var(--vscode-editorWarning-foreground, #ff9800)"
+      if (s === "disabled") return "var(--vscode-disabledForeground, #888)"
+      return "var(--vscode-disabledForeground, #888)"
+    }
+
+    const statusLabel = (name: string) => {
+      const s = session.mcpStatus()[name]?.status
+      if (!s) return ""
+      const key = {
+        connected: "mcp.status.connected",
+        failed: "mcp.status.failed",
+        needs_auth: "mcp.status.needs_auth",
+        disabled: "mcp.status.disabled",
+        needs_client_registration: "mcp.status.needs_registration",
+      }[s]
+      return key ? language.t(key) : s
+    }
+
+    const isConnected = (name: string) => session.mcpStatus()[name]?.status === "connected"
+
     if (editingMcp()) {
       return (
         <McpEditView
@@ -513,6 +539,12 @@ const AgentBehaviourTab: Component = () => {
               {([name, mcp], index) => {
                 const open = () => expanded()[name] ?? false
                 const env = () => Object.entries(mcp.environment ?? mcp.env ?? {})
+                const error = () => {
+                  const s = session.mcpStatus()[name]
+                  if (s?.status === "failed") return s.error
+                  if (s?.status === "needs_client_registration") return s.error
+                  return undefined
+                }
                 return (
                   <div
                     style={{
@@ -540,6 +572,16 @@ const AgentBehaviourTab: Component = () => {
                             toggle(name)
                           }}
                         />
+                        {/* Status dot */}
+                        <div
+                          style={{
+                            width: "6px",
+                            height: "6px",
+                            "border-radius": "50%",
+                            "background-color": statusColor(name),
+                            "flex-shrink": "0",
+                          }}
+                        />
                         <div style={{ "font-weight": "500" }}>{name}</div>
                         <span
                           style={{
@@ -547,10 +589,26 @@ const AgentBehaviourTab: Component = () => {
                             color: "var(--text-weak-base, var(--vscode-descriptionForeground))",
                           }}
                         >
-                          {mcp.url ? "remote" : "stdio"}
+                          {statusLabel(name) || (mcp.url ? "remote" : "stdio")}
                         </span>
                       </div>
-                      <div style={{ display: "flex", gap: "4px" }}>
+                      <div style={{ display: "flex", gap: "4px", "align-items": "center" }}>
+                        <div onClick={(e: MouseEvent) => e.stopPropagation()}>
+                          <Switch
+                            checked={isConnected(name)}
+                            disabled={session.mcpLoading() === name}
+                            onChange={() => {
+                              if (isConnected(name)) {
+                                session.disconnectMcp(name)
+                              } else {
+                                session.connectMcp(name)
+                              }
+                            }}
+                            hideLabel
+                          >
+                            {name}
+                          </Switch>
+                        </div>
                         <IconButton
                           size="small"
                           variant="ghost"
@@ -571,6 +629,20 @@ const AgentBehaviourTab: Component = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Error message */}
+                    <Show when={error()}>
+                      <div
+                        style={{
+                          "padding-left": "28px",
+                          "padding-bottom": "4px",
+                          "font-size": "11px",
+                          color: "var(--vscode-errorForeground)",
+                        }}
+                      >
+                        {error()}
+                      </div>
+                    </Show>
 
                     {/* Expandable detail */}
                     <Show when={open()}>
@@ -635,16 +707,6 @@ const AgentBehaviourTab: Component = () => {
                               </div>
                             )}
                           </For>
-                        </Show>
-                        <Show when={mcp.enabled === false}>
-                          <div
-                            style={{
-                              "margin-top": "4px",
-                              color: "var(--vscode-errorForeground)",
-                            }}
-                          >
-                            {language.t("settings.agentBehaviour.mcpDetail.disabled")}
-                          </div>
                         </Show>
                       </div>
                     </Show>
