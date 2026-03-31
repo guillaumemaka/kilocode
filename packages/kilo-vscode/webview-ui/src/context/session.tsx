@@ -1620,18 +1620,24 @@ export const SessionProvider: ParentComponent = (props) => {
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
   )
 
-  /**
-   * Per-session cost breakdown for the current session family.
-   * Returns entries only for sessions with non-zero cost.
-   * Child session labels come from the task tool part that spawned them.
-   */
-  const costBreakdown = createMemo<Array<{ label: string; cost: number }>>(() => {
+  /** Per-session cost — only reads store.messages (not parts). */
+  const familyCosts = createMemo<Map<string, number>>(() => {
     const id = currentSessionID()
-    if (!id) return []
-    const family = sessionFamily(id)
+    if (!id) return new Map()
+    const costs = new Map<string, number>()
+    for (const sid of sessionFamily(id)) {
+      const cost = calcTotalCost(store.messages[sid] ?? [])
+      if (cost > 0) costs.set(sid, cost)
+    }
+    return costs
+  })
 
-    // Build label map: child sessionID → label from the parent's task tool input
+  /** Child session labels — only reads store.parts (not message costs). */
+  const familyLabels = createMemo<Map<string, string>>(() => {
+    const id = currentSessionID()
+    if (!id) return new Map()
     const labels = new Map<string, string>()
+    const family = sessionFamily(id)
     for (const sid of family) {
       const msgs = store.messages[sid]
       if (!msgs) continue
@@ -1652,11 +1658,17 @@ export const SessionProvider: ParentComponent = (props) => {
         }
       }
     }
+    return labels
+  })
 
+  /** Combined cost breakdown with labels. */
+  const costBreakdown = createMemo<Array<{ label: string; cost: number }>>(() => {
+    const id = currentSessionID()
+    const costs = familyCosts()
+    if (!id || costs.size === 0) return []
+    const labels = familyLabels()
     const items: Array<{ label: string; cost: number }> = []
-    for (const sid of family) {
-      const cost = calcTotalCost(store.messages[sid] ?? [])
-      if (cost === 0) continue
+    for (const [sid, cost] of costs) {
       const label = sid === id ? language.t("context.stats.thisSession") : (labels.get(sid) ?? sid.slice(0, 8))
       items.push({ label, cost })
     }
