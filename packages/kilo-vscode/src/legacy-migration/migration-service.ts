@@ -1187,7 +1187,7 @@ export function buildCustomModeList(
 export function isNativeModeModified(
   yaml: LegacyCustomMode | undefined,
   prompt: LegacyPromptComponent | undefined,
-  defaults: { roleDefinition: string; customInstructions?: string; whenToUse?: string },
+  defaults: { roleDefinition: string; customInstructions?: string; whenToUse?: string; description?: string },
 ): boolean {
   if (yaml) return true
   if (!prompt) return false
@@ -1195,6 +1195,7 @@ export function isNativeModeModified(
   if (prompt.roleDefinition && prompt.roleDefinition !== defaults.roleDefinition) return true
   if (prompt.customInstructions && prompt.customInstructions !== (defaults.customInstructions ?? "")) return true
   if (prompt.whenToUse && prompt.whenToUse !== (defaults.whenToUse ?? "")) return true
+  if (prompt.description && prompt.description !== (defaults.description ?? "")) return true
 
   return false
 }
@@ -1230,6 +1231,7 @@ export function buildMergedNativeMode(
     if (prompt.roleDefinition) base.roleDefinition = prompt.roleDefinition
     if (prompt.customInstructions) base.customInstructions = prompt.customInstructions
     if (prompt.whenToUse) base.whenToUse = prompt.whenToUse
+    if (prompt.description) base.description = prompt.description
   }
 
   return base

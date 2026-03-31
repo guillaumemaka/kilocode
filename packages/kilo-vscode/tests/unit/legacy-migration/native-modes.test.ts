@@ -81,6 +81,20 @@ describe("isNativeModeModified", () => {
     }
     expect(isNativeModeModified(undefined, prompt, ask)).toBe(true)
   })
+
+  it("returns true when description differs from default", () => {
+    const prompt: LegacyPromptComponent = {
+      description: "My custom short description",
+    }
+    expect(isNativeModeModified(undefined, prompt, defaults)).toBe(true)
+  })
+
+  it("returns false when description matches default", () => {
+    const prompt: LegacyPromptComponent = {
+      description: defaults.description,
+    }
+    expect(isNativeModeModified(undefined, prompt, defaults)).toBe(false)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -273,5 +287,36 @@ describe("buildMergedNativeMode", () => {
     }
     const result = buildMergedNativeMode(undefined, prompt, "code")
     expect(result!.whenToUse).toBe("Use for special tasks")
+  })
+
+  it("overlays description from prompts", () => {
+    const prompt: LegacyPromptComponent = {
+      description: "My custom description",
+    }
+    const result = buildMergedNativeMode(undefined, prompt, "code")
+    expect(result!.description).toBe("My custom description")
+  })
+
+  it("preserves default description when prompt description is empty", () => {
+    const prompt: LegacyPromptComponent = {
+      description: "",
+    }
+    const result = buildMergedNativeMode(undefined, prompt, "code")
+    expect(result!.description).toBe(NATIVE_MODE_DEFAULTS["code"]!.description)
+  })
+
+  it("overlays description from prompts on top of YAML", () => {
+    const yaml: LegacyCustomMode = {
+      slug: "code",
+      name: "My Code",
+      roleDefinition: "yaml role",
+      description: "yaml description",
+      groups: ["read"],
+    }
+    const prompt: LegacyPromptComponent = {
+      description: "prompt description",
+    }
+    const result = buildMergedNativeMode(yaml, prompt, "code")
+    expect(result!.description).toBe("prompt description")
   })
 })
