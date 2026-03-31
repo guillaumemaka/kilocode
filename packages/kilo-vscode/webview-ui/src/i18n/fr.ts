@@ -1311,6 +1311,11 @@ export const dict = {
   "migration.complete.cleanupDescription":
     "Cela supprime les anciens paramètres du stockage de VS Code. Vous ne pourrez pas réexécuter cette migration.",
   "migration.complete.done": "Terminé",
+  "migration.migrate.sessionsDetected": "{{count}} sessions détectées",
+  "migration.error.sessionFailed": "La migration de la session a échoué",
+  "migration.error.continue": "Continuer",
+  "migration.error.action.copy": "Copier",
+  "migration.error.toast.copied": "Erreur copiée dans le presse-papiers",
   // legacy-migration end
 
   "error.details.show": "Détails",
