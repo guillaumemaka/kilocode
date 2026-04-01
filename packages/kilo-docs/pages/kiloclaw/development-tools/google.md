@@ -42,6 +42,12 @@ Before you begin, make sure you have:
 
 ## Setup
 
+{% callout type="info" title="Setup Video Guide" %}
+Watch this video to see how to connect your Google account to KiloClaw step by step.
+
+**[▶ Watch Setup Video](https://screen.studio/share/cU8B3K4N)**
+{% /callout %}
+
 1. Go to the **Settings** tab on your [KiloClaw dashboard](/docs/kiloclaw/dashboard)
 2. Find the **Google Account** section
 3. Copy the provided `docker run` command — it includes a short-lived authentication token
