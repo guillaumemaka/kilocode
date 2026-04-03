@@ -73,12 +73,12 @@ class KiloConnectionService(private val cs: CoroutineScope) : Disposable {
         val cliService = service<ServerManager>()
         val processState = cliService.init()
 
-        if (processState is KiloProcessState.Error) {
+        if (processState is ServerManager.ServerState.Error) {
             setState(ConnectionState.Error(processState.message))
             return
         }
 
-        val ready = processState as KiloProcessState.Ready
+        val ready = processState as ServerManager.ServerState.Ready
         port = ready.port
         password = ready.password
 
