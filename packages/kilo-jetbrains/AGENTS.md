@@ -30,18 +30,12 @@
 - Avoid chatty RPC. Debounce UI events, batch requests, cache results where appropriate, and page large datasets instead of sending everything at once.
 - If a new split feature requires RPC support similar to the JetBrains template, mirror the template's wiring: `shared` and `frontend` use the RPC/serialization plugins, and the backend adds the required backend RPC platform modules.
 
-## CLI Binary Bundling
+## CLI Integration
 
-- CLI binaries are bundled as **JAR resources** at `/cli/{platform}/kilo[.exe]` where platform is `darwin-arm64`, `darwin-x64`, `linux-arm64`, `linux-x64`, `windows-x64`, `windows-arm64`.
-- The build script (`script/build.ts`) copies binaries from `packages/opencode/dist/` into `backend/build/generated/cli/cli/{platform}/`. Gradle includes this via `sourceSets.main.resources.srcDir`.
-- `./gradlew buildPlugin` requires CLI binaries to already exist in `backend/build/generated/cli/`. Run `bun run build` first (which calls the build script + Gradle), or ensure binaries are present before invoking Gradle directly.
-- Production builds (`bun run build:production` or `./gradlew buildPlugin -Pproduction=true`) require all 6 platform binaries. Local builds only need the current platform.
-
-## CLI Extraction at Runtime
-
-- Binaries are extracted to `PathManager.getSystemPath()/kilo/bin/kilo` — this is the standard JetBrains location for plugin-extracted native binaries (e.g. `~/Library/Caches/JetBrains/IntelliJIdea2025.1/kilo/bin/kilo` on macOS).
-- Use `com.intellij.util.system.CpuArch.CURRENT` for architecture detection, not `System.getProperty("os.arch")`. `CpuArch` is an enum (`X86_64`, `ARM64`, etc.) and handles Rosetta/WoW64 detection.
-- Use `com.intellij.openapi.util.SystemInfo.isMac`/`isLinux`/`isWindows` for OS detection.
+- CLI process spawning, extraction, and lifecycle belong in `backend`.
+- Detect architecture with `com.intellij.util.system.CpuArch.CURRENT`, not `System.getProperty("os.arch")`.
+- Detect OS with `com.intellij.openapi.util.SystemInfo.isMac` / `isLinux` / `isWindows`.
+- For packaging/build plumbing, see `script/build.ts` and `backend/build.gradle.kts`.
 
 ## Services and Coroutines
 
