@@ -27,6 +27,16 @@ async function search(params: { query?: string; limit?: number }, ctx: Tool.Cont
     throw new Error("The 'query' parameter is required when mode is 'search'")
   }
 
+  await ctx.ask({
+    permission: "recall",
+    patterns: ["search"],
+    always: ["search"],
+    metadata: {
+      mode: "search",
+      query: params.query,
+    },
+  })
+
   const limit = Math.min(params.limit ?? 20, 50)
   const current = Instance.project.id
 
@@ -51,19 +61,6 @@ async function search(params: { query?: string; limit?: number }, ctx: Tool.Cont
       directory: session.directory,
       updated: Locale.todayTimeOrDateTime(session.time.updated),
       current: session.projectID === current,
-    })
-  }
-
-  const dirs = [...new Set(results.filter((r) => !r.current).map((r) => r.directory))]
-  if (dirs.length > 0) {
-    await ctx.ask({
-      permission: "recall",
-      patterns: dirs,
-      always: dirs,
-      metadata: {
-        mode: "search",
-        query: params.query,
-      },
     })
   }
 
@@ -95,20 +92,17 @@ async function read(params: { sessionID?: string }, ctx: Tool.Context) {
   const session = await Session.get(params.sessionID).catch(() => {
     throw new Error(`Session "${params.sessionID}" not found. Use search mode first to find valid session IDs.`)
   })
-  const cross = session.projectID !== Instance.project.id
 
-  if (cross) {
-    await ctx.ask({
-      permission: "recall",
-      patterns: [session.directory],
-      always: [session.directory],
-      metadata: {
-        sessionID: session.id,
-        title: session.title,
-        directory: session.directory,
-      },
-    })
-  }
+  await ctx.ask({
+    permission: "recall",
+    patterns: [session.directory],
+    always: [session.directory],
+    metadata: {
+      sessionID: session.id,
+      title: session.title,
+      directory: session.directory,
+    },
+  })
 
   const msgs = await Session.messages({ sessionID: session.id })
   const lines: string[] = [
