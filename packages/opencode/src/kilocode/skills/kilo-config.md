@@ -30,7 +30,8 @@ When asked where `/name` lives, do not search only the repo root. Search these r
 2. `~/.kilo/`
 3. `~/.kilocode/`
 4. `~/.opencode/`
-5. project `.kilo/`, `.kilocode/`, and `.opencode/` directories from the current working directory up to the worktree root
+5. The `KILO_CONFIG_DIR` directory (if the env var is set)
+6. project `.kilo/`, `.kilocode/`, and `.opencode/` directories from the current working directory up to the worktree root
 
 Use exact patterns first:
 
