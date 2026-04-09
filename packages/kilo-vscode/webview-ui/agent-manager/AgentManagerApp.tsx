@@ -85,6 +85,7 @@ import { validateLocalSession, nextSelectionAfterDelete, adjacentHint, LOCAL } f
 import { reorderTabs, applyTabOrder, firstOrderedTitle } from "./tab-order"
 import { ConstrainDragYAxis, SortableReviewTab, SortableTab } from "./sortable-tab"
 import { DiffPanel } from "./DiffPanel"
+import { createRevertFile } from "./revert-file"
 import { FullScreenDiffView } from "./FullScreenDiffView"
 import { ApplyDialog } from "./ApplyDialog"
 import { groupApplyConflicts } from "./apply-conflicts"
@@ -1397,6 +1398,8 @@ const AgentManagerContent: Component = () => {
         }
       }
 
+      if (msg.type === "agentManager.revertWorktreeFileResult") revertCtl.onResult(msg as never)
+
       if (msg.type === "agentManager.worktreeStats") {
         const ev = msg as AgentManagerWorktreeStatsMessage
         const map: Record<string, WorktreeGitStats> = {}
@@ -1597,6 +1600,8 @@ const AgentManagerContent: Component = () => {
     if (!sessionId) return new Set<string>()
     return new Set(Object.keys(diffFileLoading()[sessionId] ?? {}))
   })
+
+  const revertCtl = createRevertFile(currentDiffSessionId, vscode, showToast, t)
 
   const handleConfigureSetupScript = () => {
     vscode.postMessage({ type: "agentManager.configureSetupScript" })
@@ -2924,6 +2929,8 @@ const AgentManagerContent: Component = () => {
                         if (id) vscode.postMessage({ type: "agentManager.openFile", sessionId: id, filePath: file })
                         else if (selection() === LOCAL) vscode.postMessage({ type: "openFile", filePath: file })
                       }}
+                      onRevertFile={revertCtl.revert}
+                      revertingFiles={revertCtl.reverting()}
                     />
                   </Show>
                 </div>
@@ -2950,6 +2957,8 @@ const AgentManagerContent: Component = () => {
                   if (id) vscode.postMessage({ type: "agentManager.openFile", sessionId: id, filePath: file })
                   else if (selection() === LOCAL) vscode.postMessage({ type: "openFile", filePath: file })
                 }}
+                onRevertFile={revertCtl.revert}
+                revertingFiles={revertCtl.reverting()}
                 onClose={closeReviewTab}
               />
             </div>
