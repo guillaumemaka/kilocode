@@ -9,7 +9,7 @@ import type { RemoteProtocol } from "../../src/kilo-sessions/remote-protocol"
 import { SessionPrompt } from "../../src/session/prompt"
 import { Question } from "../../src/question"
 import { PermissionNext } from "../../src/permission/next"
-import { Suggestion } from "../../src/suggestion"
+import { Suggestion } from "../../src/kilocode/suggestion"
 // kilocode_change end
 
 function fakeConn() {

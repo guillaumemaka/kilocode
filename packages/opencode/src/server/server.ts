@@ -50,7 +50,7 @@ import { EnhancePromptRoutes } from "./routes/enhance-prompt" // kilocode_change
 import { KilocodeRoutes } from "./routes/kilocode" // kilocode_change
 import { Filesystem } from "@/util/filesystem"
 import { QuestionRoutes } from "./routes/question"
-import { SuggestionRoutes } from "./routes/suggestion"
+import { SuggestionRoutes } from "../kilocode/suggestion/routes" // kilocode_change
 import { PermissionRoutes } from "./routes/permission"
 import { RemoteRoutes } from "./routes/remote" // kilocode_change
 import { GlobalRoutes } from "./routes/global"
@@ -279,7 +279,7 @@ export namespace Server {
         .route("/session", SessionRoutes())
         .route("/permission", PermissionRoutes())
         .route("/question", QuestionRoutes())
-        .route("/suggestion", SuggestionRoutes())
+        .route("/suggestion", SuggestionRoutes()) // kilocode_change
         .route("/provider", ProviderRoutes())
         .route("/telemetry", TelemetryRoutes()) // kilocode_change
         .route("/remote", RemoteRoutes()) // kilocode_change

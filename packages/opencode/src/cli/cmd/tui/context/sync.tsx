@@ -27,6 +27,7 @@ import type { Snapshot } from "@/snapshot"
 import { useExit } from "./exit"
 import { useArgs } from "./args"
 import { batch, onMount } from "solid-js"
+import { handleSuggestionEvent } from "@/kilocode/suggestion/tui/sync" // kilocode_change
 import { Log } from "@/util/log"
 import type { Path } from "@kilocode/sdk"
 import type { Workspace } from "@kilocode/sdk/v2"
@@ -49,9 +50,11 @@ export const { use: useSync, provider: SyncProvider } = createSimpleContext({
       question: {
         [sessionID: string]: QuestionRequest[]
       }
+      // kilocode_change start
       suggestion: {
         [sessionID: string]: SuggestionRequest[]
       }
+      // kilocode_change end
       config: Config
       session: Session[]
       session_status: {
@@ -92,7 +95,7 @@ export const { use: useSync, provider: SyncProvider } = createSimpleContext({
       agent: [],
       permission: {},
       question: {},
-      suggestion: {},
+      suggestion: {}, // kilocode_change
       command: [],
       provider: [],
       provider_default: {},
@@ -235,40 +238,11 @@ export const { use: useSync, provider: SyncProvider } = createSimpleContext({
         }
 
         case "suggestion.accepted":
-        case "suggestion.dismissed": {
-          const requests = store.suggestion[event.properties.sessionID]
-          if (!requests) break
-          const match = Binary.search(requests, event.properties.requestID, (r) => r.id)
-          if (!match.found) break
-          setStore(
-            "suggestion",
-            event.properties.sessionID,
-            produce((draft) => {
-              draft.splice(match.index, 1)
-            }),
-          )
-          break
-        }
-
+        case "suggestion.dismissed":
         case "suggestion.shown": {
-          const request = event.properties
-          const requests = store.suggestion[request.sessionID]
-          if (!requests) {
-            setStore("suggestion", request.sessionID, [request])
-            break
-          }
-          const match = Binary.search(requests, request.id, (r) => r.id)
-          if (match.found) {
-            setStore("suggestion", request.sessionID, match.index, reconcile(request))
-            break
-          }
-          setStore(
-            "suggestion",
-            request.sessionID,
-            produce((draft) => {
-              draft.splice(match.index, 0, request)
-            }),
-          )
+          // kilocode_change start
+          handleSuggestionEvent(event, store, setStore)
+          // kilocode_change end
           break
         }
 

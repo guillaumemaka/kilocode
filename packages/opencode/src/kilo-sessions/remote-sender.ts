@@ -5,7 +5,7 @@ import { Instance } from "@/project/instance"
 import { Session } from "@/session"
 import { SessionPrompt } from "@/session/prompt"
 import { Question } from "@/question"
-import { Suggestion } from "@/suggestion"
+import { Suggestion } from "@/kilocode/suggestion" // kilocode_change
 import { PermissionNext } from "@/permission/next"
 import { Log } from "@/util/log"
 import z from "zod"

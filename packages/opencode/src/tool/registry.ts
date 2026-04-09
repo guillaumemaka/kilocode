@@ -1,6 +1,6 @@
 import { PlanExitTool } from "./plan"
 import { QuestionTool } from "./question"
-import { SuggestTool } from "./suggest"
+import { SuggestTool } from "../kilocode/suggestion/tool" // kilocode_change
 import { BashTool } from "./bash"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
@@ -106,7 +106,7 @@ export namespace ToolRegistry {
     return [
       InvalidTool,
       ...(["app", "cli", "desktop", "vscode"].includes(Flag.KILO_CLIENT) && interactive ? [QuestionTool] : []), // kilocode_change
-      ...(suggest ? [SuggestTool] : []),
+      ...(suggest ? [SuggestTool] : []), // kilocode_change
       BashTool,
       ReadTool,
       GlobTool,

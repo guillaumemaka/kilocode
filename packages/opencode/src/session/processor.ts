@@ -15,7 +15,7 @@ import { Config } from "@/config/config"
 import { SessionCompaction } from "./compaction"
 import { PermissionNext } from "@/permission/next"
 import { Question } from "@/question"
-import { Suggestion } from "@/suggestion"
+import { Suggestion } from "@/kilocode/suggestion" // kilocode_change
 import { Telemetry } from "@kilocode/kilo-telemetry" // kilocode_change
 import { Flag } from "@/flag/flag" // kilocode_change
 
@@ -252,7 +252,7 @@ export namespace SessionProcessor {
                     if (
                       value.error instanceof PermissionNext.RejectedError ||
                       value.error instanceof Question.RejectedError ||
-                      value.error instanceof Suggestion.DismissedError
+                      value.error instanceof Suggestion.DismissedError // kilocode_change
                     ) {
                       blocked = shouldBreak
                     }

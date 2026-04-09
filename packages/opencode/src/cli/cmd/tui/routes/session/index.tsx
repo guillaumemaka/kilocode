@@ -45,7 +45,6 @@ import type { ApplyPatchTool } from "@/tool/apply_patch"
 import type { WebFetchTool } from "@/tool/webfetch"
 import type { TaskTool } from "@/tool/task"
 import type { QuestionTool } from "@/tool/question"
-import type { SuggestTool } from "@/tool/suggest"
 import type { SkillTool } from "@/tool/skill"
 import { useKeyboard, useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
 import { useSDK } from "@tui/context/sdk"
@@ -79,7 +78,8 @@ import { Filesystem } from "@/util/filesystem"
 import { Global } from "@/global"
 import { PermissionPrompt } from "./permission"
 import { QuestionPrompt } from "./question"
-import { SuggestPrompt } from "./suggest"
+import { Suggest } from "@/kilocode/suggestion/tui/render" // kilocode_change
+import { SuggestPrompt } from "@/kilocode/suggestion/tui/prompt" // kilocode_change
 import { DialogExportOptions } from "../../ui/dialog-export-options"
 import { formatTranscript } from "../../util/transcript"
 import { UI } from "@/cli/ui.ts"
@@ -150,9 +150,9 @@ export function Session() {
   const blockingQuestions = createMemo(() => questions().filter((q) => q.blocking !== false)) // kilocode_change
   const nonBlockingQuestions = createMemo(() => questions().filter((q) => q.blocking === false)) // kilocode_change
   const question = createMemo(() => blockingQuestions()[0] ?? nonBlockingQuestions()[0]) // kilocode_change
-  const blockingSuggestions = createMemo(() => suggestions().filter((s) => s.blocking !== false))
-  const nonBlockingSuggestions = createMemo(() => suggestions().filter((s) => s.blocking === false))
-  const suggestion = createMemo(() => blockingSuggestions()[0] ?? nonBlockingSuggestions()[0])
+  const blockingSuggestions = createMemo(() => suggestions().filter((s) => s.blocking !== false)) // kilocode_change
+  const nonBlockingSuggestions = createMemo(() => suggestions().filter((s) => s.blocking === false)) // kilocode_change
+  const suggestion = createMemo(() => blockingSuggestions()[0] ?? nonBlockingSuggestions()[0]) // kilocode_change
 
   const pending = createMemo(() => {
     return messages().findLast((x) => x.role === "assistant" && !x.time.completed)?.id
@@ -1231,6 +1231,7 @@ export function Session() {
                 )}
               </Show>
               <Show when={permissions().length === 0 && !question()}>
+                {/* kilocode_change start */}
                 <Show when={suggestion()} keyed>
                   {(request) => (
                     <SuggestPrompt
@@ -1240,13 +1241,14 @@ export function Session() {
                     />
                   )}
                 </Show>
+                {/* kilocode_change end */}
               </Show>
               <Prompt
                 visible={
                   !session()?.parentID &&
                   permissions().length === 0 &&
                   blockingQuestions().length === 0 &&
-                  blockingSuggestions().length === 0
+                  blockingSuggestions().length === 0 // kilocode_change
                 }
                 ref={(r) => {
                   prompt = r
@@ -1257,7 +1259,7 @@ export function Session() {
                   }
                 }}
                 disabled={
-                  permissions().length > 0 || blockingQuestions().length > 0 || blockingSuggestions().length > 0
+                  permissions().length > 0 || blockingQuestions().length > 0 || blockingSuggestions().length > 0 // kilocode_change
                 }
                 onSubmit={() => {
                   toBottom()
@@ -1654,7 +1656,7 @@ function ToolPart(props: { last: boolean; part: ToolPart; message: AssistantMess
           <Question {...toolprops} />
         </Match>
         <Match when={props.part.tool === "suggest"}>
-          <Suggest {...toolprops} />
+          <Suggest {...toolprops} InlineTool={InlineTool} BlockTool={BlockTool} />
         </Match>
         <Match when={props.part.tool === "skill"}>
           <Skill {...toolprops} />
@@ -2303,40 +2305,6 @@ function Question(props: ToolProps<typeof QuestionTool>) {
       <Match when={true}>
         <InlineTool icon="→" pending="Asking questions..." complete={count()} part={props.part}>
           Asked {count()} question{count() !== 1 ? "s" : ""}
-        </InlineTool>
-      </Match>
-    </Switch>
-  )
-}
-
-function Suggest(props: ToolProps<typeof SuggestTool>) {
-  const { theme } = useTheme()
-  const accepted = createMemo(() => props.metadata.accepted)
-  const dismissed = createMemo(() => props.metadata.dismissed === true)
-
-  return (
-    <Switch>
-      <Match when={accepted() || dismissed()}>
-        <BlockTool title="# Suggestion" part={props.part}>
-          <box gap={1}>
-            <text fg={theme.textMuted}>{props.input.suggest}</text>
-            <Show when={accepted()}>
-              <text fg={theme.text}>Accepted: {accepted()?.label}</text>
-            </Show>
-            <Show when={dismissed()}>
-              <text fg={theme.text}>Dismissed</text>
-            </Show>
-          </box>
-        </BlockTool>
-      </Match>
-      <Match when={true}>
-        <InlineTool
-          icon="→"
-          pending="Suggesting next step..."
-          complete={props.part.state.status === "completed"}
-          part={props.part}
-        >
-          {props.input.suggest ?? "Suggested next step"}
         </InlineTool>
       </Match>
     </Switch>
