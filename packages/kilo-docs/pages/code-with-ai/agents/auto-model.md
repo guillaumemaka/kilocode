@@ -45,23 +45,23 @@ That's it. No configuration needed.
 
 ## Auto Balanced
 
-`kilo-auto/balanced` follows the same mode-based routing structure as Frontier but uses a more cost-effective model — Qwen 3.6 Plus across all modes.
+`kilo-auto/balanced` follows the same mode-based routing structure as Frontier but uses a more cost-effective model — GPT 5.3 Codex across all modes.
 
 ### Mode-to-Model Mapping
 
 | Mode           | Model Used    | Best For                     |
 | -------------- | ------------- | ---------------------------- |
-| `architect`    | Qwen 3.6 Plus | System design, planning      |
-| `orchestrator` | Qwen 3.6 Plus | Multi-step task coordination |
-| `ask`          | Qwen 3.6 Plus | Questions, explanations      |
-| `plan`         | Qwen 3.6 Plus | Planning, reasoning          |
-| `general`      | Qwen 3.6 Plus | General assistance           |
-| `debug`        | Qwen 3.6 Plus | Debugging and fixing issues  |
-| `code`         | Qwen 3.6 Plus | Writing and editing code     |
-| `build`        | Qwen 3.6 Plus | Implementation tasks         |
-| `explore`      | Qwen 3.6 Plus | Codebase exploration         |
+| `architect`    | GPT 5.3 Codex | System design, planning      |
+| `orchestrator` | GPT 5.3 Codex | Multi-step task coordination |
+| `ask`          | GPT 5.3 Codex | Questions, explanations      |
+| `plan`         | GPT 5.3 Codex | Planning, reasoning          |
+| `general`      | GPT 5.3 Codex | General assistance           |
+| `debug`        | GPT 5.3 Codex | Debugging and fixing issues  |
+| `code`         | GPT 5.3 Codex | Writing and editing code     |
+| `build`        | GPT 5.3 Codex | Implementation tasks         |
+| `explore`      | GPT 5.3 Codex | Codebase exploration         |
 
-**All tasks** use Qwen 3.6 Plus, a strong multimodal reasoning model with 1M context window, fast code generation, and vision capabilities — at a fraction of frontier model costs.
+**All tasks** use GPT 5.3 Codex, providing strong coding and reasoning performance across all modes at a lower cost than frontier routing.
 
 ## Benefits
 

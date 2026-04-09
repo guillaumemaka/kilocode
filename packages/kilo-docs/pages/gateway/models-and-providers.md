@@ -82,11 +82,11 @@ Routes to the most capable paid models optimizing for cost, performance, and cap
 
 Follows the same mode-based routing as Frontier but uses a more cost-effective model.
 
-| Mode                                                           | Resolved Model      |
-| -------------------------------------------------------------- | ------------------- |
-| `plan`, `general`, `architect`, `orchestrator`, `ask`, `debug` | `qwen/qwen3.6-plus` |
-| `build`, `explore`, `code`                                     | `qwen/qwen3.6-plus` |
-| Default (no mode specified)                                    | `qwen/qwen3.6-plus` |
+| Mode                                                           | Resolved Model         |
+| -------------------------------------------------------------- | ---------------------- |
+| `plan`, `general`, `architect`, `orchestrator`, `ask`, `debug` | `openai/gpt-5.3-codex` |
+| `build`, `explore`, `code`                                     | `openai/gpt-5.3-codex` |
+| Default (no mode specified)                                    | `openai/gpt-5.3-codex` |
 
 ### `kilo-auto/free`
 

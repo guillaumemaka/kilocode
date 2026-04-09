@@ -52,7 +52,7 @@ For the current mode-to-model mappings, see the [Auto Model user docs](/docs/cod
 
 **Who it's for**: Cost-conscious developers who want better results than free models at a fraction of frontier cost.
 
-**What it does**: Follows the same mode-based routing structure as Frontier but uses Qwen 3.6 Plus — a cost-effective multimodal model with strong reasoning and coding capabilities — across all modes.
+**What it does**: Follows the same mode-based routing structure as Frontier but uses GPT 5.3 Codex — a cost-effective model with strong reasoning and coding capabilities — across all modes.
 
 **Pricing**: Paid, but significantly cheaper than Frontier.
 
