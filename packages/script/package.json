@@ -12,7 +12,7 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "version": "7.2.1",
+  "version": "7.2.4",
   "scripts": {
     "test": "bun test"
   },
