@@ -9,7 +9,6 @@ import { TsClient } from "../../src/kilocode/ts-client"
 import { TsCheck } from "../../src/kilocode/ts-check"
 import { Flag } from "../../src/flag/flag"
 import { Instance } from "../../src/project/instance"
-import { tmpdir } from "../fixture/fixture"
 
 afterEach(async () => {
   await Instance.disposeAll()
