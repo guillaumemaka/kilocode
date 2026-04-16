@@ -1,6 +1,6 @@
 package ai.kilocode.client.session.model
 
-class ViewSwitchingTest : SessionModelTestBase() {
+class ViewSwitchingTest : SessionManagerTestBase() {
 
     fun `test first prompt shows messages view`() {
         val m = model()

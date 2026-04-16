@@ -2,7 +2,7 @@ package ai.kilocode.client.session.model
 
 import ai.kilocode.rpc.dto.ChatEventDto
 
-class MessageListTest : SessionModelTestBase() {
+class MessageListTest : SessionManagerTestBase() {
 
     fun `test MessageUpdated adds message to ChatModel`() {
         val (m, events) = prompted()

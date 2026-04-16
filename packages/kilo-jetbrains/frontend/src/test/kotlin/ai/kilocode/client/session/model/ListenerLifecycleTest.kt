@@ -3,7 +3,7 @@ package ai.kilocode.client.session.model
 import ai.kilocode.rpc.dto.SessionStatusDto
 import com.intellij.openapi.util.Disposer
 
-class ListenerLifecycleTest : SessionModelTestBase() {
+class ListenerLifecycleTest : SessionManagerTestBase() {
 
     fun `test listener removed on parent dispose`() {
         val m = model()

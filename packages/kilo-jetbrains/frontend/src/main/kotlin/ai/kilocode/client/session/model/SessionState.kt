@@ -12,19 +12,19 @@ import ai.kilocode.rpc.dto.PartDto
  * Pure data holder for the active session's messages, parts, and
  * workspace state (agents, models, selection).
  *
- * **EDT-only access** — no synchronization. [SessionModel] guarantees
+ * **EDT-only access** — no synchronization. [SessionManager] guarantees
  * all reads and writes happen on the EDT.
  */
 class SessionState {
 
     private val messages = LinkedHashMap<String, MessageData>()
 
-    // --- App lifecycle state (set by SessionModel, read by EmptyChatUi) ---
+    // --- App lifecycle state (set by SessionManager, read by EmptyChatUi) ---
 
     var app: KiloAppStateDto = KiloAppStateDto(KiloAppStatusDto.DISCONNECTED)
     var version: String? = null
 
-    // --- Workspace state (set by SessionModel, read by UI) ---
+    // --- Workspace state (set by SessionManager, read by UI) ---
 
     var workspace: KiloWorkspaceStateDto = KiloWorkspaceStateDto(KiloWorkspaceStatusDto.PENDING)
     var agents: List<AgentItem> = emptyList()
@@ -45,7 +45,7 @@ class SessionState {
 
     fun isEmpty(): Boolean = messages.isEmpty()
 
-    // --- Write (called by SessionModel on EDT) ---
+    // --- Write (called by SessionManager on EDT) ---
 
     /**
      * Add a message. Returns false if the message already exists.

@@ -3,7 +3,7 @@ package ai.kilocode.client.session.model
 import ai.kilocode.client.plugin.KiloBundle
 import ai.kilocode.rpc.dto.ChatEventDto
 
-class StatusComputationTest : SessionModelTestBase() {
+class StatusComputationTest : SessionManagerTestBase() {
 
     fun `test status shows tool-specific text`() {
         val (_, events) = prompted()

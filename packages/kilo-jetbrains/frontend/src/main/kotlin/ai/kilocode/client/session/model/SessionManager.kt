@@ -25,11 +25,11 @@ import kotlinx.coroutines.launch
  * ensures event subscription happens *before* the prompt is sent,
  * eliminating race conditions.
  *
- * Owns [SessionState] and the listener list. All model mutations and
+ * Owns [SessionState] and the listener list. All state mutations and
  * listener notifications happen on the EDT — [fire] auto-dispatches
  * via `invokeLater` when called from a background thread.
  */
-class SessionModel(
+class SessionManager(
     parent: Disposable,
     id: String?,
     private val sessions: KiloSessionService,
@@ -39,7 +39,7 @@ class SessionModel(
 ) : Disposable {
 
     companion object {
-        private val LOG = Logger.getInstance(SessionModel::class.java)
+        private val LOG = Logger.getInstance(SessionManager::class.java)
     }
 
     init {
@@ -48,7 +48,7 @@ class SessionModel(
 
     val chat = SessionState()
 
-    private val listeners = mutableListOf<SessionModelListener>()
+    private val listeners = mutableListOf<SessionManagerListener>()
 
     /** The session ID owned by this model. Null until created or passed in. */
     private var sessionId: String? = id
@@ -70,7 +70,7 @@ class SessionModel(
      * Register a listener whose lifetime is tied to [parent].
      * When [parent] is disposed the listener is auto-removed.
      */
-    fun addListener(parent: Disposable, listener: SessionModelListener) {
+    fun addListener(parent: Disposable, listener: SessionManagerListener) {
         listeners.add(listener)
         Disposer.register(parent) { listeners.remove(listener) }
     }

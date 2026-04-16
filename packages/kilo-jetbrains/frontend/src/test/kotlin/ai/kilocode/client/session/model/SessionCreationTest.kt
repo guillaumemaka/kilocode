@@ -1,6 +1,6 @@
 package ai.kilocode.client.session.model
 
-class SessionCreationTest : SessionModelTestBase() {
+class SessionCreationTest : SessionManagerTestBase() {
 
     fun `test prompt creates session on first call`() {
         val m = model()

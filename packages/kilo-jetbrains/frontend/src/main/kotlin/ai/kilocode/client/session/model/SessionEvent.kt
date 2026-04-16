@@ -1,7 +1,7 @@
 package ai.kilocode.client.session.model
 
 /**
- * Change events fired by [SessionModel] on the EDT.
+ * Change events fired by [SessionManager] on the EDT.
  *
  * Events carry IDs so the UI knows **which** message/part changed.
  * The UI can read full data from [SessionState] directly (safe — same
@@ -37,9 +37,9 @@ sealed class SessionEvent {
 }
 
 /**
- * Listener for [SessionEvent]s fired by [SessionModel].
+ * Listener for [SessionEvent]s fired by [SessionManager].
  * All callbacks are guaranteed to run on the EDT.
  */
-fun interface SessionModelListener {
+fun interface SessionManagerListener {
     fun onEvent(event: SessionEvent)
 }

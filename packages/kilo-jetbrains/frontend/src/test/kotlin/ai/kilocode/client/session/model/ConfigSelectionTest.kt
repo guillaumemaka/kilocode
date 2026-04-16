@@ -1,6 +1,6 @@
 package ai.kilocode.client.session.model
 
-class ConfigSelectionTest : SessionModelTestBase() {
+class ConfigSelectionTest : SessionManagerTestBase() {
 
     fun `test selectModel updates ChatModel and calls updateConfig`() {
         val m = model()

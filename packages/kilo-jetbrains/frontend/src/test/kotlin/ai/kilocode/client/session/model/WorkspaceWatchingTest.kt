@@ -1,6 +1,6 @@
 package ai.kilocode.client.session.model
 
-class WorkspaceWatchingTest : SessionModelTestBase() {
+class WorkspaceWatchingTest : SessionManagerTestBase() {
 
     fun `test workspace ready populates agents and models`() {
         val m = model()

@@ -1,8 +1,8 @@
 package ai.kilocode.client.session.ui
 
 import ai.kilocode.client.session.model.SessionEvent
-import ai.kilocode.client.session.model.SessionModel
-import ai.kilocode.client.session.model.SessionModelListener
+import ai.kilocode.client.session.model.SessionManager
+import ai.kilocode.client.session.model.SessionManagerListener
 import ai.kilocode.client.plugin.KiloBundle
 import ai.kilocode.rpc.dto.KiloAppStateDto
 import ai.kilocode.rpc.dto.KiloAppStatusDto
@@ -29,7 +29,7 @@ import javax.swing.SwingConstants
 /**
  * Welcome panel showing app + workspace initialization progress.
  *
- * Pure view — listens to [SessionModel] events and reads
+ * Pure view — listens to [SessionManager] events and reads
  * [SessionState][ai.kilocode.client.session.model.SessionState] for data.
  * No coroutines, no service references.
  *
@@ -39,8 +39,8 @@ import javax.swing.SwingConstants
  */
 class StatusPanel(
     parent: Disposable,
-    private val model: SessionModel,
-) : JPanel(GridBagLayout()), SessionModelListener, Disposable {
+    private val model: SessionManager,
+) : JPanel(GridBagLayout()), SessionManagerListener, Disposable {
 
     init {
         Disposer.register(parent, this)

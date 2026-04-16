@@ -4,7 +4,7 @@ import ai.kilocode.client.plugin.KiloBundle
 import ai.kilocode.rpc.dto.ChatEventDto
 import ai.kilocode.rpc.dto.MessageErrorDto
 
-class TurnLifecycleTest : SessionModelTestBase() {
+class TurnLifecycleTest : SessionManagerTestBase() {
 
     fun `test TurnOpen fires BusyChanged true`() {
         val (_, events) = prompted()

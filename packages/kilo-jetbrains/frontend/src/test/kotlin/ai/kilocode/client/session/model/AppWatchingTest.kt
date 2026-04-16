@@ -3,7 +3,7 @@ package ai.kilocode.client.session.model
 import ai.kilocode.rpc.dto.KiloAppStateDto
 import ai.kilocode.rpc.dto.KiloAppStatusDto
 
-class AppWatchingTest : SessionModelTestBase() {
+class AppWatchingTest : SessionManagerTestBase() {
 
     fun `test app state change fires AppChanged`() {
         val m = model()

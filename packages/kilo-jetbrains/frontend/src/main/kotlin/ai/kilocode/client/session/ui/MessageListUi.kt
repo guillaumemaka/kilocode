@@ -1,6 +1,9 @@
 package ai.kilocode.client.session.ui
 
+import ai.kilocode.client.session.model.MessageListModel
+import ai.kilocode.client.session.model.MessageModelEvent
 import ai.kilocode.rpc.dto.MessageDto
+import com.intellij.openapi.Disposable
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
@@ -17,13 +20,19 @@ import javax.swing.border.MatteBorder
  * Scrollable panel displaying chat messages aligned to the top,
  * with an optional animated status indicator at the bottom.
  *
+ * Passive view — all rendering is driven by [MessageModelEvent]s
+ * from the [MessageListModel]. No public mutation methods.
+ *
  * Inner panel uses [BoxLayout.Y_AXIS] for stacking, wrapped in a
  * [BorderLayout.NORTH] so messages stay top-aligned when the scroll
  * viewport is taller than the content.
  */
-class MessageListPanel : JPanel(BorderLayout()) {
+class MessageListUi(
+    parent: Disposable,
+    private val model: MessageListModel,
+) : JPanel(BorderLayout()) {
 
-    private val panels = LinkedHashMap<String, MessageBlock>()
+    private val blocks = LinkedHashMap<String, MessageBlock>()
 
     private val inner = JPanel().apply {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -31,88 +40,112 @@ class MessageListPanel : JPanel(BorderLayout()) {
         border = JBUI.Borders.empty(4, 8)
     }
 
-    private val statusLabel = JBLabel().apply {
+    private val label = JBLabel().apply {
         foreground = UIUtil.getContextHelpForeground()
     }
 
-    private val status = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(4), 0)).apply {
+    private val spinner = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(4), 0)).apply {
         isOpaque = false
         isVisible = false
         border = JBUI.Borders.empty(6, 0)
         alignmentX = LEFT_ALIGNMENT
         add(JBLabel(AnimatedIcon.Default()))
-        add(statusLabel)
+        add(label)
     }
 
     init {
         isOpaque = true
         background = UIUtil.getPanelBackground()
-        inner.add(status)
+        inner.add(spinner)
         add(inner, BorderLayout.NORTH)
+
+        model.addListener(parent) { event ->
+            when (event) {
+                is MessageModelEvent.MessageAdded -> onAdded(event.info)
+                is MessageModelEvent.MessageRemoved -> onRemoved(event.id)
+                is MessageModelEvent.PartText -> onPartText(event.messageId, event.partId, event.text)
+                is MessageModelEvent.PartDelta -> onPartDelta(event.messageId, event.partId, event.delta)
+                is MessageModelEvent.Error -> onError(event.message)
+                is MessageModelEvent.StatusChanged -> onStatus(event.text)
+                is MessageModelEvent.HistoryLoaded -> onHistory()
+                is MessageModelEvent.Cleared -> onCleared()
+            }
+        }
     }
 
-    fun addMessage(info: MessageDto) {
-        if (panels.containsKey(info.id)) return
+    private fun onAdded(info: MessageDto) {
+        if (blocks.containsKey(info.id)) return
         val block = MessageBlock(info)
-        panels[info.id] = block
-        // Insert before the status row (which is always last)
+        blocks[info.id] = block
         inner.add(block, inner.componentCount - 1)
-        revalidate()
-        repaint()
+        refresh()
     }
 
-    fun updatePartText(messageID: String, partID: String, text: String) {
-        panels[messageID]?.setText(partID, text)
-        revalidate()
-        repaint()
-    }
-
-    fun appendDelta(messageID: String, partID: String, delta: String) {
-        panels[messageID]?.appendDelta(partID, delta)
-        revalidate()
-        repaint()
-    }
-
-    fun removeMessage(messageID: String) {
-        val block = panels.remove(messageID) ?: return
+    private fun onRemoved(id: String) {
+        val block = blocks.remove(id) ?: return
         inner.remove(block)
-        revalidate()
-        repaint()
+        refresh()
     }
 
-    fun addError(msg: String) {
-        val label = JBLabel(msg).apply {
+    private fun onPartText(messageId: String, partId: String, text: String) {
+        blocks[messageId]?.setText(partId, text)
+        refresh()
+    }
+
+    private fun onPartDelta(messageId: String, partId: String, delta: String) {
+        blocks[messageId]?.appendDelta(partId, delta)
+        refresh()
+    }
+
+    private fun onError(msg: String) {
+        val err = JBLabel(msg).apply {
             foreground = JBColor.RED
             font = JBUI.Fonts.label()
             border = JBUI.Borders.empty(4, 0)
             alignmentX = LEFT_ALIGNMENT
         }
-        inner.add(label, inner.componentCount - 1)
-        revalidate()
-        repaint()
+        inner.add(err, inner.componentCount - 1)
+        refresh()
     }
 
-    /**
-     * Show or hide the working status indicator at the bottom of the list.
-     * Pass null to hide, a string to show with animated spinner.
-     */
-    fun setStatus(text: String?) {
+    private fun onStatus(text: String?) {
         if (text != null) {
-            statusLabel.text = text
-            status.isVisible = true
+            label.text = text
+            spinner.isVisible = true
         } else {
-            status.isVisible = false
+            spinner.isVisible = false
         }
-        revalidate()
-        repaint()
+        refresh()
     }
 
-    fun clear() {
-        panels.clear()
+    private fun onHistory() {
+        clear()
+        for (entry in model.entries()) {
+            val block = MessageBlock(entry.info)
+            blocks[entry.info.id] = block
+            inner.add(block, inner.componentCount - 1)
+            for ((partId, text) in entry.parts) {
+                if (text.isNotEmpty()) {
+                    block.setText(partId, text.toString())
+                }
+            }
+        }
+        refresh()
+    }
+
+    private fun onCleared() {
+        clear()
+        refresh()
+    }
+
+    private fun clear() {
+        blocks.clear()
         inner.removeAll()
-        // Re-add status row (always last)
-        inner.add(status)
-        status.isVisible = false
+        inner.add(spinner)
+        spinner.isVisible = false
+    }
+
+    private fun refresh() {
         revalidate()
         repaint()
     }

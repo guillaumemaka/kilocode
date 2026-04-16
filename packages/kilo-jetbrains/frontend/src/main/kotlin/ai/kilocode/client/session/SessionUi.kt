@@ -3,10 +3,11 @@ package ai.kilocode.client.session
 import ai.kilocode.client.app.KiloAppService
 import ai.kilocode.client.app.KiloSessionService
 import ai.kilocode.client.app.Workspace
+import ai.kilocode.client.session.model.MessageListModel
 import ai.kilocode.client.session.model.SessionEvent
-import ai.kilocode.client.session.model.SessionModel
+import ai.kilocode.client.session.model.SessionManager
 import ai.kilocode.client.session.ui.LabelPicker
-import ai.kilocode.client.session.ui.MessageListPanel
+import ai.kilocode.client.session.ui.MessageListUi
 import ai.kilocode.client.session.ui.PromptPanel
 import ai.kilocode.client.session.ui.StatusPanel
 import com.intellij.openapi.Disposable
@@ -19,15 +20,17 @@ import java.awt.CardLayout
 import javax.swing.JPanel
 
 /**
- * Main chat panel — reacts to [SessionModel] events.
+ * Main chat panel — reacts to [SessionManager] events.
  *
  * Uses [CardLayout] in the center to switch between the empty panel
  * (shown before the first prompt) and the scrollable message list.
  *
  * All business logic (app/workspace watching, session lifecycle, event
- * handling, status computation) lives in [SessionModel]. Welcome
- * rendering lives in [ai.kilocode.client.session.ui.StatusPanel]. This class handles layout, prompt
- * wiring, message list updates, card switching, picker population,
+ * handling, status computation) lives in [SessionManager]. Welcome
+ * rendering lives in [ai.kilocode.client.session.ui.StatusPanel].
+ * Message list rendering lives in [MessageListUi], driven by
+ * [MessageListModel] events. This class handles layout, prompt
+ * wiring, model mutations, card switching, picker population,
  * busy state, and scrolling.
  */
 class SessionUi(
@@ -43,9 +46,10 @@ class SessionUi(
         private const val MESSAGES = "messages"
     }
 
-    private val model = SessionModel(this, null, sessions, workspace, app, cs)
+    private val model = SessionManager(this, null, sessions, workspace, app, cs)
     private val status = StatusPanel(this, model)
-    private val messages = MessageListPanel()
+    private val messageList = MessageListModel()
+    private val messages = MessageListUi(this, messageList)
 
     private val cards = CardLayout()
     private val center = JPanel(cards)
@@ -82,57 +86,50 @@ class SessionUi(
             }
         }
 
-        // React to model events — no coroutines, pure EDT
+        // React to model events — no coroutines, pure EDT.
+        // Message-related events are forwarded to MessageListModel;
+        // MessageListUi listens to the model and renders autonomously.
         model.addListener(this) { event ->
             when (event) {
                 is SessionEvent.MessageAdded -> {
                     val msg = model.chat.message(event.id) ?: return@addListener
-                    messages.addMessage(msg.info)
-                    refreshMessages()
+                    messageList.addMessage(msg.info)
+                    scrollToBottom()
                 }
 
                 is SessionEvent.MessageRemoved -> {
-                    messages.removeMessage(event.id)
-                    refreshMessages()
+                    messageList.removeMessage(event.id)
+                    scrollToBottom()
                 }
 
                 is SessionEvent.PartUpdated -> {
                     val part = model.chat.part(event.messageId, event.partId) ?: return@addListener
-                    messages.updatePartText(event.messageId, event.partId, part.text.toString())
-                    refreshMessages()
+                    messageList.setPartText(event.messageId, event.partId, part.text.toString())
+                    scrollToBottom()
                 }
 
                 is SessionEvent.PartDelta -> {
-                    messages.appendDelta(event.messageId, event.partId, event.delta)
-                    refreshMessages()
+                    messageList.appendDelta(event.messageId, event.partId, event.delta)
+                    scrollToBottom()
                 }
 
                 is SessionEvent.StatusChanged -> {
-                    messages.setStatus(event.text)
-                    refreshMessages()
+                    messageList.setStatus(event.text)
+                    scrollToBottom()
                 }
 
                 is SessionEvent.Error -> {
-                    messages.addError(event.message)
-                    refreshMessages()
+                    messageList.addError(event.message)
+                    scrollToBottom()
                 }
 
                 is SessionEvent.HistoryLoaded -> {
-                    messages.clear()
-                    for (msg in model.chat.messages()) {
-                        messages.addMessage(msg.info)
-                        for ((partId, part) in msg.parts) {
-                            if (part.dto.type == "text" && part.text.isNotEmpty()) {
-                                messages.updatePartText(msg.info.id, partId, part.text.toString())
-                            }
-                        }
-                    }
-                    refreshMessages()
+                    messageList.loadHistory(model.chat.messages())
+                    scrollToBottom()
                 }
 
                 is SessionEvent.Cleared -> {
-                    messages.clear()
-                    refreshMessages()
+                    messageList.clear()
                 }
 
                 is SessionEvent.WorkspaceReady -> {
@@ -171,12 +168,6 @@ class SessionUi(
         if (text.isBlank()) return
         model.prompt(text)
         prompt.clear()
-    }
-
-    private fun refreshMessages() {
-        messages.revalidate()
-        messages.repaint()
-        scrollToBottom()
     }
 
     private fun scrollToBottom() {

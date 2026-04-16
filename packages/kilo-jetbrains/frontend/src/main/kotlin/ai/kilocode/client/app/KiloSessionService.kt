@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
  * Project-level frontend service for session management.
  *
  * Stateless with respect to "active session" — callers pass explicit
- * session IDs. [ai.kilocode.client.session.model.SessionModel] owns the
+ * session IDs. [ai.kilocode.client.session.model.SessionManager] owns the
  * active session concept.
  */
 @Service(Service.Level.PROJECT)

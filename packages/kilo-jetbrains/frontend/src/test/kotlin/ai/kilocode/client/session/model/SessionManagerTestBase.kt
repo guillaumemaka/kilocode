@@ -30,12 +30,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
 /**
- * Base class for [SessionModel] tests.
+ * Base class for [SessionManager] tests.
  *
  * Provides real IntelliJ Application/EDT/Disposer via [BasePlatformTestCase],
  * real frontend services wired to fake RPC backends, and shared helpers.
  */
-abstract class SessionModelTestBase : BasePlatformTestCase() {
+abstract class SessionManagerTestBase : BasePlatformTestCase() {
 
     protected lateinit var rpc: FakeSessionRpcApi
     protected lateinit var appRpc: FakeAppRpcApi
@@ -76,12 +76,12 @@ abstract class SessionModelTestBase : BasePlatformTestCase() {
     // ------ Model creation ------
 
     protected fun model(id: String? = null) =
-        SessionModel(parent, id, sessions, workspace, app, scope)
+        SessionManager(parent, id, sessions, workspace, app, scope)
 
     // ------ Event collection ------
 
     /** Attach a listener that collects events and asserts EDT. */
-    protected fun collect(m: SessionModel): MutableList<SessionEvent> {
+    protected fun collect(m: SessionManager): MutableList<SessionEvent> {
         val events = mutableListOf<SessionEvent>()
         val disposable = Disposer.newDisposable("listener")
         Disposer.register(parent, disposable)
@@ -112,7 +112,7 @@ abstract class SessionModelTestBase : BasePlatformTestCase() {
     }
 
     /** Create a model, attach listener, send initial prompt, and flush. */
-    protected fun prompted(): Pair<SessionModel, MutableList<SessionEvent>> {
+    protected fun prompted(): Pair<SessionManager, MutableList<SessionEvent>> {
         val m = model()
         val events = collect(m)
         edt { m.prompt("go") }

@@ -2,7 +2,7 @@ package ai.kilocode.client.session.model
 
 import ai.kilocode.rpc.dto.MessageWithPartsDto
 
-class HistoryLoadingTest : SessionModelTestBase() {
+class HistoryLoadingTest : SessionManagerTestBase() {
 
     fun `test existing session loads history on init`() {
         val m = msg("msg1", "ses_test", "user")
