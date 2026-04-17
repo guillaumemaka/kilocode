@@ -476,18 +476,6 @@ export const { use: useSync, provider: SyncProvider } = createSimpleContext({
           })
           break
         }
-
-        case "session.warning": {
-          // Surface diff skips + summary timeouts as a short toast so users
-          // understand that a silent patch-skip happened (e.g. huge file in
-          // a snapshot) without cluttering the session view itself.
-          toast.show({
-            variant: "warning",
-            message: event.properties.message,
-            duration: 5000,
-          })
-          break
-        }
         // kilocode_change end
       }
     })

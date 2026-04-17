@@ -26,7 +26,6 @@ import { ProjectID } from "../project/schema"
 import { WorkspaceID } from "../control-plane/schema"
 import { SessionID, MessageID, PartID } from "./schema"
 import { KiloSession, kiloSessionFork } from "@/kilocode/session" // kilocode_change
-import { SessionWarningEvent } from "@/kilocode/session/warning" // kilocode_change
 
 import type { Provider } from "@/provider/provider"
 import { Permission } from "@/permission"
@@ -246,7 +245,6 @@ export namespace Session {
     // kilocode_change start
     TurnOpen: KiloSession.Event.TurnOpen,
     TurnClose: KiloSession.Event.TurnClose,
-    Warning: SessionWarningEvent,
     // kilocode_change end
   }
 

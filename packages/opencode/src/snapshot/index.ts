@@ -11,10 +11,7 @@ import { Config } from "../config/config"
 import { Global } from "../global"
 import { Log } from "../util/log"
 import * as KiloSnapshot from "../kilocode/snapshot" // kilocode_change
-// kilocode_change start
-import { DiffFull } from "../kilocode/snapshot/diff-full"
-import { Bus } from "../bus"
-// kilocode_change end
+import { DiffFull } from "../kilocode/snapshot/diff-full" // kilocode_change
 
 export namespace Snapshot {
   export const Patch = z.object({
@@ -71,14 +68,13 @@ export namespace Snapshot {
   export const layer: Layer.Layer<
     Service,
     never,
-    AppFileSystem.Service | ChildProcessSpawner.ChildProcessSpawner | Config.Service | Bus.Service // kilocode_change
+    AppFileSystem.Service | ChildProcessSpawner.ChildProcessSpawner | Config.Service
   > = Layer.effect(
     Service,
     Effect.gen(function* () {
       const fs = yield* AppFileSystem.Service
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
       const config = yield* Config.Service
-      const bus = yield* Bus.Service // kilocode_change
       const locks = new Map<string, Semaphore.Semaphore>()
 
       const lock = (key: string) => {
@@ -634,8 +630,8 @@ export namespace Snapshot {
                     ]
                   })
                 const step = 100
-                // kilocode_change start - delegate to kilo helper (caps + worker + warnings)
-                result.push(...(yield* DiffFull.run({ rows, step, from, to, bus, load, show })))
+                // kilocode_change start - delegate to kilo helper (caps + worker)
+                result.push(...(yield* DiffFull.run({ rows, step, from, to, load, show })))
                 // kilocode_change end
                 return result
               }),
@@ -689,7 +685,6 @@ export namespace Snapshot {
     Layer.provide(CrossSpawnSpawner.defaultLayer),
     Layer.provide(AppFileSystem.defaultLayer),
     Layer.provide(Config.defaultLayer),
-    Layer.provide(Bus.layer), // kilocode_change
   )
 
   const { runPromise } = makeRuntime(Service, defaultLayer)

@@ -90,18 +90,6 @@ export type EventLspUpdated = {
   }
 }
 
-export type EventSessionWarning = {
-  type: "session.warning"
-  properties: {
-    sessionID?: string
-    kind: "diff_skipped" | "summary_truncated" | "summary_failed"
-    message: string
-    details?: {
-      [key: string]: unknown
-    }
-  }
-}
-
 export type EventTuiPromptAppend = {
   type: "tui.prompt.append"
   properties: {
@@ -1132,7 +1120,6 @@ export type Event =
   | EventGlobalConfigUpdated
   | EventLspClientDiagnostics
   | EventLspUpdated
-  | EventSessionWarning
   | EventTuiPromptAppend
   | EventTuiCommandExecute
   | EventTuiToastShow

@@ -10587,40 +10587,6 @@
         },
         "required": ["type", "properties"]
       },
-      "Event.session.warning": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "session.warning"
-          },
-          "properties": {
-            "type": "object",
-            "properties": {
-              "sessionID": {
-                "type": "string",
-                "pattern": "^ses.*"
-              },
-              "kind": {
-                "type": "string",
-                "enum": ["diff_skipped", "summary_truncated", "summary_failed"]
-              },
-              "message": {
-                "type": "string"
-              },
-              "details": {
-                "type": "object",
-                "propertyNames": {
-                  "type": "string"
-                },
-                "additionalProperties": {}
-              }
-            },
-            "required": ["kind", "message"]
-          }
-        },
-        "required": ["type", "properties"]
-      },
       "Event.tui.prompt.append": {
         "type": "object",
         "properties": {
@@ -13497,9 +13463,6 @@
           },
           {
             "$ref": "#/components/schemas/Event.lsp.updated"
-          },
-          {
-            "$ref": "#/components/schemas/Event.session.warning"
           },
           {
             "$ref": "#/components/schemas/Event.tui.prompt.append"

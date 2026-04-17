@@ -7,7 +7,6 @@
 //   - Runs the npm `diff` package inside a worker (with caps and a timeout)
 //     via `DiffEngine.patchAsync`, so a file with tens of thousands of lines
 //     cannot block the event loop.
-//   - Tracks `skipped` files and publishes a single warning after the loop.
 //   - Yields to the Effect scheduler between files so abort + heartbeat
 //     endpoints stay responsive during a large diff.
 //
@@ -15,9 +14,7 @@
 // the two closed-over readers (`load`, `show`) from the snapshot layer.
 
 import { Effect } from "effect"
-import type { Bus } from "@/bus"
 import { Log } from "@/util/log"
-import { SessionWarningEvent } from "../session/warning"
 import { DiffEngine } from "./diff-engine"
 
 export namespace DiffFull {
@@ -44,14 +41,12 @@ export namespace DiffFull {
     step: number
     from: string
     to: string
-    bus: Bus.Interface
     load: (run: Row[]) => Effect.Effect<Map<string, { before: string; after: string }> | undefined, E1, R1>
     show: (row: Row) => Effect.Effect<string[], E2, R2>
   }) {
     return Effect.gen(function* () {
       const timer = log.time("diffFull", { from: params.from, to: params.to, rows: params.rows.length })
       const out: Result[] = []
-      const skipped: { file: string; reason: DiffEngine.SkipReason }[] = []
 
       for (let i = 0; i < params.rows.length; i += params.step) {
         const batch = params.rows.slice(i, i + params.step)
@@ -66,7 +61,6 @@ export namespace DiffFull {
             ? { patch: "" as string, skipped: undefined as DiffEngine.SkipReason | undefined }
             : yield* Effect.promise(() => DiffEngine.patchAsync(row.file, before, after))
           if (res.skipped) {
-            skipped.push({ file: row.file, reason: res.skipped })
             log.warn("diffFull.skipped", {
               file: row.file,
               reason: res.skipped,
@@ -85,20 +79,6 @@ export namespace DiffFull {
           // can service the abort endpoint and SSE heartbeat.
           yield* Effect.yieldNow
         }
-      }
-
-      if (skipped.length > 0) {
-        yield* params.bus
-          .publish(SessionWarningEvent, {
-            sessionID: undefined,
-            kind: "diff_skipped",
-            message:
-              skipped.length === 1
-                ? `Skipped diff for ${skipped[0]!.file} (${skipped[0]!.reason})`
-                : `Skipped diffs for ${skipped.length} files`,
-            details: { files: skipped },
-          })
-          .pipe(Effect.ignore)
       }
 
       timer.stop()

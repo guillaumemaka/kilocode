@@ -19,8 +19,6 @@
 // reference to `svc.summarize` via the `summarize` callback.
 
 import { Cause, Effect } from "effect"
-import { Bus } from "@/bus"
-import { Session } from "@/session"
 import { MessageID, SessionID } from "@/session/schema"
 import { Log } from "@/util/log"
 
@@ -77,20 +75,11 @@ export namespace SummaryDispatch {
             Effect.onInterrupt(() =>
               Effect.sync(() => {
                 const elapsed = Date.now() - started
-                // Skip the user-facing warning when a newer summarize call
-                // replaced this one — that is a normal pipeline event, not
-                // a timeout or user cancel.
                 if (ac.reason === "superseded") {
                   log.info("summary superseded", { sessionID: input.sessionID, elapsed })
                   return
                 }
                 log.warn("summary interrupted", { sessionID: input.sessionID, elapsed })
-                Bus.publish(Session.Event.Warning, {
-                  sessionID: input.sessionID,
-                  kind: "summary_truncated",
-                  message: `Session summary interrupted after ${elapsed}ms`,
-                  details: { elapsed, timeout: SUMMARY_TIMEOUT_MS },
-                }).catch(() => {})
               }),
             ),
             Effect.ensuring(
@@ -102,15 +91,8 @@ export namespace SummaryDispatch {
             ),
             Effect.catchCause((cause) =>
               Effect.sync(() => {
-                // onInterrupt already emitted a warning for the interrupt
-                // path. Only emit "summary_failed" for real failures.
                 if (Cause.hasInterrupts(cause)) return
                 log.warn("summary failed", { sessionID: input.sessionID, cause: String(cause) })
-                Bus.publish(Session.Event.Warning, {
-                  sessionID: input.sessionID,
-                  kind: "summary_failed",
-                  message: "Session summary failed",
-                }).catch(() => {})
               }),
             ),
           ),
