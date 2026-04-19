@@ -37,6 +37,7 @@ class MessageListUi(
 ) : JPanel(BorderLayout()) {
 
     private val blocks = LinkedHashMap<String, MessageBlock>()
+    private var errorLabel: JBLabel? = null
 
     private val inner = JPanel().apply {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -75,6 +76,9 @@ class MessageListUi(
                 is SessionModelEvent.StateChanged -> onState(event.state)
                 is SessionModelEvent.HistoryLoaded -> onHistory()
                 is SessionModelEvent.Cleared -> onCleared()
+                is SessionModelEvent.DiffUpdated,
+                is SessionModelEvent.TodosUpdated,
+                is SessionModelEvent.Compacted -> Unit
             }
         }
     }
@@ -114,6 +118,7 @@ class MessageListUi(
     }
 
     private fun onState(state: SessionState) {
+        errorLabel?.let { inner.remove(it); errorLabel = null }
         when (state) {
             is SessionState.Busy -> {
                 label.text = state.text
@@ -127,6 +132,7 @@ class MessageListUi(
                     border = JBUI.Borders.empty(4, 0)
                     alignmentX = LEFT_ALIGNMENT
                 }
+                errorLabel = err
                 inner.add(err, inner.componentCount - 1)
             }
             else -> {
@@ -154,6 +160,7 @@ class MessageListUi(
 
     private fun clear() {
         blocks.clear()
+        errorLabel = null
         inner.removeAll()
         inner.add(spinner)
         spinner.isVisible = false

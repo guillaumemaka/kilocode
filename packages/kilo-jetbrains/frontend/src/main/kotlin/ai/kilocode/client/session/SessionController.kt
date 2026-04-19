@@ -25,6 +25,7 @@ import ai.kilocode.rpc.dto.PermissionReplyDto
 import ai.kilocode.rpc.dto.PermissionRequestDto
 import ai.kilocode.rpc.dto.QuestionReplyDto
 import ai.kilocode.rpc.dto.QuestionRequestDto
+import ai.kilocode.rpc.dto.SessionStatusDto
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
@@ -248,21 +249,47 @@ class SessionController(
         }
     }
 
-    /** Rehydrate pending permissions/questions after history load or reconnect. */
+    /** Rehydrate pending permissions/questions and current session status after history load. */
     private suspend fun recoverPending(id: String) {
         try {
             val permissions = sessions.pendingPermissions(directory).filter { it.sessionID == id }
             val questions = sessions.pendingQuestions(directory).filter { it.sessionID == id }
+            val status = sessions.statuses.value[id]
             edt {
                 if (permissions.isNotEmpty()) {
                     model.setState(SessionState.AwaitingPermission(toPermission(permissions.last())))
                 } else if (questions.isNotEmpty()) {
                     model.setState(SessionState.AwaitingQuestion(toQuestion(questions.last())))
+                } else if (status != null) {
+                    seedStatus(status)
                 }
             }
         } catch (e: Exception) {
             LOG.warn("recoverPending failed", e)
         }
+    }
+
+    /**
+     * Seed initial session state from a snapshot status value.
+     *
+     * Used only during recovery — does not apply the live-event clobbering guard
+     * for "busy" because no more-specific state has arrived yet.
+     */
+    private fun seedStatus(dto: SessionStatusDto) {
+        val state = when (dto.type) {
+            "busy" -> SessionState.Busy(KiloBundle.message("session.status.considering"))
+            "retry" -> SessionState.Retry(
+                message = dto.message ?: "",
+                attempt = dto.attempt ?: 0,
+                next = dto.next ?: 0L,
+            )
+            "offline" -> SessionState.Offline(
+                message = dto.message ?: "",
+                requestId = dto.requestID ?: "",
+            )
+            else -> return  // idle or unknown — leave as Idle
+        }
+        model.setState(state)
     }
 
     private fun handle(event: ChatEventDto) {
@@ -386,10 +413,9 @@ class SessionController(
                 }
             }
 
-            // These events don't change visible session state — ignore for now.
-            is ChatEventDto.SessionCompacted -> Unit
-            is ChatEventDto.SessionDiffChanged -> Unit
-            is ChatEventDto.TodoUpdated -> Unit
+            is ChatEventDto.SessionCompacted -> model.markCompacted()
+            is ChatEventDto.SessionDiffChanged -> model.setDiff(event.diff)
+            is ChatEventDto.TodoUpdated -> model.setTodos(event.todos)
         }
     }
 

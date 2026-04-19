@@ -109,7 +109,7 @@ class KiloSessionRpcApiImpl : KiloSessionRpcApi {
                 is ChatEventDto.SessionDiffChanged -> event.sessionID
                 is ChatEventDto.TodoUpdated -> event.sessionID
             }
-            sid == id
+            sid == null || sid == id
         }
 
     override suspend fun updateConfig(directory: String, config: ConfigUpdateDto) =

@@ -1,5 +1,8 @@
 package ai.kilocode.client.session.model
 
+import ai.kilocode.rpc.dto.DiffFileDto
+import ai.kilocode.rpc.dto.TodoDto
+
 /**
  * Change events fired by [SessionModel].
  *
@@ -30,6 +33,15 @@ sealed class SessionModelEvent {
     }
     data class StateChanged(val state: SessionState) : SessionModelEvent() {
         override fun toString() = "StateChanged ${state::class.simpleName}"
+    }
+    data class DiffUpdated(val diff: List<DiffFileDto>) : SessionModelEvent() {
+        override fun toString() = "DiffUpdated files=${diff.size}"
+    }
+    data class TodosUpdated(val todos: List<TodoDto>) : SessionModelEvent() {
+        override fun toString() = "TodosUpdated count=${todos.size}"
+    }
+    data class Compacted(val count: Int) : SessionModelEvent() {
+        override fun toString() = "Compacted count=$count"
     }
     data object HistoryLoaded : SessionModelEvent()
     data object Cleared : SessionModelEvent()

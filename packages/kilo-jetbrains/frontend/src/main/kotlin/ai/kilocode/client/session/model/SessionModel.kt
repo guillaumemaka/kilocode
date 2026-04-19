@@ -1,5 +1,6 @@
 package ai.kilocode.client.session.model
 
+import ai.kilocode.rpc.dto.DiffFileDto
 import ai.kilocode.rpc.dto.KiloAppStateDto
 import ai.kilocode.rpc.dto.KiloAppStatusDto
 import ai.kilocode.rpc.dto.KiloWorkspaceStateDto
@@ -7,6 +8,7 @@ import ai.kilocode.rpc.dto.KiloWorkspaceStatusDto
 import ai.kilocode.rpc.dto.MessageDto
 import ai.kilocode.rpc.dto.MessageWithPartsDto
 import ai.kilocode.rpc.dto.PartDto
+import ai.kilocode.rpc.dto.TodoDto
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 
@@ -31,6 +33,15 @@ class SessionModel {
     var showMessages: Boolean = false
 
     var state: SessionState = SessionState.Idle
+        private set
+
+    var diff: List<DiffFileDto> = emptyList()
+        private set
+
+    var todos: List<TodoDto> = emptyList()
+        private set
+
+    var compactionCount: Int = 0
         private set
 
     private val listeners = mutableListOf<SessionModelEvent.Listener>()
@@ -124,9 +135,27 @@ class SessionModel {
         fire(SessionModelEvent.StateChanged(state))
     }
 
+    fun setDiff(diff: List<DiffFileDto>) {
+        this.diff = diff
+        fire(SessionModelEvent.DiffUpdated(diff))
+    }
+
+    fun setTodos(todos: List<TodoDto>) {
+        this.todos = todos
+        fire(SessionModelEvent.TodosUpdated(todos))
+    }
+
+    fun markCompacted() {
+        compactionCount++
+        fire(SessionModelEvent.Compacted(compactionCount))
+    }
+
     fun loadHistory(history: List<MessageWithPartsDto>) {
         entries.clear()
         state = SessionState.Idle
+        diff = emptyList()
+        todos = emptyList()
+        compactionCount = 0
         for (msg in history) {
             val item = Message(msg.info)
             for (part in msg.parts) {
@@ -141,6 +170,9 @@ class SessionModel {
     fun clear() {
         entries.clear()
         state = SessionState.Idle
+        diff = emptyList()
+        todos = emptyList()
+        compactionCount = 0
         fire(SessionModelEvent.Cleared)
     }
 
@@ -206,6 +238,19 @@ class SessionModel {
                 out.addAll(renderPermission(state.permission))
             }
             else -> {}
+        }
+
+        if (diff.isNotEmpty()) {
+            if (out.isNotEmpty()) out.add("---")
+            out.add("diff: ${diff.joinToString(" ") { it.file }}")
+        }
+        if (todos.isNotEmpty()) {
+            if (out.isNotEmpty()) out.add("---")
+            todos.forEach { out.add("todo: [${it.status}] ${it.content}") }
+        }
+        if (compactionCount > 0) {
+            if (out.isNotEmpty()) out.add("---")
+            out.add("compacted: $compactionCount")
         }
 
         return out.joinToString("\n")

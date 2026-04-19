@@ -1,5 +1,6 @@
 package ai.kilocode.client.session.model
 
+import ai.kilocode.rpc.dto.DiffFileDto
 import ai.kilocode.rpc.dto.KiloAppStateDto
 import ai.kilocode.rpc.dto.KiloAppStatusDto
 import ai.kilocode.rpc.dto.KiloWorkspaceStateDto
@@ -8,6 +9,7 @@ import ai.kilocode.rpc.dto.MessageDto
 import ai.kilocode.rpc.dto.MessageTimeDto
 import ai.kilocode.rpc.dto.MessageWithPartsDto
 import ai.kilocode.rpc.dto.PartDto
+import ai.kilocode.rpc.dto.TodoDto
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.UsefulTestCase
@@ -405,6 +407,89 @@ class SessionModelTest : UsefulTestCase() {
         events.clear()
         model.removeContent("m1", "missing_part")
         assertTrue(events.isEmpty())
+    }
+
+    fun `test setDiff stores diff and fires DiffUpdated`() {
+        model.setDiff(listOf(
+            DiffFileDto("src/A.kt", additions = 3, deletions = 1),
+            DiffFileDto("src/B.kt", additions = 0, deletions = 2),
+        ))
+
+        assertModel("diff: src/A.kt src/B.kt")
+        assertEquals("DiffUpdated files=2", events.single().toString())
+    }
+
+    fun `test setDiff with empty list clears diff`() {
+        model.setDiff(listOf(DiffFileDto("src/A.kt", additions = 1, deletions = 0)))
+        events.clear()
+
+        model.setDiff(emptyList())
+
+        assertModel("")
+        assertEquals("DiffUpdated files=0", events.single().toString())
+    }
+
+    fun `test setTodos stores todos and fires TodosUpdated`() {
+        model.setTodos(listOf(
+            TodoDto("Write tests", "pending", "high"),
+            TodoDto("Ship it", "in_progress", "medium"),
+        ))
+
+        assertModel("""
+            todo: [pending] Write tests
+            todo: [in_progress] Ship it
+        """)
+        assertEquals("TodosUpdated count=2", events.single().toString())
+    }
+
+    fun `test setTodos with empty list clears todos`() {
+        model.setTodos(listOf(TodoDto("old task", "completed", "low")))
+        events.clear()
+
+        model.setTodos(emptyList())
+
+        assertModel("")
+        assertEquals("TodosUpdated count=0", events.single().toString())
+    }
+
+    fun `test markCompacted increments count and fires Compacted`() {
+        model.markCompacted()
+
+        assertModel("compacted: 1")
+        assertEquals("Compacted count=1", events.single().toString())
+    }
+
+    fun `test markCompacted accumulates across multiple calls`() {
+        model.markCompacted()
+        model.markCompacted()
+        model.markCompacted()
+
+        assertModel("compacted: 3")
+        assertEquals("Compacted count=3", events.last().toString())
+    }
+
+    fun `test clear resets diff todos and compactionCount`() {
+        model.setDiff(listOf(DiffFileDto("a.kt", 1, 0)))
+        model.setTodos(listOf(TodoDto("task", "pending", "high")))
+        model.markCompacted()
+        events.clear()
+
+        model.clear()
+
+        assertModel("")
+        assertTrue(events.single() is SessionModelEvent.Cleared)
+    }
+
+    fun `test loadHistory resets diff todos and compactionCount`() {
+        model.setDiff(listOf(DiffFileDto("a.kt", 1, 0)))
+        model.setTodos(listOf(TodoDto("task", "pending", "high")))
+        model.markCompacted()
+        events.clear()
+
+        model.loadHistory(emptyList())
+
+        assertModel("")
+        assertTrue(events.single() is SessionModelEvent.HistoryLoaded)
     }
 
     fun `test clear resets messages and state`() {
