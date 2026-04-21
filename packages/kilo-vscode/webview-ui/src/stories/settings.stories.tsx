@@ -3,7 +3,7 @@
  * Stories for Settings and ProvidersTab components.
  */
 
-import { onMount, type JSXElement } from "solid-js"
+import { onCleanup, onMount, type JSXElement } from "solid-js"
 import { useDialog } from "@kilocode/kilo-ui/context/dialog"
 import type { Meta, StoryObj } from "storybook-solidjs-vite"
 import { StoryProviders, mockSessionValue } from "./StoryProviders"
@@ -28,6 +28,7 @@ function noop() {}
 function DialogStory(props: { render: () => JSXElement }) {
   const dialog = useDialog()
   onMount(() => dialog.show(props.render))
+  onCleanup(() => dialog.close())
   return <div style={{ height: "700px" }} />
 }
 
