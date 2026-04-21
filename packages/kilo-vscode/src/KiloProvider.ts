@@ -818,7 +818,6 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
               .getConfiguration("kilo-code.new.autocomplete")
               .update(message.key, message.value, vscode.ConfigurationTarget.Global)
             this.sendAutocompleteSettings()
-            // Reload autocomplete service to pick up model/setting changes
             await vscode.commands.executeCommand("kilo-code.new.autocomplete.reload")
           }
           break
