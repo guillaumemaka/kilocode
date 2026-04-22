@@ -55,7 +55,7 @@ import { fetchMessagePage, MESSAGE_PAGE_LIMIT } from "./kilo-provider/message-pa
 import { childID } from "./kilo-provider/task-session"
 import { handleNetworkEvent, clearNetworkWaits } from "./kilo-provider/network"
 import { abortSession, parseQueued } from "./kilo-provider/abort"
-import { buildSettingsMessage, routeAutocompleteMessage } from "./kilo-provider/autocomplete-settings"
+import { buildSettingsMessage, routeAutocompleteMessage } from "./services/autocomplete/settings"
 import * as ModelState from "./kilo-provider/model-state"
 import { handleForkSession } from "./kilo-provider/fork-session"
 import { retryable, backoff, MAX_RETRIES } from "./util/retry"
