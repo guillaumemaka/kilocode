@@ -56,7 +56,7 @@ import { childID } from "./kilo-provider/task-session"
 import { handleNetworkEvent, clearNetworkWaits } from "./kilo-provider/network"
 import { abortSession, parseQueued } from "./kilo-provider/abort"
 import {
-  buildSettingsMessage,
+  buildAutocompleteSettingsMessage,
   routeAutocompleteMessage,
   watchAutocompleteConfig,
 } from "./services/autocomplete/settings"
@@ -2998,7 +2998,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
 
   /** Read autocomplete settings from VS Code configuration and push to the webview. */
   private sendAutocompleteSettings(): void {
-    this.postMessage(buildSettingsMessage())
+    this.postMessage(buildAutocompleteSettingsMessage())
   }
 
   /** Wait until the webview has sent "webviewReady". Resolves immediately when already ready. */

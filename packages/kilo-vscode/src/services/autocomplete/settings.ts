@@ -12,13 +12,13 @@ type Post = (msg: unknown) => void
 
 export async function routeAutocompleteMessage(message: Message, post: Post): Promise<boolean> {
   if (message.type === "requestAutocompleteSettings") {
-    post(buildSettingsMessage())
+    post(buildAutocompleteSettingsMessage())
     return true
   }
 
   if (message.type === "updateAutocompleteSetting") {
     if (await update(message.key, message.value)) {
-      post(buildSettingsMessage())
+      post(buildAutocompleteSettingsMessage())
     }
     return true
   }
@@ -26,7 +26,7 @@ export async function routeAutocompleteMessage(message: Message, post: Post): Pr
   return false
 }
 
-export function buildSettingsMessage() {
+export function buildAutocompleteSettingsMessage() {
   const config = vscode.workspace.getConfiguration("kilo-code.new.autocomplete")
   return {
     type: "autocompleteSettingsLoaded" as const,
@@ -42,7 +42,7 @@ export function buildSettingsMessage() {
 export function watchAutocompleteConfig(post: Post): vscode.Disposable {
   return vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("kilo-code.new.autocomplete")) {
-      post(buildSettingsMessage())
+      post(buildAutocompleteSettingsMessage())
     }
   })
 }
