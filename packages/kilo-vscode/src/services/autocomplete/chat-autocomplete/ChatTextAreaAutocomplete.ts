@@ -34,11 +34,8 @@ export class ChatTextAreaAutocomplete {
   private dir = ""
   private watcher: vscode.FileSystemWatcher | undefined
 
-  private configWatcher: vscode.Disposable | undefined
-
   constructor(connectionService: KiloConnectionService, telemetry?: AutocompleteTelemetry) {
     this.model = new AutocompleteModel(connectionService)
-    this.syncModel()
     this.telemetry = telemetry ?? new AutocompleteTelemetry("chat-textarea")
     this.watcher = vscode.workspace.createFileSystemWatcher("**/{.kilocodeignore,.gitignore}")
     const invalidate = () => {
@@ -49,17 +46,6 @@ export class ChatTextAreaAutocomplete {
     this.watcher.onDidChange(invalidate)
     this.watcher.onDidCreate(invalidate)
     this.watcher.onDidDelete(invalidate)
-
-    this.configWatcher = vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("kilo-code.new.autocomplete.model")) {
-        this.syncModel()
-      }
-    })
-  }
-
-  private syncModel() {
-    const cfg = vscode.workspace.getConfiguration("kilo-code.new.autocomplete")
-    this.model.setModel(cfg.get<string>("model") ?? "mistralai/codestral-2508")
   }
 
   /**
@@ -89,6 +75,8 @@ export class ChatTextAreaAutocomplete {
   }
 
   async getCompletion(userText: string, visibleCodeContext?: VisibleCodeContext): Promise<{ suggestion: string }> {
+    const cfg = vscode.workspace.getConfiguration("kilo-code.new.autocomplete")
+    this.model.setModel(cfg.get<string>("model") ?? "mistralai/codestral-2508")
     const startTime = Date.now()
 
     // Build context for telemetry
@@ -170,7 +158,6 @@ export class ChatTextAreaAutocomplete {
   }
 
   dispose() {
-    this.configWatcher?.dispose()
     this.watcher?.dispose()
     this.ignore?.dispose()
     this.ignore = null
