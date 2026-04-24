@@ -1,7 +1,8 @@
 // Agent Manager root component
 
+/** @jsxImportSource solid-js */
+
 import {
-  Component,
   For,
   Show,
   createSignal,
@@ -11,6 +12,7 @@ import {
   onMount,
   onCleanup,
   type Accessor,
+  type Component,
 } from "solid-js"
 import type {
   ExtensionMessage,
@@ -2285,7 +2287,7 @@ const AgentManagerContent: Component = () => {
                         <DropdownMenu.Separator />
                         <DropdownMenu.Item onSelect={showAdvancedWorktreeDialog}>
                           <Icon name="settings-gear" size="small" />
-                          <DropdownMenu.ItemLabel>{t("agentManager.dialog.advanced")}</DropdownMenu.ItemLabel>
+                          <DropdownMenu.ItemLabel>{t("agentManager.dialog.configureWorktree")}</DropdownMenu.ItemLabel>
                           <span class="am-menu-shortcut">
                             {parseBindingTokens(kb().advancedWorktree ?? "").map((token) => (
                               <kbd class="am-menu-key">{token}</kbd>

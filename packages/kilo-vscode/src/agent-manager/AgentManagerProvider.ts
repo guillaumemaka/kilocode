@@ -1543,6 +1543,16 @@ export class AgentManagerProvider implements Disposable {
     await this.onCreateWorktree(baseBranch, branchName)
   }
 
+  public async openAdvancedWorktree(): Promise<void> {
+    this.openPanel()
+    const panel = this.panel
+    if (!panel) return
+    await panel.waitForActive()
+    await panel.waitForReady()
+    await this.waitForStateReady("openAdvancedWorktree")
+    queueMicrotask(() => this.postToWebview({ type: "action", action: "advancedWorktree" }))
+  }
+
   private handleSection(m: AgentManagerInMessage): boolean {
     return handleSection(this.state, m, () => this.pushState())
   }

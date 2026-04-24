@@ -54,6 +54,7 @@ export const ChatView: Component<ChatViewProps> = (props) => {
   const [transferring, setTransferring] = createSignal(false)
   const [transferDetail, setTransferDetail] = createSignal("")
   const [repoBranch, setRepoBranch] = createSignal<string>()
+  let worktreeRef: HTMLDivElement | undefined
 
   // Permissions and questions scoped to this session's family (self + subagents).
   // Each ChatView only sees its own session tree — no cross-session leakage.
@@ -146,7 +147,10 @@ export const ChatView: Component<ChatViewProps> = (props) => {
 
   const openAgentManager = () => vscode.postMessage({ type: "openAgentManager" })
 
+  const openChanges = () => vscode.postMessage({ type: "openChanges" })
+
   const moveToWorktree = () => {
+    if (transferring()) return
     const sid = id()
     if (!sid) return
     setTransferring(true)
@@ -159,6 +163,19 @@ export const ChatView: Component<ChatViewProps> = (props) => {
 
   const advancedTooltip = "Open the Agent Manager worktree dialog to configure a new worktree before creating it."
 
+  const moveTooltip = () => {
+    const stats = session.worktreeStats()
+    if (!stats?.files)
+      return "Move this conversation and your current local changes into a dedicated worktree for isolated follow-up work."
+    return `Move this conversation and ${stats.files} changed file${stats.files > 1 ? "s" : ""} into a dedicated worktree for isolated follow-up work.`
+  }
+
+  const changesTooltip = () => {
+    const stats = session.worktreeStats()
+    if (!stats?.files) return "Open the changes view to inspect the current working tree."
+    return `${stats.files} file${stats.files > 1 ? "s" : ""} changed · +${stats.additions} -${stats.deletions}. Open the changes view.`
+  }
+
   const showAdvancedWorktree = () => vscode.postMessage({ type: "openAdvancedWorktree" })
 
   createEffect(() => {
@@ -169,13 +186,27 @@ export const ChatView: Component<ChatViewProps> = (props) => {
   const renderActions = (hasChat: boolean) => (
     <div class="new-task-button-wrapper" classList={{ "new-task-button-wrapper--empty": !hasChat }}>
       <div class="session-actions-row">
-        <Tooltip value="Start a fresh conversation while keeping the current session intact." placement="top">
-          <Button variant="secondary" size="small" onClick={startSession} aria-label="New Session">
+        <Tooltip
+          value={
+            hasChat
+              ? "Start a fresh conversation while keeping the current session intact."
+              : "This session is already new. Start chatting or create a worktree instead."
+          }
+          placement="top"
+        >
+          <Button
+            variant="secondary"
+            size="small"
+            class="session-new-button"
+            onClick={startSession}
+            disabled={!hasChat}
+            aria-label="New Session"
+          >
             New Session
           </Button>
         </Tooltip>
         <Show when={isSidebar() && server.gitInstalled()}>
-          <div class="session-worktree-split">
+          <div class="session-worktree-split" ref={worktreeRef}>
             <Tooltip value={worktreeTooltip} placement="top">
               <Button
                 variant="secondary"
@@ -187,7 +218,7 @@ export const ChatView: Component<ChatViewProps> = (props) => {
                 New Worktree
               </Button>
             </Tooltip>
-            <DropdownMenu gutter={4} placement="top-end">
+            <DropdownMenu gutter={4} placement="top-start" getAnchorRect={() => worktreeRef?.getBoundingClientRect()}>
               <Tooltip value={advancedTooltip} placement="top">
                 <DropdownMenu.Trigger class="session-worktree-split-arrow" aria-label="Advanced worktree options">
                   <Icon name="chevron-down" size="small" />
@@ -207,7 +238,9 @@ export const ChatView: Component<ChatViewProps> = (props) => {
                   </DropdownMenu.Item>
                   <DropdownMenu.Item onSelect={showAdvancedWorktree}>
                     <Icon name="settings-gear" size="small" />
-                    <DropdownMenu.ItemLabel>Configure New Worktree...</DropdownMenu.ItemLabel>
+                    <DropdownMenu.ItemLabel>
+                      {language.t("agentManager.dialog.configureWorktree")}
+                    </DropdownMenu.ItemLabel>
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
@@ -216,42 +249,42 @@ export const ChatView: Component<ChatViewProps> = (props) => {
         </Show>
         <Show when={!hasChat}></Show>
         <Show when={hasChat && canContinueInWorktree() && server.gitInstalled()}>
-          <Tooltip
-            value={
-              session.worktreeStats()?.files
-                ? `Move this conversation and ${session.worktreeStats()!.files} changed file${session.worktreeStats()!.files > 1 ? "s" : ""} into a dedicated worktree for isolated follow-up work.`
-                : "Move this conversation and your current local changes into a dedicated worktree for isolated follow-up work."
-            }
-            placement="top"
-          >
-            <Button
-              variant="ghost"
-              size="small"
-              class="session-move-button"
-              classList={{
-                "session-move-button--empty": !session.worktreeStats()?.files,
-                "session-move-button--has-changes": !!session.worktreeStats()?.files,
-              }}
-              disabled={transferring()}
-              onClick={moveToWorktree}
-              aria-label="Move to Worktree"
-            >
-              <Show when={transferring()} fallback={<Icon name="branch" size="small" />}>
-                <Spinner class="chat-spinner-small" />
-              </Show>
-              <span class="session-move-label">{transferring() ? transferDetail() : "Move to Worktree"}</span>
-              <Show when={!transferring() && session.worktreeStats()?.files}>
-                <span class="session-move-tail" aria-hidden="true">
-                  <span class="session-move-divider" />
-                  <span class="session-move-stats">
-                    <Icon name="layers" size="small" />
-                    <span class="session-diff-add">+{session.worktreeStats()!.additions}</span>
-                    <span class="session-diff-del">-{session.worktreeStats()!.deletions}</span>
-                  </span>
-                </span>
-              </Show>
-            </Button>
-          </Tooltip>
+          <div class="session-move-group">
+            <Tooltip value={moveTooltip()} placement="top">
+              <Button
+                variant="ghost"
+                size="small"
+                class="session-move-action"
+                aria-disabled={transferring()}
+                onClick={moveToWorktree}
+                aria-label="Move to Worktree"
+              >
+                <Show when={transferring()} fallback={<Icon name="branch" size="small" />}>
+                  <Spinner class="chat-spinner-small" />
+                </Show>
+                <span class="session-move-label">{transferring() ? transferDetail() : "Move to Worktree"}</span>
+              </Button>
+            </Tooltip>
+            <Tooltip value={changesTooltip()} placement="top">
+              <Button
+                variant="ghost"
+                size="small"
+                class="session-move-changes"
+                classList={{
+                  "session-move-changes--empty": !session.worktreeStats()?.files,
+                  "session-move-changes--has-changes": !!session.worktreeStats()?.files,
+                }}
+                onClick={openChanges}
+                aria-label={language.t("command.session.show.changes")}
+              >
+                <Icon name="layers" size="small" />
+                <Show when={session.worktreeStats()?.files}>
+                  <span class="session-diff-add">+{session.worktreeStats()!.additions}</span>
+                  <span class="session-diff-del">-{session.worktreeStats()!.deletions}</span>
+                </Show>
+              </Button>
+            </Tooltip>
+          </div>
         </Show>
         <div class="session-agent-manager-slot">
           <Tooltip

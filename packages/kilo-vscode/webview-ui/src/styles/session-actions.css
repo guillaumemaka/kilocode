@@ -63,6 +63,10 @@
   color: var(--vscode-foreground);
 }
 
+.session-actions-row > [data-component="tooltip-trigger"] > [data-component="button"].session-new-button:disabled {
+  cursor: default;
+}
+
 .session-worktree-split {
   display: flex;
   flex: 0 0 auto;
@@ -177,22 +181,57 @@
   font-weight: 600;
 }
 
-/* Diff wrapper also stretches evenly (same flex as buttons) */
-.session-move-button {
+.session-move-group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--session-action-radius);
+  color: var(--vscode-descriptionForeground);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.session-move-group > [data-component="tooltip-trigger"] {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.session-move-group:hover,
+.session-move-group:has(.session-move-action:focus-visible),
+.session-move-group:has(.session-move-changes:focus-visible) {
+  color: var(--vscode-foreground);
+}
+
+.session-move-group:hover .session-move-action,
+.session-move-group:hover .session-move-changes,
+.session-move-group:has(.session-move-action:focus-visible) .session-move-action,
+.session-move-group:has(.session-move-action:focus-visible) .session-move-changes,
+.session-move-group:has(.session-move-changes:focus-visible) .session-move-action,
+.session-move-group:has(.session-move-changes:focus-visible) .session-move-changes {
+  background: var(--surface-base-hover);
+}
+
+.session-move-action {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border-radius: var(--session-action-radius);
-  color: var(--vscode-descriptionForeground);
+  border-radius: var(--session-action-radius) 0 0 var(--session-action-radius);
+  color: inherit;
   padding: 4px 6px !important;
+  background: transparent;
+  box-shadow: none;
 }
 
-.session-move-button:hover:not(:disabled),
-.session-move-button:focus-visible:not(:disabled),
-.session-move-button:active:not(:disabled) {
-  color: var(--vscode-foreground);
+.session-move-action:hover:not(:disabled),
+.session-move-action:focus-visible:not(:disabled),
+.session-move-action:active:not(:disabled) {
+  color: inherit;
+  background: inherit;
+  box-shadow: none;
 }
 
 .session-move-label {
@@ -202,29 +241,39 @@
   white-space: nowrap;
 }
 
-.session-move-tail {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  padding-left: 5px;
-}
-
-.session-move-divider {
-  width: 1px;
-  height: 14px;
-  background: color-mix(in srgb, currentColor 25%, transparent);
+.session-move-action [data-component="icon"],
+.session-move-changes [data-component="icon"] {
   opacity: 0.7;
 }
 
-.session-move-stats {
+.session-move-changes {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  border-radius: 0 var(--session-action-radius) var(--session-action-radius) 0;
+  color: inherit;
+  padding: 4px 6px !important;
+  background: transparent;
+  box-shadow: none;
+}
+
+.session-move-changes:hover:not(:disabled),
+.session-move-changes:focus-visible:not(:disabled),
+.session-move-changes:active:not(:disabled) {
+  color: inherit;
+  background: inherit;
+  box-shadow: none;
+}
+
+.session-move-changes {
   font-family: var(--font-family-sans);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+}
+
+.session-move-changes--empty {
+  opacity: 0.7;
 }
 
 .session-agent-manager-slot {
@@ -252,10 +301,6 @@
 .session-agent-manager:focus-visible:not(:disabled),
 .session-agent-manager:active:not(:disabled) {
   color: var(--vscode-foreground);
-}
-
-.session-move-stats [data-component="icon"] {
-  opacity: 0.7;
 }
 
 /* Diff stats badge styles retained for the inline move button stats */
@@ -315,21 +360,16 @@
     margin-left: 0;
   }
 
-  .session-move-divider,
   .session-diff-add,
   .session-diff-del {
     display: none;
   }
 
-  .session-move-tail {
-    padding-left: 4px;
-  }
-
-  .session-move-stats {
+  .session-move-changes {
     position: relative;
   }
 
-  .session-move-button--has-changes .session-move-stats [data-component="icon"]::after {
+  .session-move-changes--has-changes [data-component="icon"]::after {
     content: "";
     position: absolute;
     top: -2px;
