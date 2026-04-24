@@ -1,5 +1,6 @@
 import path from "path"
 import os from "os"
+import { existsSync } from "fs"
 import { mkdir } from "fs/promises"
 import { fileURLToPath } from "url"
 import { cmd } from "@/cli/cmd/cmd"
@@ -163,7 +164,17 @@ function defaultRc(shell: Shell): string {
   if (shell === "zsh") return path.join(home, ".zshrc")
   if (shell === "fish") return path.join(home, ".config", "fish", "config.fish")
   if (shell === "powershell") {
-    // Cross-shell profile on Windows; on *nix pwsh users pass --rc explicitly.
+    // PowerShell 7+ uses Documents\PowerShell; Windows PowerShell 5.1 uses
+    // Documents\WindowsPowerShell. Prefer whichever profile already exists;
+    // on fresh installs, fall back based on whether pwsh is available.
+    // On *nix, pwsh users should pass --rc explicitly (XDG path varies).
+    if (process.platform === "win32") {
+      const ps7 = path.join(home, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")
+      const wps = path.join(home, "Documents", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1")
+      if (existsSync(ps7)) return ps7
+      if (existsSync(wps)) return wps
+      return Bun.which("pwsh") ? ps7 : wps
+    }
     return path.join(home, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")
   }
   // bash: prefer .bashrc, fall back to .bash_profile / .profile
