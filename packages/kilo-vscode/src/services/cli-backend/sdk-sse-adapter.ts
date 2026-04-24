@@ -1,6 +1,10 @@
 import type { KiloClient, GlobalEvent, Event } from "@kilocode/sdk/v2/client"
 
-export type SSEEventHandler = (event: Event) => void
+/**
+ * `directory` is the per-Instance directory carried on every SSE envelope.
+ * It is optional so existing handlers that don't care continue to compile unchanged.
+ */
+export type SSEEventHandler = (event: Event, directory?: string) => void
 export type SSEErrorHandler = (error: Error) => void
 export type SSEStateHandler = (state: "connecting" | "connected" | "disconnected") => void
 
@@ -172,12 +176,15 @@ export class SdkSSEAdapter {
           this.resetHeartbeat(attempt)
 
           // The SDK yields GlobalEvent = { directory, payload: Event }.
+          // Forward the envelope directory alongside the payload so downstream
+          // code (e.g. permission routing) can reply to the right Instance
+          // regardless of session-directory state.
           const globalEvent = event as GlobalEvent
           const type = (globalEvent.payload as { type: string }).type
           if (type !== "server.heartbeat") {
             console.log("[Kilo New] SSE: 📨 Event:", type)
           }
-          this.notifyEvent(globalEvent.payload as Event)
+          this.notifyEvent(globalEvent.payload as Event, globalEvent.directory)
         }
 
         console.log("[Kilo New] SSE: 📭 Stream ended normally")
@@ -229,10 +236,10 @@ export class SdkSSEAdapter {
 
   // ── Notify helpers ─────────────────────────────────────────────────
 
-  private notifyEvent(event: Event): void {
+  private notifyEvent(event: Event, directory: string | undefined): void {
     for (const handler of this.handlers) {
       try {
-        handler(event)
+        handler(event, directory)
       } catch (error) {
         console.error("[Kilo New] SSE: Error in event handler:", error)
       }

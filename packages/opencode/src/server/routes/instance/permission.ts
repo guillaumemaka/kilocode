@@ -4,6 +4,7 @@ import z from "zod"
 import { AppRuntime } from "@/effect/app-runtime"
 import { Permission } from "@/permission"
 import { PermissionID } from "@/permission/schema"
+import { NotFoundError } from "@/storage" // kilocode_change
 import { errors } from "../../error"
 import { lazy } from "@/util/lazy"
 
@@ -37,7 +38,8 @@ export const PermissionRoutes = lazy(() =>
       async (c) => {
         const params = c.req.valid("param")
         const json = c.req.valid("json")
-        await AppRuntime.runPromise(
+        // kilocode_change start — surface stale/unknown requestIDs as 404 so the caller can clean up its UI
+        const ok = await AppRuntime.runPromise(
           Permission.Service.use((svc) =>
             svc.reply({
               requestID: params.requestID,
@@ -46,6 +48,8 @@ export const PermissionRoutes = lazy(() =>
             }),
           ),
         )
+        if (!ok) throw new NotFoundError({ message: `Permission request not found: ${params.requestID}` })
+        // kilocode_change end
         return c.json(true)
       },
     )
@@ -84,7 +88,7 @@ export const PermissionRoutes = lazy(() =>
       async (c) => {
         const params = c.req.valid("param")
         const json = c.req.valid("json")
-        await AppRuntime.runPromise(
+        const ok = await AppRuntime.runPromise(
           Permission.Service.use((svc) =>
             svc.saveAlwaysRules({
               requestID: params.requestID,
@@ -93,6 +97,7 @@ export const PermissionRoutes = lazy(() =>
             }),
           ),
         )
+        if (!ok) throw new NotFoundError({ message: `Permission request not found: ${params.requestID}` })
         return c.json(true)
       },
     )

@@ -149,9 +149,9 @@ export const AllowEverythingInput = z.object({
 
 export interface Interface {
   readonly ask: (input: AskInput) => Effect.Effect<void, Error>
-  readonly reply: (input: ReplyInput) => Effect.Effect<void>
+  readonly reply: (input: ReplyInput) => Effect.Effect<boolean> // kilocode_change — boolean indicates whether request was accepted
   readonly list: () => Effect.Effect<ReadonlyArray<Request>>
-  readonly saveAlwaysRules: (input: z.infer<typeof SaveAlwaysRulesInput>) => Effect.Effect<void> // kilocode_change
+  readonly saveAlwaysRules: (input: z.infer<typeof SaveAlwaysRulesInput>) => Effect.Effect<boolean> // kilocode_change — boolean indicates whether request was accepted
   readonly allowEverything: (input: z.infer<typeof AllowEverythingInput>) => Effect.Effect<void> // kilocode_change
   readonly pending: (id: string) => Effect.Effect<Request | undefined> // kilocode_change
 }
@@ -257,7 +257,7 @@ export const layer = Layer.effect(
     const reply = Effect.fn("Permission.reply")(function* (input: ReplyInput) {
       const { approved, pending } = yield* InstanceState.get(state)
       const existing = pending.get(input.requestID)
-      if (!existing) return
+      if (!existing) return false // kilocode_change — signal "not found" so the HTTP route can 404
 
       pending.delete(input.requestID)
       yield* bus.publish(Event.Replied, {
@@ -282,14 +282,14 @@ export const layer = Layer.effect(
           })
           yield* Deferred.fail(item.deferred, new RejectedError())
         }
-        return
+        return true // kilocode_change
       }
 
       yield* Deferred.succeed(existing.deferred, undefined)
-      if (input.reply === "once") return
+      if (input.reply === "once") return true // kilocode_change
 
       // kilocode_change start — downgrade "always" to "once" for config file edits
-      if (ConfigProtection.isRequest(existing.info)) return
+      if (ConfigProtection.isRequest(existing.info)) return true // kilocode_change — request was accepted, "always" was downgraded
       // kilocode_change end
 
       for (const pattern of existing.info.always) {
@@ -325,6 +325,7 @@ export const layer = Layer.effect(
         yield* Effect.promise(() => Config.updateGlobal({ permission: toConfig(alwaysRules) }, { dispose: false }))
       }
       // kilocode_change end
+      return true // kilocode_change
     })
 
     const list = Effect.fn("Permission.list")(function* () {
@@ -338,9 +339,9 @@ export const layer = Layer.effect(
     ) {
       const s = yield* InstanceState.get(state)
       const existing = s.pending.get(input.requestID)
-      if (!existing) return
+      if (!existing) return false // kilocode_change — signal "not found" so the HTTP route can 404
 
-      if (ConfigProtection.isRequest(existing.info)) return
+      if (ConfigProtection.isRequest(existing.info)) return true // kilocode_change — request was accepted but no-op for protected paths
 
       const validRules = new Set([
         ...((existing.info.metadata?.rules as string[] | undefined) ?? []),
@@ -367,6 +368,7 @@ export const layer = Layer.effect(
         DeniedError,
         input.requestID as unknown as string,
       )
+      return true
     })
 
     const allowEverything = Effect.fn("Permission.allowEverything")(function* (

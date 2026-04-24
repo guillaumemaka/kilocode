@@ -1060,10 +1060,12 @@ it.live("pending permission rejects on instance reload", () =>
   }),
 )
 
-it.live("reply - does nothing for unknown requestID", () =>
+it.live("reply - returns false for unknown requestID", () =>
   withDir({ git: true }, () =>
     Effect.gen(function* () {
-      yield* reply({ requestID: PermissionID.make("per_unknown"), reply: "once" })
+      // kilocode_change — was "does nothing"; now returns false so the HTTP route can 404
+      const accepted = yield* reply({ requestID: PermissionID.make("per_unknown"), reply: "once" })
+      expect(accepted).toBe(false)
       expect(yield* list()).toHaveLength(0)
     }),
   ),

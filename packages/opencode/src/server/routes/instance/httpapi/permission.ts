@@ -1,7 +1,7 @@
 import { Permission } from "@/permission"
 import { PermissionID } from "@/permission/schema"
 import { Effect, Layer, Schema } from "effect"
-import { HttpApi, HttpApiBuilder, HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
+import { HttpApi, HttpApiBuilder, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 
 const root = "/permission"
 
@@ -22,6 +22,8 @@ export const PermissionApi = HttpApi.make("permission")
           params: { requestID: PermissionID },
           payload: Permission.ReplyBody,
           success: Schema.Boolean,
+          // kilocode_change - surface stale permission replies as 404 in experimental HttpApi mode too
+          error: [HttpApiError.NotFoundNoContent],
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "permission.reply",
@@ -57,11 +59,13 @@ export const permissionHandlers = Layer.unwrap(
       params: { requestID: PermissionID }
       payload: Permission.ReplyBody
     }) {
-      yield* svc.reply({
+      const ok = yield* svc.reply({
         requestID: ctx.params.requestID,
         reply: ctx.payload.reply,
         message: ctx.payload.message,
       })
+      // kilocode_change - match the classic Hono route so clients can stale-clean up
+      if (!ok) return yield* new HttpApiError.NotFound({})
       return true
     })
 

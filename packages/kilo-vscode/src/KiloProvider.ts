@@ -180,6 +180,12 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
   private sessionStatusMap = new Map<string, SessionStatus["type"]>()
   /** Per-session directory overrides (e.g., worktree paths registered by AgentManagerProvider). */
   private sessionDirectories = new Map<string, string>()
+  /**
+   * Per-permission directory captured from the SSE envelope on `permission.asked`.
+   * Used to route replies to the exact Instance that holds the pending entry,
+   * avoiding silent drops when `sessionDirectories` is stale.
+   */
+  private permissionDirectories = new Map<string, string>()
   /** Project ID for the current workspace, used to filter out sessions from other repositories. */
   private projectID: string | undefined
   /** Abort controller for the current loadMessages request; aborted when a new session is selected. */
@@ -1111,8 +1117,8 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
 
           return this.trackedSessionIds.has(sessionId)
         },
-        (event) => {
-          this.handleEvent(event)
+        (event, directory) => {
+          this.handleEvent(event, directory)
         },
       )
 
@@ -2647,6 +2653,8 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
       sessionDirectories: this.sessionDirectories,
       postMessage: (msg) => this.postMessage(msg),
       getWorkspaceDirectory: (sid) => this.getWorkspaceDirectory(sid),
+      recordPermissionDirectory: (id, dir) => this.permissionDirectories.set(id, dir),
+      getPermissionDirectory: (id) => this.permissionDirectories.get(id),
     }
   }
 
@@ -2883,7 +2891,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
    * Handle SSE events from the CLI backend.
    * Filters events by project ID and tracked session IDs so each webview only sees its own sessions.
    */
-  private handleEvent(event: Event): void {
+  private handleEvent(event: Event, directory?: string): void {
     if (event.type === "kilo-sessions.remote-status-changed") {
       this.remoteService?.updateFromEvent({ enabled: event.properties.enabled, connected: event.properties.connected })
       return
@@ -2893,6 +2901,16 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
     // This must come first: the trackedSessionIds guard below would otherwise
     // let a foreign session through if it was accidentally tracked.
     if (isEventFromForeignProject(event, this.projectID)) return
+
+    // Record per-permission directory from the SSE envelope so replies route
+    // to the Instance that actually owns the pending entry. Clean up on reply
+    // so the map doesn't grow without bound.
+    if (event.type === "permission.asked" && directory) {
+      this.permissionDirectories.set(event.properties.id, directory)
+    }
+    if (event.type === "permission.replied") {
+      this.permissionDirectories.delete(event.properties.requestID)
+    }
 
     if (event.type === "message.updated") {
       this.confirmations.confirm(event.properties.info.id)
@@ -3319,6 +3337,7 @@ export class KiloProvider implements vscode.WebviewViewProvider, TelemetryProper
     this.trackedSessionIds.clear()
     this.syncedChildSessions.clear()
     this.sessionDirectories.clear()
+    this.permissionDirectories.clear()
     this.sessionStatusMap.clear()
     this.ignoreController?.dispose()
     this.chatAutocomplete?.dispose()

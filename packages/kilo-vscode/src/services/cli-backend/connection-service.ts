@@ -6,7 +6,11 @@ import type { ServerConfig } from "./types"
 import { resolveEventSessionId as resolveEventSessionIdPure } from "./connection-utils"
 
 export type ConnectionState = "connecting" | "connected" | "disconnected" | "error"
-type SSEEventListener = (event: Event) => void
+/**
+ * `directory` is the per-Instance directory from the SSE envelope. Optional so
+ * existing listeners that don't need it continue to work unchanged.
+ */
+type SSEEventListener = (event: Event, directory?: string) => void
 type StateListener = (state: ConnectionState) => void
 type SSEEventFilter = (event: Event) => boolean
 type NotificationDismissListener = (notificationId: string) => void
@@ -16,6 +20,16 @@ type MigrationCompleteListener = () => void
 type FavoritesChangeListener = (favorites: Array<{ providerID: string; modelID: string }>) => void
 type ClearPendingPromptsListener = () => void
 type DirectoryProvider = () => string[]
+
+function isNotFound(err: unknown) {
+  if (!err || typeof err !== "object") return false
+  const obj = err as Record<string, unknown>
+  if (obj.name === "NotFoundError") return true
+  if (obj.data && typeof obj.data === "object") {
+    return (obj.data as Record<string, unknown>).name === "NotFoundError"
+  }
+  return false
+}
 
 // Poll /global/health at the same interval as packages/app/src/context/server.tsx.
 // This provides a second detection channel for server death independent of the SSE heartbeat.
@@ -192,11 +206,11 @@ export class KiloConnectionService {
    * Subscribe to SSE events with a filter. The filter runs for every incoming SSE event.
    */
   onEventFiltered(filter: SSEEventFilter, listener: SSEEventListener): () => void {
-    const wrapped: SSEEventListener = (event) => {
+    const wrapped: SSEEventListener = (event, directory) => {
       if (!filter(event)) {
         return
       }
-      listener(event)
+      listener(event, directory)
     }
     return this.onEvent(wrapped)
   }
@@ -394,7 +408,7 @@ export class KiloConnectionService {
       if (perms) {
         for (const perm of perms) {
           const { error } = await this.client.permission.reply({ requestID: perm.id, reply: "reject", directory: dir })
-          if (error) throw new Error(`Failed to reject permission ${perm.id}: ${String(error)}`)
+          if (error && !isNotFound(error)) throw new Error(`Failed to reject permission ${perm.id}: ${String(error)}`)
         }
       }
       const { data: qs, error: qsErr } = await this.client.question.list({ directory: dir })
@@ -594,9 +608,9 @@ export class KiloConnectionService {
     let didConnect = false
 
     // Wire SSE events → broadcast to all registered listeners
-    this.sseClient.onEvent((event) => {
+    this.sseClient.onEvent((event, directory) => {
       for (const listener of this.eventListeners) {
-        listener(event)
+        listener(event, directory)
       }
     })
 
