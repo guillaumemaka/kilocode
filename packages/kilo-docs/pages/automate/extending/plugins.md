@@ -9,7 +9,7 @@ platform: new
 Plugins extend the Kilo CLI by hooking into events, adding custom tools, registering auth or model providers, and customizing runtime behavior. They are TypeScript or JavaScript modules loaded at startup.
 
 {% callout type="note" %}
-Plugins run in the Kilo CLI. They are available everywhere the CLI runs — directly, through `kilo serve`, and inside the VS Code extension (which spawns `kilo serve` under the hood).
+Plugins work in both the Kilo CLI and the VS Code extension.
 {% /callout %}
 
 ## What plugins can do
