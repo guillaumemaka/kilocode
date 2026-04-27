@@ -14,6 +14,7 @@ import { IngestQueue } from "@/kilo-sessions/ingest-queue"
 import { clearInFlightCache, withInFlightCache } from "@/kilo-sessions/inflight-cache"
 import type * as SDK from "@kilocode/sdk/v2"
 import z from "zod"
+import { Schema } from "effect"
 import { KILO_API_BASE } from "@kilocode/kilo-gateway"
 import { Config } from "@/config"
 import { Instance } from "@/project/instance"
@@ -31,9 +32,9 @@ export namespace KiloSessions {
   export const Event = {
     RemoteStatusChanged: BusEvent.define(
       "kilo-sessions.remote-status-changed",
-      z.object({
-        enabled: z.boolean(),
-        connected: z.boolean(),
+      Schema.Struct({
+        enabled: Schema.Boolean,
+        connected: Schema.Boolean,
       }),
     ),
   }

@@ -861,18 +861,37 @@ export function* listGlobal(input?: {
 // kilocode_change start - keep legacy promise helpers for Kilo callsites
 const { runPromise } = makeRuntime(Service, defaultLayer)
 
-export const create = fn(CreateInput, (input) => runPromise((svc) => svc.create(input)))
+const decodeCreate = Schema.decodeUnknownSync(CreateInput)
+const decodeGet = Schema.decodeUnknownSync(GetInput)
+const decodeSetTitle = Schema.decodeUnknownSync(SetTitleInput)
+const decodeSetArchived = Schema.decodeUnknownSync(SetArchivedInput)
+const decodeSetPermission = Schema.decodeUnknownSync(SetPermissionInput)
+const decodeSetRevert = Schema.decodeUnknownSync(SetRevertInput)
+const decodeMessages = Schema.decodeUnknownSync(MessagesInput)
+const decodeChildren = Schema.decodeUnknownSync(ChildrenInput)
+const decodeRemove = Schema.decodeUnknownSync(RemoveInput)
+
+export const create = (input?: CreateInput) => runPromise((svc) => svc.create(decodeCreate(input) as CreateInput))
 export const fork = kiloSessionFork
-export const get = fn(GetInput, (id) => runPromise((svc) => svc.get(id)))
-export const setTitle = fn(SetTitleInput, (input) => runPromise((svc) => svc.setTitle(input)))
-export const setArchived = fn(SetArchivedInput, (input) => runPromise((svc) => svc.setArchived(input)))
-export const setPermission = fn(SetPermissionInput, (input) => runPromise((svc) => svc.setPermission(input)))
-export const setRevert = fn(SetRevertInput, (input) =>
-  runPromise((svc) => svc.setRevert({ sessionID: input.sessionID, revert: input.revert, summary: input.summary })),
-)
-export const messages = fn(MessagesInput, (input) => runPromise((svc) => svc.messages(input)))
-export const children = fn(ChildrenInput, (id) => runPromise((svc) => svc.children(id)))
-export const remove = fn(RemoveInput, (id) => runPromise((svc) => svc.remove(id)))
+export const get = (id: SessionID) => runPromise((svc) => svc.get(decodeGet(id)))
+export const setTitle = (input: { sessionID: SessionID; title: string }) =>
+  runPromise((svc) => svc.setTitle(decodeSetTitle(input)))
+export const setArchived = (input: { sessionID: SessionID; time?: number }) =>
+  runPromise((svc) => svc.setArchived(decodeSetArchived(input)))
+export const setPermission = (input: { sessionID: SessionID; permission: Permission.Ruleset }) =>
+  runPromise((svc) =>
+    svc.setPermission(decodeSetPermission(input) as { sessionID: SessionID; permission: Permission.Ruleset }),
+  )
+export const setRevert = (input: { sessionID: SessionID; revert?: Info["revert"]; summary?: Info["summary"] }) => {
+  const parsed = decodeSetRevert(input) as { sessionID: SessionID; revert?: Info["revert"]; summary?: Info["summary"] }
+  return runPromise((svc) =>
+    svc.setRevert({ sessionID: parsed.sessionID, revert: parsed.revert, summary: parsed.summary }),
+  )
+}
+export const messages = (input: { sessionID: SessionID; limit?: number }) =>
+  runPromise((svc) => svc.messages(decodeMessages(input)))
+export const children = (id: SessionID) => runPromise((svc) => svc.children(decodeChildren(id)))
+export const remove = (id: SessionID) => runPromise((svc) => svc.remove(decodeRemove(id)))
 export async function updateMessage<T extends MessageV2.Info>(msg: T): Promise<T> {
   MessageV2.Info.zod.parse(msg) // kilocode_change
   return runPromise((svc) => svc.updateMessage(msg))

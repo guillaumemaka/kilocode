@@ -2,6 +2,7 @@ import { BusEvent } from "@/bus/bus-event"
 import { Bus } from "@/bus"
 import { InstanceState } from "@/effect"
 import { SessionID } from "./schema"
+import { QuestionID } from "@/question/schema" // kilocode_change
 import { makeRuntime } from "@/effect/run-service" // kilocode_change
 import { zod } from "@/util/effect-zod"
 import { withStatics } from "@/util/schema"
@@ -24,7 +25,7 @@ export const Info = Schema.Union([
   // kilocode_change start
   Schema.Struct({
     type: Schema.Literal("offline"),
-    requestID: Schema.String,
+    requestID: QuestionID,
     message: Schema.String,
   }),
   // kilocode_change end

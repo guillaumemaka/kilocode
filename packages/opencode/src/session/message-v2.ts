@@ -370,6 +370,16 @@ const messageBase = {
   sessionID: SessionID,
 }
 
+// kilocode_change start - shared editor context schema (used by MessageV2.User and SessionPrompt.PromptInput)
+export const EditorContext = Schema.Struct({
+  visibleFiles: Schema.optional(Schema.Array(Schema.String)),
+  openTabs: Schema.optional(Schema.Array(Schema.String)),
+  activeFile: Schema.optional(Schema.String),
+  shell: Schema.optional(Schema.String),
+})
+export type EditorContext = Types.DeepMutable<Schema.Schema.Type<typeof EditorContext>>
+// kilocode_change end
+
 export const User = Schema.Struct({
   ...messageBase,
   role: Schema.Literal("user"),
@@ -393,14 +403,7 @@ export const User = Schema.Struct({
   system: Schema.optional(Schema.String),
   tools: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
   // kilocode_change start
-  editorContext: Schema.optional(
-    Schema.Struct({
-      visibleFiles: Schema.optional(Schema.Array(Schema.String)),
-      openTabs: Schema.optional(Schema.Array(Schema.String)),
-      activeFile: Schema.optional(Schema.String),
-      shell: Schema.optional(Schema.String),
-    }),
-  ),
+  editorContext: Schema.optional(EditorContext),
   // kilocode_change end
 })
   .annotate({ identifier: "UserMessage" })

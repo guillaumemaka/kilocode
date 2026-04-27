@@ -1858,15 +1858,8 @@ export const PromptInput = Schema.Struct({
   format: Schema.optional(MessageV2.Format),
   system: Schema.optional(Schema.String),
   variant: Schema.optional(Schema.String),
-  // kilocode_change start
-  editorContext: Schema.optional(
-    Schema.Struct({
-      visibleFiles: Schema.optional(Schema.Array(Schema.String)),
-      openTabs: Schema.optional(Schema.Array(Schema.String)),
-      activeFile: Schema.optional(Schema.String),
-      shell: Schema.optional(Schema.String),
-    }),
-  ),
+  // kilocode_change start - reuse shared editor context schema
+  editorContext: Schema.optional(MessageV2.EditorContext),
   // kilocode_change end
   parts: Schema.Array(
     Schema.Union([
@@ -1886,8 +1879,9 @@ type PartInputUnion =
   | MessageV2.FilePartInput
   | MessageV2.AgentPartInput
   | MessageV2.SubtaskPartInput
-export type PromptInput = Omit<Schema.Schema.Type<typeof PromptInput>, "parts"> & {
+export type PromptInput = Omit<Schema.Schema.Type<typeof PromptInput>, "parts" | "editorContext"> & {
   parts: PartInputUnion[]
+  editorContext?: MessageV2.EditorContext
 }
 
 export class LoopInput extends Schema.Class<LoopInput>("SessionPrompt.LoopInput")({
@@ -1970,7 +1964,7 @@ const quoteTrimRegex = /^["']|["']$/g
 // kilocode_change start - legacy promise helpers for Kilo callsites
 const { runPromise } = makeRuntime(Service, defaultLayer)
 export const prompt = (input: PromptInput) => runPromise((svc) => svc.prompt(input))
-export const loop = (input: z.infer<typeof LoopInput>) => runPromise((svc) => svc.loop(input))
+export const loop = (input: LoopInput) => runPromise((svc) => svc.loop(input))
 export const cancel = (sessionID: SessionID) => runPromise((svc) => svc.cancel(sessionID))
 // kilocode_change end
 
