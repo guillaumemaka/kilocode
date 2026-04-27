@@ -105,6 +105,31 @@ function errorTool(parts: MessageV2.Part[]) {
   return part?.state.status === "error" ? (part as ErrorToolPart) : undefined
 }
 
+function names(input: Record<string, unknown> | undefined) {
+  const tools = input?.tools
+  if (!Array.isArray(tools)) return []
+  return tools.flatMap((item) => {
+    if (!item || typeof item !== "object") return []
+    const obj = item as Record<string, unknown>
+    const fn = obj.function
+    if (fn && typeof fn === "object") {
+      const name = (fn as Record<string, unknown>).name
+      if (typeof name === "string") return [name]
+    }
+    if (typeof obj.name === "string") return [obj.name]
+    return []
+  })
+}
+
+const waitQuestion = Effect.fn("test.waitQuestion")(function* (sessionID: SessionID) {
+  for (let i = 0; i < 100; i++) {
+    const list = yield* Effect.promise(() => Question.list())
+    const item = list.find((q) => q.sessionID === sessionID)
+    if (item) return item
+    yield* Effect.sleep("10 millis")
+  }
+})
+
 const mcp = Layer.succeed(
   MCP.Service,
   MCP.Service.of({
@@ -539,6 +564,117 @@ it.live("loop continues when finish is stop but assistant has tool parts", () =>
         expect(result.info.finish).toBe("stop")
       }
     }),
+    { git: true, config: providerCfg },
+  ),
+)
+
+unix("ask agent denies bash redirection during prompt loop", () =>
+  provideTmpdirServer(
+    ({ dir, llm }) =>
+      withSh(() =>
+        Effect.gen(function* () {
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const session = yield* sessions.create({ title: "Ask bash guard" })
+          const file = path.join(dir, "ask-bug.txt")
+
+          yield* prompt.prompt({
+            sessionID: session.id,
+            agent: "ask",
+            noReply: true,
+            parts: [{ type: "text", text: "Explain the repo" }],
+          })
+          yield* llm.tool("bash", { command: "echo bug > ask-bug.txt", description: "write ask bug" })
+          yield* llm.text("done")
+
+          yield* prompt.loop({ sessionID: session.id })
+          expect(yield* Effect.promise(() => Bun.file(file).exists())).toBe(false)
+
+          const msgs = yield* MessageV2.filterCompactedEffect(session.id)
+          const tool = msgs
+            .flatMap((msg) => msg.parts)
+            .find((part): part is MessageV2.ToolPart => part.type === "tool" && part.tool === "bash")
+          expect(tool?.state.status).toBe("error")
+        }),
+      ),
+    { git: true, config: providerCfg },
+  ),
+)
+
+it.live("ask agent hides edit tools despite session allow-all", () =>
+  provideTmpdirServer(
+    ({ dir, llm }) =>
+      Effect.gen(function* () {
+        const prompt = yield* SessionPrompt.Service
+        const sessions = yield* Session.Service
+        const session = yield* sessions.create({
+          title: "Ask session guard",
+          permission: [{ permission: "*", pattern: "*", action: "allow" }],
+        })
+        const file = path.join(dir, "ask-write-bug.txt")
+
+        yield* prompt.prompt({
+          sessionID: session.id,
+          agent: "ask",
+          noReply: true,
+          parts: [{ type: "text", text: "Explain the repo" }],
+        })
+        yield* llm.tool("write", { filePath: file, content: "bug\n" })
+        yield* llm.text("done")
+
+        yield* prompt.loop({ sessionID: session.id })
+        const inputs = yield* llm.inputs
+        expect(names(inputs[0])).not.toContain("write")
+        expect(names(inputs[0])).not.toContain("edit")
+        expect(yield* Effect.promise(() => Bun.file(file).exists())).toBe(false)
+      }),
+    { git: true, config: providerCfg },
+  ),
+)
+
+unix("plan follow-up stops before queued mutations after plan_exit", () =>
+  provideTmpdirServer(
+    ({ dir, llm }) =>
+      withSh(() =>
+        Effect.gen(function* () {
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const session = yield* sessions.create({ title: "Plan hard stop" })
+          const plan = Session.plan(session)
+          const file = path.join(dir, "plan-after-exit.txt")
+
+          yield* prompt.prompt({
+            sessionID: session.id,
+            agent: "plan",
+            noReply: true,
+            parts: [{ type: "text", text: "Create a plan only" }],
+          })
+          yield* llm.tool("write", { filePath: plan, content: "# Plan\n\n- Stop after planning.\n" })
+          yield* llm.tool("plan_exit", {})
+          yield* llm.tool("bash", { command: "echo bug > plan-after-exit.txt", description: "write plan bug" })
+
+          const fiber = yield* prompt.loop({ sessionID: session.id }).pipe(Effect.forkChild)
+          const question = yield* waitQuestion(session.id)
+          if (!question) {
+            yield* Fiber.interrupt(fiber)
+            expect(question).toBeDefined()
+            return
+          }
+
+          const calls = yield* llm.calls
+          const pending = yield* llm.pending
+          const mutated = yield* Effect.promise(() => Bun.file(file).exists())
+          const planned = yield* Effect.promise(() => Bun.file(plan).exists())
+          yield* Effect.promise(() => Question.reject(question.id))
+          const exit = yield* Fiber.await(fiber)
+
+          expect(Exit.isSuccess(exit)).toBe(true)
+          expect(calls).toBe(2)
+          expect(pending).toBe(1)
+          expect(mutated).toBe(false)
+          expect(planned).toBe(true)
+        }),
+      ),
     { git: true, config: providerCfg },
   ),
 )

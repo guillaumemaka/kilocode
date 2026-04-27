@@ -6,124 +6,17 @@ import { Truncate } from "../../tool"
 import { Config } from "../../config"
 import { Instance } from "../../project/instance"
 import { makeRuntime } from "@/effect/run-service"
-import { Global } from "@/global"
 import { Telemetry } from "@kilocode/kilo-telemetry"
 import z from "zod"
 import path from "path"
+import { askGuard, bash, planGuard } from "./permissions"
+export { bash, readOnlyBash } from "./permissions"
 
 import PROMPT_DEBUG from "../../agent/prompt/debug.txt"
 import PROMPT_ORCHESTRATOR from "../../agent/prompt/orchestrator.txt"
 import PROMPT_ASK from "../../agent/prompt/ask.txt"
 import PROMPT_EXPLORE from "../../agent/prompt/explore.txt"
 
-// Safe bash commands that don't need user approval.
-// Only commands that cannot execute arbitrary code or subprocesses.
-export const bash: Record<string, "allow" | "ask" | "deny"> = {
-  "*": "ask",
-  // read-only / informational
-  "cat *": "allow",
-  "head *": "allow",
-  "tail *": "allow",
-  "less *": "allow",
-  "ls *": "allow",
-  "tree *": "allow",
-  "pwd *": "allow",
-  "echo *": "allow",
-  "wc *": "allow",
-  "which *": "allow",
-  "type *": "allow",
-  "file *": "allow",
-  "diff *": "allow",
-  "du *": "allow",
-  "df *": "allow",
-  "date *": "allow",
-  "uname *": "allow",
-  "whoami *": "allow",
-  "printenv *": "allow",
-  "man *": "allow",
-  // text processing
-  "grep *": "allow",
-  "rg *": "allow",
-  "ag *": "allow",
-  "sort *": "allow",
-  "uniq *": "allow",
-  "cut *": "allow",
-  "tr *": "allow",
-  "jq *": "allow",
-  // file operations
-  "touch *": "allow",
-  "mkdir *": "allow",
-  "cp *": "allow",
-  "mv *": "allow",
-  // compilers (no script execution)
-  "tsc *": "allow",
-  "tsgo *": "allow",
-  // archive
-  "tar *": "allow",
-  "unzip *": "allow",
-  "gzip *": "allow",
-  "gunzip *": "allow",
-}
-
-// Read-only bash commands for ask/plan agents.
-// Unknown commands are DENIED (not "ask") because these agents must never modify the filesystem.
-export const readOnlyBash: Record<string, "allow" | "ask" | "deny"> = {
-  "*": "deny",
-  // read-only / informational
-  "cat *": "allow",
-  "head *": "allow",
-  "tail *": "allow",
-  "less *": "allow",
-  "ls *": "allow",
-  "tree *": "allow",
-  "pwd *": "allow",
-  "echo *": "allow",
-  "wc *": "allow",
-  "which *": "allow",
-  "type *": "allow",
-  "file *": "allow",
-  "diff *": "allow",
-  "du *": "allow",
-  "df *": "allow",
-  "date *": "allow",
-  "uname *": "allow",
-  "whoami *": "allow",
-  "printenv *": "allow",
-  "man *": "allow",
-  // text processing (stdout only, no file modification)
-  "grep *": "allow",
-  "rg *": "allow",
-  "ag *": "allow",
-  "sort *": "allow",
-  "uniq *": "allow",
-  "cut *": "allow",
-  "tr *": "allow",
-  "jq *": "allow",
-  // git — allowlist of read-only subcommands, deny everything else
-  "git *": "deny",
-  "git log *": "allow",
-  "git show *": "allow",
-  "git diff *": "allow",
-  "git status *": "allow",
-  "git blame *": "allow",
-  "git rev-parse *": "allow",
-  "git rev-list *": "allow",
-  "git ls-files *": "allow",
-  "git ls-tree *": "allow",
-  "git ls-remote *": "allow",
-  "git shortlog *": "allow",
-  "git describe *": "allow",
-  "git cat-file *": "allow",
-  "git name-rev *": "allow",
-  "git stash list *": "allow",
-  "git tag -l *": "allow",
-  "git branch --list *": "allow",
-  "git branch -a *": "allow",
-  "git branch -r *": "allow",
-  "git remote -v *": "allow",
-  // gh — require user approval since commands vary widely
-  "gh *": "ask",
-}
 
 // Generate per-server MCP wildcard rules that allow MCP tools with user approval.
 export function getMcpRules(cfg: Config.Info): Record<string, "allow" | "ask" | "deny"> {
@@ -227,26 +120,12 @@ export function patchAgents(
   if (agents.plan) {
     agents.plan = {
       ...agents.plan,
-      description: "Plan mode. Only allows editing plan files; asks before editing anything else.",
+      description: "Plan mode. Can only edit plan files; all other filesystem mutations are denied.",
       permission: Permission.merge(
         defaults,
-        Permission.fromConfig({
-          question: "allow",
-          suggest: "allow", // kilocode_change
-          plan_exit: "allow",
-          bash: readOnlyBash,
-          ...kilo.mcpRules,
-          external_directory: {
-            [path.join(Global.Path.data, "plans", "*")]: "allow",
-          },
-          edit: {
-            "*": "ask",
-            [path.join(".kilo", "plans", "*.md")]: "allow",
-            [path.join(".opencode", "plans", "*.md")]: "allow",
-            [path.relative(Instance.worktree, path.join(Global.Path.data, path.join("plans", "*.md")))]: "allow",
-          },
-        }),
         user,
+        planGuard(kilo.mcpRules),
+        user.filter((r: Permission.Rule) => r.action === "deny"),
       ),
     }
   }
@@ -347,28 +226,7 @@ export function patchAgents(
     permission: Permission.merge(
       defaults,
       user, // user before ask-specific so ask's deny+allowlist wins
-      Permission.fromConfig({
-        "*": "deny",
-        bash: readOnlyBash,
-        read: {
-          "*": "allow",
-          "*.env": "ask",
-          "*.env.*": "ask",
-          "*.env.example": "allow",
-        },
-        grep: "allow",
-        glob: "allow",
-        list: "allow",
-        question: "allow",
-        webfetch: "allow",
-        websearch: "allow",
-        codesearch: "allow",
-        codebase_search: "allow",
-        external_directory: {
-          [Truncate.GLOB]: "allow",
-        },
-        ...kilo.mcpRules,
-      }),
+      askGuard(kilo.mcpRules),
       user.filter((r: Permission.Rule) => r.action === "deny"), // re-apply user denies so explicit MCP blocks win over mcpRules
     ),
     mode: "primary",

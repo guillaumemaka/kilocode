@@ -400,7 +400,12 @@ NOTE: At any point in time through this workflow you should feel free to ask the
               ...req,
               sessionID: input.session.id,
               tool: { messageID: input.processor.message.id, callID: options.toolCallId },
-              ruleset: Permission.merge(input.agent.permission, input.session.permission ?? []),
+              // kilocode_change start - reapply Ask/Plan mode guards after session permissions
+              ruleset: Permission.merge(
+                input.agent.permission,
+                KiloSessionPrompt.guardPermissions({ agent: input.agent, session: input.session }),
+              ),
+              // kilocode_change end
             })
             .pipe(Effect.orDie),
       })
@@ -620,7 +625,12 @@ NOTE: At any point in time through this workflow you should feel free to ask the
               .ask({
                 ...req,
                 sessionID,
-                ruleset: Permission.merge(taskAgent.permission, session.permission ?? []),
+                // kilocode_change start - reapply Ask/Plan subagent guards after session permissions
+                ruleset: Permission.merge(
+                  taskAgent.permission,
+                  KiloSessionPrompt.guardPermissions({ agent: taskAgent, session }),
+                ),
+                // kilocode_change end
               })
               .pipe(Effect.orDie),
         })
@@ -1388,6 +1398,23 @@ NOTE: At any point in time through this workflow you should feel free to ask the
           const hasToolCalls =
             lastAssistantMsg?.parts.some((part) => part.type === "tool" && !part.metadata?.providerExecuted) ?? false
 
+          // kilocode_change start - plan_exit is a hard stop before another model call
+          if (
+            lastAssistant?.finish &&
+            hasToolCalls &&
+            lastAssistant.parentID === lastUser.id &&
+            lastUser.id < lastAssistant.id &&
+            KiloSessionPrompt.shouldAskPlanFollowup({ messages: msgs, abort: AbortSignal.any([]) })
+          ) {
+            const action = yield* Effect.promise((signal) =>
+              KiloSessionPrompt.askPlanFollowup({ sessionID, messages: msgs, abort: signal }),
+            )
+            if (action === "continue") continue
+            yield* slog.info("exiting loop")
+            break
+          }
+          // kilocode_change end
+
           if (
             lastAssistant?.finish &&
             !["tool-calls"].includes(lastAssistant.finish) &&
@@ -1560,7 +1587,9 @@ NOTE: At any point in time through this workflow you should feel free to ask the
             const result = yield* handle.process({
               user: lastUser,
               agent,
-              permission: session.permission,
+              // kilocode_change start - keep Ask/Plan tool filtering hardened against session allows
+              permission: KiloSessionPrompt.guardPermissions({ agent, session }),
+              // kilocode_change end
               sessionID,
               parentSessionID: session.parentID,
               system,

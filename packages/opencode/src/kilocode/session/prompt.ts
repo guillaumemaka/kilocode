@@ -9,6 +9,7 @@ import { Session } from "@/session"
 import { Flag } from "@/flag/flag"
 import { PlanFollowup } from "@/kilocode/plan-followup"
 import { KiloSession } from "@/kilocode/session"
+import { Permission } from "@/permission"
 import { environmentDetails, type EditorContext } from "@/kilocode/editor-context"
 import { Identifier } from "@/id/id"
 import { Filesystem } from "@/util"
@@ -52,6 +53,15 @@ export namespace KiloSessionPrompt {
 
   export function abortPlanFollowup(sessionID: SessionID) {
     return PlanFollowup.abort(sessionID)
+  }
+
+  export function guardPermissions(input: {
+    agent: { name: string; permission: Permission.Ruleset }
+    session: Pick<Session.Info, "permission">
+  }) {
+    const rules = input.session.permission ?? []
+    if (!["ask", "plan"].includes(input.agent.name)) return rules
+    return Permission.merge(rules, input.agent.permission, rules.filter((rule) => rule.action === "deny"))
   }
 
   /**
