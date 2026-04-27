@@ -1044,6 +1044,7 @@ export type CompactionPart = {
   type: "compaction"
   auto: boolean
   overflow?: boolean
+  tail_start_id?: string
 }
 
 export type Part =
@@ -1078,6 +1079,13 @@ export type EventMessagePartRemoved = {
   }
 }
 
+export type SnapshotSummaryFileDiff = {
+  file: string
+  additions: number
+  deletions: number
+  status?: "added" | "deleted" | "modified"
+}
+
 export type PermissionAction = "allow" | "deny" | "ask"
 
 export type PermissionRule = {
@@ -1099,12 +1107,7 @@ export type Session = {
     additions: number
     deletions: number
     files: number
-    diffs?: Array<{
-      file: string
-      additions: number
-      deletions: number
-      status?: "added" | "deleted" | "modified"
-    }>
+    diffs?: Array<SnapshotSummaryFileDiff>
   }
   share?: {
     url: string
@@ -1231,12 +1234,7 @@ export type SyncEventSessionUpdated = {
         additions: number
         deletions: number
         files: number
-        diffs?: Array<{
-          file: string
-          additions: number
-          deletions: number
-          status?: "added" | "deleted" | "modified"
-        }>
+        diffs?: Array<SnapshotSummaryFileDiff>
       } | null
       share?: {
         url: string | null
@@ -1384,8 +1382,8 @@ export type PermissionObjectConfig = {
 export type PermissionRuleConfig = PermissionActionConfig | PermissionObjectConfig
 
 export type PermissionConfig =
+  | PermissionActionConfig
   | {
-      __originalKeys?: Array<string>
       read?: PermissionRuleConfig
       edit?: PermissionRuleConfig
       glob?: PermissionRuleConfig
@@ -1402,9 +1400,8 @@ export type PermissionConfig =
       lsp?: PermissionRuleConfig
       doom_loop?: PermissionActionConfig
       skill?: PermissionRuleConfig
-      [key: string]: PermissionRuleConfig | Array<string> | PermissionActionConfig | undefined
+      [key: string]: PermissionRuleConfig | PermissionActionConfig | undefined
     }
-  | PermissionActionConfig
 
 export type AgentConfig = {
   model?: string | null
@@ -1704,10 +1701,6 @@ export type Config = {
    */
   autoshare?: boolean
   /**
-   * Enable remote control of sessions via Kilo Cloud. Equivalent to running /remote on startup.
-   */
-  remote_control?: boolean
-  /**
    * Automatically update to the latest version. Set to true to auto-update, false to disable, or 'notify' to show update notifications
    */
   autoupdate?: boolean | "notify"
@@ -1719,6 +1712,10 @@ export type Config = {
    * When set, ONLY these providers will be enabled. All other providers will be ignored
    */
   enabled_providers?: Array<string>
+  /**
+   * Enable remote control of sessions via Kilo Cloud. Equivalent to running /remote on startup.
+   */
+  remote_control?: boolean
   /**
    * Model to use in the format of provider/model, eg anthropic/claude-2
    */
@@ -1840,6 +1837,14 @@ export type Config = {
      * Enable pruning of old tool outputs (default: true)
      */
     prune?: boolean
+    /**
+     * Number of recent user turns, including their following assistant/tool responses, to keep verbatim during compaction (default: 2)
+     */
+    tail_turns?: number
+    /**
+     * Maximum number of tokens from recent turns to preserve verbatim after compaction
+     */
+    preserve_recent_tokens?: number
     /**
      * Token buffer for compaction. Leaves enough window to avoid overflow during compaction.
      */
@@ -2013,6 +2018,12 @@ export type Provider = {
   }
 }
 
+export type ConsoleState = {
+  consoleManagedProviders: Array<string>
+  activeOrgName?: string
+  switchableOrgCount: number
+}
+
 export type ToolIds = Array<string>
 
 export type ToolListItem = {
@@ -2076,12 +2087,7 @@ export type GlobalSession = {
     additions: number
     deletions: number
     files: number
-    diffs?: Array<{
-      file: string
-      additions: number
-      deletions: number
-      status?: "added" | "deleted" | "modified"
-    }>
+    diffs?: Array<SnapshotSummaryFileDiff>
   }
   share?: {
     url: string
@@ -3195,11 +3201,7 @@ export type ExperimentalConsoleGetResponses = {
   /**
    * Active Console provider metadata
    */
-  200: {
-    consoleManagedProviders: Array<string>
-    activeOrgName?: string
-    switchableOrgCount: number
-  }
+  200: ConsoleState
 }
 
 export type ExperimentalConsoleGetResponse = ExperimentalConsoleGetResponses[keyof ExperimentalConsoleGetResponses]
@@ -4944,6 +4946,25 @@ export type ProviderOauthCallbackResponses = {
 }
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
+
+export type SyncStartData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/sync/start"
+}
+
+export type SyncStartResponses = {
+  /**
+   * Workspace sync started
+   */
+  200: boolean
+}
+
+export type SyncStartResponse = SyncStartResponses[keyof SyncStartResponses]
 
 export type SyncReplayData = {
   body?: {
@@ -6863,6 +6884,7 @@ export type KiloFimResponses = {
       delta?: {
         content?: string
       }
+      text?: string
     }>
     usage?: {
       prompt_tokens?: number
