@@ -36,6 +36,7 @@ export const PermissionRoutes = lazy(() =>
         }),
       ),
       validator("json", z.object({ reply: Permission.Reply.zod, message: z.string().optional() })),
+      // kilocode_change start — reply handler returns boolean and surfaces stale/unknown requestIDs as 404
       async (c) => {
         const params = c.req.valid("param")
         const json = c.req.valid("json")
@@ -51,11 +52,10 @@ export const PermissionRoutes = lazy(() =>
             })
           }),
         )
-        // kilocode_change start — surface stale/unknown requestIDs as 404 so the caller can clean up its UI
         if (!ok) throw new NotFoundError({ message: `Permission request not found: ${params.requestID}` })
-        // kilocode_change end
         return c.json(true)
       },
+      // kilocode_change end
     )
     // kilocode_change start
     .post(
