@@ -36,7 +36,7 @@ export const PermissionRoutes = lazy(() =>
         }),
       ),
       validator("json", z.object({ reply: Permission.Reply.zod, message: z.string().optional() })),
-      // kilocode_change start — reply handler returns boolean and surfaces stale/unknown requestIDs as 404
+      // kilocode_change start
       async (c) => {
         const params = c.req.valid("param")
         const json = c.req.valid("json")

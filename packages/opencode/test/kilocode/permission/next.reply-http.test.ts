@@ -1,4 +1,3 @@
-// kilocode_change - new file
 import { afterEach, describe, expect, test } from "bun:test"
 import { Permission } from "../../../src/permission"
 import { PermissionID } from "../../../src/permission/schema"
@@ -57,8 +56,6 @@ describe("POST /permission/:requestID/reply", () => {
           ruleset: [],
         })
 
-        // Wait until the pending entry is registered. `Permission.ask` forks
-        // its own deferred so we can drive the reply via HTTP without blocking.
         for (let i = 0; i < 100; i++) {
           const list = await Permission.list()
           if (list.length > 0) break

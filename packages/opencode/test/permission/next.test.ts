@@ -1122,7 +1122,7 @@ it.live("pending permission rejects on instance reload", () =>
   }),
 )
 
-// kilocode_change start — was "does nothing"; now returns false so the HTTP route can 404
+// kilocode_change start
 it.live("reply - returns false for unknown requestID", () =>
   withDir({ git: true }, () =>
     Effect.gen(function* () {

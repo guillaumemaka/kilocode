@@ -142,8 +142,6 @@ describe("saveAlwaysRules", () => {
   it.live("returns false for unknown request ID", () =>
     withDir({ git: true }, () =>
       Effect.gen(function* () {
-        // saveAlwaysRules returns false when the request ID is not in the
-        // pending map so the HTTP route can surface a 404 to the client.
         const accepted = yield* saveAlwaysRules({
           requestID: PermissionID.make("permission_nonexistent"),
           approvedAlways: ["npm install"],

@@ -16,17 +16,9 @@ export interface PermissionContext {
   readonly sessionDirectories: ReadonlyMap<string, string>
   postMessage(msg: unknown): void
   getWorkspaceDirectory(sessionId?: string): string
-  /**
-   * Record the SSE envelope directory for a pending permission. Used so that
-   * replies land in the Instance that actually holds the pending entry,
-   * regardless of any stale session→directory mapping.
-   */
   recordPermissionDirectory(requestID: string, directory: string): void
-  /** Look up the directory recorded for a pending permission, if any. */
   getPermissionDirectory(requestID: string): string | undefined
-  /** Clear a cached directory record when the permission is no longer pending. */
   clearPermissionDirectory(requestID: string): void
-  /** Remove directory entries for permissions no longer in the active set. */
   prunePermissionDirectories(active: Set<string>): void
 }
 
@@ -47,7 +39,6 @@ function isNotFoundError(error: unknown): boolean {
   const obj = error as Record<string, unknown>
   if (obj.name === "NotFoundError") return true
   if (typeof obj.status === "number" && obj.status === 404) return true
-  // SDK `throwOnError: true` shape: { data: { name: "NotFoundError", data: {...} } }
   const data = obj.data as Record<string, unknown> | undefined
   return data?.name === "NotFoundError"
 }
@@ -55,15 +46,6 @@ function isNotFoundError(error: unknown): boolean {
 /**
  * Handle permission response from the webview.
  * Calls saveAlwaysRules first (if any), then reply — sequentially to avoid races.
- *
- * Routes the request to the Instance that owns the pending permission by
- * using the directory recorded from the `permission.asked` SSE envelope. This
- * avoids mis-routing when `sessionDirectories` is stale (e.g. worktree sessions
- * created by subagents or in a different panel).
- *
- * On a 404 (pending permission gone — typically because another panel replied
- * first), posts `permissionError` (with `stale`) to unstick the UI and refreshes
- * the pending list so the stale entry is removed from the webview.
  */
 export async function handlePermissionResponse(
   ctx: PermissionContext,
@@ -85,9 +67,6 @@ export async function handlePermissionResponse(
     return
   }
 
-  // Prefer the directory captured from the SSE envelope — that's the Instance
-  // whose pending map actually holds this permission. Fall back to the session
-  // directory heuristic only for recovered entries with no envelope record.
   const dir = ctx.getPermissionDirectory(permissionId) ?? ctx.getWorkspaceDirectory(target)
 
   const staleCleanup = () => {
@@ -96,9 +75,6 @@ export async function handlePermissionResponse(
     void fetchAndSendPendingPermissions(ctx)
   }
 
-  // Save per-pattern rules before replying (reply deletes the pending request).
-  // On 404 here, skip reply entirely — the pending is gone so reply would 404
-  // too, and both paths converge on the same stale-cleanup.
   if (approvedAlways.length > 0 || deniedAlways.length > 0) {
     const saveResult = await ctx.client.permission
       .saveAlwaysRules(
@@ -143,11 +119,6 @@ export async function handlePermissionResponse(
  * to tracked sessions to the webview. Called after SSE reconnects and after
  * loading messages for a session so that missed permission.asked events are
  * recovered instead of leaving the server blocked indefinitely.
- *
- * Each recovered permission is also recorded in the per-permission directory
- * map so subsequent replies route to the exact Instance it was fetched from.
- * Stale entries (permissions no longer pending on any backend) are pruned so
- * the map does not grow without bound.
  */
 export async function fetchAndSendPendingPermissions(ctx: PermissionContext): Promise<void> {
   if (!ctx.client) return
@@ -175,8 +146,6 @@ export async function fetchAndSendPendingPermissions(ctx: PermissionContext): Pr
         })
       }
     }
-    // Remove directory entries for permissions that are no longer pending on
-    // any backend Instance, preventing unbounded growth of the map.
     ctx.prunePermissionDirectories(seen)
   } catch (error) {
     console.error("[Kilo New] KiloProvider: Failed to fetch pending permissions:", error)

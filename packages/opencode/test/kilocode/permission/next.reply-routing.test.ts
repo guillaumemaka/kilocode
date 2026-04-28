@@ -145,10 +145,6 @@ describe("reply routing", () => {
     ),
   )
 
-  // Permission state is per-Instance (per-directory). A reply issued against a
-  // directory that doesn't own the pending entry must surface a "not found"
-  // signal so the HTTP route can 404 and the client can recover — otherwise
-  // the tool Effect hangs forever. This test pins that invariant.
   it.live("a reply to directory B does not resolve a pending permission in directory A", () =>
     Effect.gen(function* () {
       const dirA = yield* tmpdirScoped({ git: true })
@@ -174,12 +170,9 @@ describe("reply routing", () => {
       }).pipe(runB)
       expect(accepted).toBe(false)
 
-      // The pending entry in directory A is still there — the misrouted reply
-      // did not silently resolve it.
       expect(yield* list().pipe(runA)).toHaveLength(1)
       expect(yield* list().pipe(runB)).toHaveLength(0)
 
-      // Reply correctly in directory A so the fork terminates cleanly.
       const okAccepted = yield* reply({
         requestID: PermissionID.make("permission_crossdir"),
         reply: "once",

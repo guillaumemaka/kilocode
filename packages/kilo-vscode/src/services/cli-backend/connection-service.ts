@@ -6,10 +6,6 @@ import type { ServerConfig } from "./types"
 import { resolveEventSessionId as resolveEventSessionIdPure } from "./connection-utils"
 
 export type ConnectionState = "connecting" | "connected" | "disconnected" | "error"
-/**
- * `directory` is the per-Instance directory from the SSE envelope. Optional so
- * existing listeners that don't need it continue to work unchanged.
- */
 type SSEEventListener = (event: Event, directory?: string) => void
 type StateListener = (state: ConnectionState) => void
 type SSEEventFilter = (event: Event, directory?: string) => boolean

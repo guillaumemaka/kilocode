@@ -1,7 +1,7 @@
 import { Permission } from "@/permission"
 import { PermissionID } from "@/permission/schema"
 import { Effect, Layer, Schema } from "effect"
-import { HttpApi, HttpApiBuilder, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi" // kilocode_change - added HttpApiError
+import { HttpApi, HttpApiBuilder, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi" // kilocode_change
 
 const root = "/permission"
 // kilocode_change start
@@ -24,7 +24,7 @@ export const PermissionApi = HttpApi.make("permission")
             description: "Get all pending permission requests across all sessions.",
           }),
         ),
-        // kilocode_change start — added error: NotFoundNoContent so stale replies return 404
+        // kilocode_change start
         HttpApiEndpoint.post("reply", `${root}/:requestID/reply`, {
           params: { requestID: PermissionID },
           payload: Permission.ReplyBody,
@@ -76,7 +76,7 @@ export const permissionHandlers = Layer.unwrap(
       return yield* svc.list()
     })
 
-    // kilocode_change start — reply now returns boolean so caller can detect stale requests
+    // kilocode_change start
     const reply = Effect.fn("PermissionHttpApi.reply")(function* (ctx: {
       params: { requestID: PermissionID }
       payload: Permission.ReplyBody

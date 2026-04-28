@@ -147,9 +147,9 @@ export const AllowEverythingInput = z.object({
 
 export interface Interface {
   readonly ask: (input: AskInput) => Effect.Effect<void, Error>
-  readonly reply: (input: ReplyInput) => Effect.Effect<boolean> // kilocode_change — boolean indicates whether request was accepted
+  readonly reply: (input: ReplyInput) => Effect.Effect<boolean> // kilocode_change
   readonly list: () => Effect.Effect<ReadonlyArray<Request>>
-  readonly saveAlwaysRules: (input: z.infer<typeof SaveAlwaysRulesInput>) => Effect.Effect<boolean> // kilocode_change — boolean indicates whether request was accepted
+  readonly saveAlwaysRules: (input: z.infer<typeof SaveAlwaysRulesInput>) => Effect.Effect<boolean> // kilocode_change
   readonly allowEverything: (input: z.infer<typeof AllowEverythingInput>) => Effect.Effect<void> // kilocode_change
   readonly pending: (id: string) => Effect.Effect<Request | undefined> // kilocode_change
 }
@@ -255,7 +255,7 @@ export const layer = Layer.effect(
     const reply = Effect.fn("Permission.reply")(function* (input: ReplyInput) {
       const { approved, pending } = yield* InstanceState.get(state)
       const existing = pending.get(input.requestID)
-      if (!existing) return false // kilocode_change — signal "not found" so the HTTP route can 404
+      if (!existing) return false // kilocode_change
 
       pending.delete(input.requestID)
       yield* bus.publish(Event.Replied, {
@@ -287,7 +287,7 @@ export const layer = Layer.effect(
       if (input.reply === "once") return true // kilocode_change
 
       // kilocode_change start — downgrade "always" to "once" for config file edits
-      if (ConfigProtection.isRequest(existing.info)) return true // kilocode_change — request was accepted, "always" was downgraded
+      if (ConfigProtection.isRequest(existing.info)) return true // kilocode_change
       // kilocode_change end
 
       for (const pattern of existing.info.always) {
@@ -337,9 +337,9 @@ export const layer = Layer.effect(
     ) {
       const s = yield* InstanceState.get(state)
       const existing = s.pending.get(input.requestID)
-      if (!existing) return false // kilocode_change — signal "not found" so the HTTP route can 404
+      if (!existing) return false // kilocode_change
 
-      if (ConfigProtection.isRequest(existing.info)) return true // kilocode_change — request was accepted but no-op for protected paths
+      if (ConfigProtection.isRequest(existing.info)) return true // kilocode_change
 
       const validRules = new Set([
         ...((existing.info.metadata?.rules as string[] | undefined) ?? []),

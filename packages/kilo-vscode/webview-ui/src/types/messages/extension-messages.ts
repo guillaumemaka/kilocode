@@ -123,11 +123,6 @@ export interface PermissionResolvedMessage {
 export interface PermissionErrorMessage {
   type: "permissionError"
   permissionID: string
-  /**
-   * Set by the extension when the server reports the pending permission as
-   * unknown (404). The webview drops the permission from its list so the user
-   * isn't presented with a prompt that will always error.
-   */
   stale?: boolean
 }
 

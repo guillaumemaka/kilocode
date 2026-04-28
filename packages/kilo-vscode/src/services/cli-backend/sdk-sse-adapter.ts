@@ -1,9 +1,5 @@
 import type { KiloClient, GlobalEvent, Event } from "@kilocode/sdk/v2/client"
 
-/**
- * `directory` is the per-Instance directory carried on every SSE envelope.
- * It is optional so existing handlers that don't care continue to compile unchanged.
- */
 export type SSEEventHandler = (event: Event, directory?: string) => void
 export type SSEErrorHandler = (error: Error) => void
 export type SSEStateHandler = (state: "connecting" | "connected" | "disconnected") => void
@@ -176,9 +172,6 @@ export class SdkSSEAdapter {
           this.resetHeartbeat(attempt)
 
           // The SDK yields GlobalEvent = { directory, payload: Event }.
-          // Forward the envelope directory alongside the payload so downstream
-          // code (e.g. permission routing) can reply to the right Instance
-          // regardless of session-directory state.
           const globalEvent = event as GlobalEvent
           const type = (globalEvent.payload as { type: string }).type
           if (type !== "server.heartbeat") {

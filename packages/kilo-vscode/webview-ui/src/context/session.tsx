@@ -1157,16 +1157,12 @@ export const SessionProvider: ParentComponent = (props) => {
   }
 
   function handlePermissionError(permissionID: string, stale?: boolean) {
-    // Remove from responding set so buttons re-enable
     setRespondingPermissions((prev) => {
       if (!prev.has(permissionID)) return prev
       const next = new Set(prev)
       next.delete(permissionID)
       return next
     })
-    // When the server reports the pending permission as unknown, the prompt
-    // is no longer actionable (typically because another panel replied first).
-    // Drop it from the displayed list so the user doesn't click a dead button.
     if (stale) {
       setPermissions((prev) => prev.filter((p) => p.id !== permissionID))
       return
