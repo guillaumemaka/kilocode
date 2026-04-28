@@ -473,7 +473,7 @@ Default legacy mode slugs (`code`, `build`, `architect`, `ask`, `debug`, `orches
 The CLI reads legacy mode files from the following locations (in load order). When the same slug appears in multiple sources, the **last loaded source wins**:
 
 | Load Order | Path | Format | Scope |
-|------------|------|--------|-------|
+|---|---|---|---|
 | 1 | VSCode extension global storage `/settings/custom_modes.yaml` | YAML | Global |
 | 2 | `~/.kilocode/cli/global/settings/custom_modes.yaml` | YAML | Global |
 | 3 | `~/.kilocodemodes` | YAML | Global |

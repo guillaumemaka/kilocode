@@ -1,1 +1,4 @@
 packages/desktop/src/bindings.ts
+packages/opencode/src/provider/models-snapshot.ts
+packages/opencode/src/provider/models-snapshot.js
+packages/opencode/src/provider/models-snapshot.d.ts
