@@ -3,6 +3,7 @@ package ai.kilocode.client.session
 import ai.kilocode.client.app.KiloAppService
 import ai.kilocode.client.app.KiloSessionService
 import ai.kilocode.client.app.Workspace
+import ai.kilocode.client.plugin.KiloBundle
 import ai.kilocode.client.session.model.SessionModelEvent
 import ai.kilocode.client.session.model.SessionState
 import ai.kilocode.client.session.ui.ConnectionPanel
@@ -17,12 +18,14 @@ import ai.kilocode.client.session.update.EVENT_FLUSH_MS
 import ai.kilocode.client.session.update.SessionController
 import ai.kilocode.client.session.update.SessionControllerEvent
 import ai.kilocode.rpc.dto.SessionDto
+import ai.kilocode.log.ChatLogSummary
+import ai.kilocode.log.KiloLog
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.registry.Registry
-import ai.kilocode.log.ChatLogSummary
-import ai.kilocode.log.KiloLog
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.ui.Centerizer
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.CoroutineScope
 import java.awt.BorderLayout
@@ -43,7 +46,7 @@ class SessionUi(
     app: KiloAppService,
     cs: CoroutineScope,
     id: String? = null,
-    private val onOpenSession: (SessionDto) -> Unit = {},
+    open: (SessionDto) -> Unit = {},
 ) : JPanel(BorderLayout()), Disposable {
 
     companion object {
@@ -61,6 +64,7 @@ class SessionUi(
         this, id, sessions, workspace, app, cs, this,
         flushMs = flushMs,
         condense = Registry.`is`("kilo.session.condense", true),
+        open = open,
     )
 
 
@@ -68,7 +72,7 @@ class SessionUi(
 
     private lateinit var sessionContent: JPanel
 
-    private lateinit var emptyBody: EmptySessionPanel
+    private lateinit var progressBody: JPanel
 
     private lateinit var messageBody: SessionMessageListPanel
 
@@ -83,7 +87,7 @@ class SessionUi(
     init {
         buildUi()
         bindUi()
-        showBody(emptyBody)
+        showBody(progressBody)
     }
 
     private fun buildUi() {
@@ -91,10 +95,16 @@ class SessionUi(
 
         sessionContent = JPanel(BorderLayout())
 
-        emptyBody = EmptySessionPanel(this, controller, onOpenSession)
+        progressBody = JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(Centerizer(
+                JBLabel(KiloBundle.message("session.empty.loading")),
+                Centerizer.TYPE.BOTH,
+            ), BorderLayout.CENTER)
+        }
         messageBody = SessionMessageListPanel(controller.model, this)
 
-        scroll = JBScrollPane(emptyBody).apply {
+        scroll = JBScrollPane(progressBody).apply {
             border = JBUI.Borders.empty()
             verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
             horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
@@ -154,8 +164,17 @@ class SessionUi(
                     prompt.setReady(m.isReady())
                 }
 
-                is SessionControllerEvent.ViewChanged -> {
-                    showBody(if (event.show) messageBody else emptyBody)
+                is SessionControllerEvent.ViewChanged.ShowProgress -> {
+                    showBody(progressBody)
+                }
+
+                is SessionControllerEvent.ViewChanged.ShowRecents -> {
+                    val panel = EmptySessionPanel(this, controller, event.recents)
+                    showBody(panel)
+                }
+
+                is SessionControllerEvent.ViewChanged.ShowSession -> {
+                    showBody(messageBody)
                 }
 
                 is SessionControllerEvent.AppChanged,

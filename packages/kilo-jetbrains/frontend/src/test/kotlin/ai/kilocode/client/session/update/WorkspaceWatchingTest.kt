@@ -17,6 +17,8 @@ class WorkspaceWatchingTest : SessionControllerTestBase() {
         assertEquals("gpt-5", m.model.models[0].id)
         assertFalse(m.model.isReady())
         assertControllerEvents("""
+            ViewChanged progress
+            ViewChanged recents=0
             WorkspaceChanged
             WorkspaceReady
         """, events)

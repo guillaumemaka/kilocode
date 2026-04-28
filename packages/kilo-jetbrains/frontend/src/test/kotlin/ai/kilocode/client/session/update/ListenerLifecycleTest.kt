@@ -24,7 +24,7 @@ class ListenerLifecycleTest : SessionControllerTestBase() {
         flush()
 
         assertControllerEvents("""
-            ViewChanged show
+            ViewChanged session
             AppChanged
             WorkspaceChanged
         """, events)
@@ -47,7 +47,7 @@ class ListenerLifecycleTest : SessionControllerTestBase() {
 
         assertEquals(events1, events2)
         assertControllerEvents("""
-            ViewChanged show
+            ViewChanged session
             AppChanged
             WorkspaceChanged
         """, events1)

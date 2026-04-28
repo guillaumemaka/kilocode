@@ -29,7 +29,15 @@ class HistoryLoadingTest : SessionControllerTestBase() {
         rpc.history.add(MessageWithPartsDto(msg("msg1", "ses_test", "user"), emptyList()))
 
         val c = controller("ses_test")
+        val events = collect(c)
         flush()
+
+        assertControllerEvents("""
+            AppChanged
+            WorkspaceChanged
+            ViewChanged progress
+            ViewChanged session
+        """, events)
 
         assertSession(
             """

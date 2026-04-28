@@ -2,6 +2,7 @@ package ai.kilocode.client.session.update
 
 import ai.kilocode.client.session.model.SessionModel
 import ai.kilocode.client.session.model.SessionModelEvent
+import ai.kilocode.rpc.dto.SessionDto
 
 /**
  * Lifecycle events fired by [SessionController] on the EDT.
@@ -18,8 +19,19 @@ sealed class SessionControllerEvent {
 
     // Workspace ready (pickers populated)
     data object WorkspaceReady : SessionControllerEvent()
-    data class ViewChanged(val show: Boolean) : SessionControllerEvent() {
-        override fun toString() = if (show) "ViewChanged show" else "ViewChanged hide"
+
+    sealed class ViewChanged : SessionControllerEvent() {
+        data object ShowProgress : ViewChanged() {
+            override fun toString() = "ViewChanged progress"
+        }
+
+        data class ShowRecents(val recents: List<SessionDto>) : ViewChanged() {
+            override fun toString() = "ViewChanged recents=${recents.size}"
+        }
+
+        data object ShowSession : ViewChanged() {
+            override fun toString() = "ViewChanged session"
+        }
     }
 }
 

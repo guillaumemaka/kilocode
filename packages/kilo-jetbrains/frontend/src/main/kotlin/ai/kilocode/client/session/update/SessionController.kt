@@ -60,10 +60,12 @@ class SessionController(
   comp: Component? = null,
   private val flushMs: Long = EVENT_FLUSH_MS,
   private val condense: Boolean = true,
+  private val open: (SessionDto) -> Unit = {},
 ) : Disposable {
 
     companion object {
         private val LOG = KiloLog.create(SessionController::class.java)
+        internal const val RECENT_LIMIT = 5
     }
 
     init {
@@ -87,23 +89,41 @@ class SessionController(
     private var partType: String? = null
     private var tool: String? = null
     private var eventJob: Job? = null
+    private var recentsLoading = false
+    private var recentsLoaded = false
+    private var view: SessionControllerEvent.ViewChanged? = null
 
     val ready: Boolean get() = model.isReady()
 
-    fun recent(
-        limit: Int,
-        onResult: (List<SessionDto>) -> Unit,
-        onError: () -> Unit = {},
-    ) {
+    fun refreshRecents(force: Boolean = false) {
+        if (model.showMessages) return
+        if (recentsLoading) return
+        if (recentsLoaded && !force) return
+        recentsLoading = true
+        view(SessionControllerEvent.ViewChanged.ShowProgress)
         cs.launch {
             try {
-                val items = sessions.recent(directory, limit)
-                edt { onResult(items) }
+                val items = sessions.recent(directory, RECENT_LIMIT)
+                edt {
+                    recentsLoading = false
+                    recentsLoaded = true
+                    if (model.showMessages) return@edt
+                    view(SessionControllerEvent.ViewChanged.ShowRecents(items))
+                }
             } catch (e: Exception) {
                 LOG.warn("kind=session-recent dir=${ChatLogSummary.dir(directory)} failed message=${e.message}", e)
-                edt { onError() }
+                edt {
+                    recentsLoading = false
+                    recentsLoaded = true
+                    if (model.showMessages) return@edt
+                    view(SessionControllerEvent.ViewChanged.ShowRecents(emptyList()))
+                }
             }
         }
+    }
+
+    fun openSession(session: SessionDto) {
+        open(session)
     }
 
     fun addListener(parent: Disposable, listener: SessionControllerListener) {
@@ -286,6 +306,9 @@ class SessionController(
 
                 if (state.status == KiloWorkspaceStatusDto.READY) {
                     fire(SessionControllerEvent.WorkspaceReady)
+                    edt {
+                        if (sessionId == null) refreshRecents()
+                    }
                 }
             }
         }
@@ -294,16 +317,24 @@ class SessionController(
     private fun loadHistory() {
         val id = sessionId ?: return
         cs.launch {
+            view(SessionControllerEvent.ViewChanged.ShowProgress)
             try {
                 val history = sessions.messages(id, directory)
                 LOG.debug { "${ChatLogSummary.sid(id)} ${ChatLogSummary.history(history)}" }
                 runEdt {
                     this@SessionController.model.loadHistory(history)
-                    if (!model.isEmpty()) showMessages()
                 }
                 recoverPending(id)
+                edt {
+                    if (!model.isEmpty()) {
+                        showMessages()
+                        return@edt
+                    }
+                    refreshRecents(force = true)
+                }
             } catch (e: Exception) {
                 LOG.warn("${ChatLogSummary.sid(id)} kind=history dir=${ChatLogSummary.dir(directory)} failed message=${e.message}", e)
+                edt { refreshRecents(force = true) }
             } finally {
                 updates.holdFlush(false)
                 updates.requestFlush(true)
@@ -519,8 +550,14 @@ class SessionController(
     private fun showMessages() {
         if (!model.showMessages) {
             model.showMessages = true
-            fire(SessionControllerEvent.ViewChanged(true))
+            view(SessionControllerEvent.ViewChanged.ShowSession)
         }
+    }
+
+    private fun view(event: SessionControllerEvent.ViewChanged) {
+        if (view == event) return
+        view = event
+        fire(event)
     }
 
     private fun status(): String = when (partType) {

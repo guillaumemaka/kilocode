@@ -110,7 +110,7 @@ class SessionSidePanelManagerTest : BasePlatformTestCase() {
             root = workspace,
             create = { project, workspace, owner, id ->
                 created.add(workspace.directory to id)
-                SessionUi(project, workspace, sessions, app, scope, id = id, onOpenSession = owner::openSession)
+                SessionUi(project, workspace, sessions, app, scope, id = id, open = owner::openSession)
             },
             resolve = { workspaces.workspace(it) },
         )

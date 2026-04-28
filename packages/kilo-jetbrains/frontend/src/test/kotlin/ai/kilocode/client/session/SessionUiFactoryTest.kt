@@ -55,15 +55,31 @@ class SessionUiFactoryTest : BasePlatformTestCase() {
 
     fun `test factory wires open callback`() {
         val manager = FakeManager()
-        val ui = SessionUi(project, workspace, sessions, app, scope, onOpenSession = manager::openSession)
-        val panel = find<ai.kilocode.client.session.ui.EmptySessionPanel>(ui)
-
-        panel.onEvent(ai.kilocode.client.session.update.SessionControllerEvent.WorkspaceReady)
         val rpc = session("ses_1")
-        panel.setSessions(listOf(rpc))
+        val ui = SessionUi(project, workspace, sessions, app, scope, open = manager::openSession)
+        val controller = controller(ui)
+
+        controller.openSession(rpc)
+
+        assertEquals(listOf("ses_1"), manager.opened)
+    }
+
+    fun `test empty panel opens through controller`() {
+        val manager = FakeManager()
+        val rpc = session("ses_1")
+        val ui = SessionUi(project, workspace, sessions, app, scope, open = manager::openSession)
+        val controller = controller(ui)
+        val panel = ai.kilocode.client.session.ui.EmptySessionPanel(testRootDisposable, controller, listOf(rpc))
+
         panel.clickRecent(0)
 
         assertEquals(listOf("ses_1"), manager.opened)
+    }
+
+    private fun controller(ui: SessionUi): ai.kilocode.client.session.update.SessionController {
+        val field = SessionUi::class.java.getDeclaredField("controller")
+        field.isAccessible = true
+        return field.get(ui) as ai.kilocode.client.session.update.SessionController
     }
 
     fun `test application service is available`() {
@@ -71,22 +87,6 @@ class SessionUiFactoryTest : BasePlatformTestCase() {
     }
 
     private fun direct() = SessionUiFactory(scope)
-
-    private inline fun <reified T> find(root: java.awt.Container): T {
-        return find(root, T::class.java) ?: error("missing ${T::class.java.simpleName}")
-    }
-
-    private fun <T> find(root: java.awt.Container, cls: Class<T>): T? {
-        if (cls.isInstance(root)) return cls.cast(root)
-        for (child in root.components) {
-            if (cls.isInstance(child)) return cls.cast(child)
-            if (child is java.awt.Container) {
-                val item = find(child, cls)
-                if (item != null) return item
-            }
-        }
-        return null
-    }
 
     private fun session(id: String) = SessionDto(
         id = id,

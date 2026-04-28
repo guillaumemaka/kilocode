@@ -160,6 +160,7 @@ class SessionUiLayoutTest : BasePlatformTestCase() {
     }
 
     fun `test empty and message bodies share the same scroll pane`() {
+        settle()
         val scroll = find<JBScrollPane>(ui)
         val empty = find<EmptySessionPanel>(ui)
 
@@ -175,11 +176,12 @@ class SessionUiLayoutTest : BasePlatformTestCase() {
     fun `test clicking recent session calls opener`() {
         val opened = mutableListOf<String>()
         rpc.recent.add(session("ses_1"))
-        ui = SessionUi(project, workspace, sessions, app, scope, onOpenSession = { opened.add(it.id) }).apply {
+        ui = SessionUi(project, workspace, sessions, app, scope, open = { opened.add(it.id) }).apply {
             setSize(800, 600)
         }
 
         settle()
+        layout()
         find<EmptySessionPanel>(ui).clickRecent(0)
 
         assertEquals(listOf("ses_1"), opened)
