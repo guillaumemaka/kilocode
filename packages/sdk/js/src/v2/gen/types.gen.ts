@@ -590,23 +590,6 @@ export type EventVcsBranchUpdated = {
   }
 }
 
-export type IndexingStatusState = "Disabled" | "In Progress" | "Complete" | "Error" | "Standby"
-
-export type IndexingStatus = {
-  state: IndexingStatusState
-  message: string
-  processedFiles: number
-  totalFiles: number
-  percent: number
-}
-
-export type EventIndexingStatus = {
-  type: "indexing.status"
-  properties: {
-    status: IndexingStatus
-  }
-}
-
 export type EventSessionCompacted = {
   type: "session.compacted"
   properties: {
@@ -1170,6 +1153,23 @@ export type EventSessionDeleted = {
   }
 }
 
+export type IndexingStatusState = "Disabled" | "In Progress" | "Complete" | "Error" | "Standby"
+
+export type IndexingStatus = {
+  state: IndexingStatusState
+  message: string
+  processedFiles: number
+  totalFiles: number
+  percent: number
+}
+
+export type EventIndexingStatus = {
+  type: "indexing.status"
+  properties: {
+    status: IndexingStatus
+  }
+}
+
 export type SyncEventMessageUpdated = {
   type: "sync"
   name: "message.updated.1"
@@ -1331,7 +1331,6 @@ export type GlobalEvent = {
     | EventSessionIdle
     | EventTodoUpdated
     | EventVcsBranchUpdated
-    | EventIndexingStatus
     | EventSessionCompacted
     | EventKiloSessionsRemoteStatusChanged
     | EventWorktreeReady
@@ -1351,6 +1350,7 @@ export type GlobalEvent = {
     | EventSessionCreated
     | EventSessionUpdated
     | EventSessionDeleted
+    | EventIndexingStatus
     | SyncEventMessageUpdated
     | SyncEventMessageRemoved
     | SyncEventMessagePartUpdated
@@ -2449,7 +2449,6 @@ export type Event =
   | EventSessionIdle
   | EventTodoUpdated
   | EventVcsBranchUpdated
-  | EventIndexingStatus
   | EventSessionCompacted
   | EventKiloSessionsRemoteStatusChanged
   | EventWorktreeReady
@@ -2469,6 +2468,7 @@ export type Event =
   | EventSessionCreated
   | EventSessionUpdated
   | EventSessionDeleted
+  | EventIndexingStatus
 
 export type McpStatusConnected = {
   status: "connected"
