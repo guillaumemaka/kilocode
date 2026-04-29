@@ -22,11 +22,13 @@ on:
         description: "Override version (optional)"
         required: false
         type: string
+      # kilocode_change start
       pre_release:
         description: "Publish as pre-release (VS Code marketplace + npm rc channel)"
         required: false
         type: boolean
         default: true
+      # kilocode_change end
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version || inputs.bump }}
 
