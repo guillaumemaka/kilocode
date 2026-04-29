@@ -159,11 +159,11 @@ function join(text: Text) {
 
 function strip(file: string, line: string) {
   if (standalone.some((item) => item.test(line))) return null
-  if (style(file) === "hash") return comment(line, ["#"])
-  return comment(line, ["{/*", "/*", "//"])
+  if (style(file) === "hash") return comment(line, [/^#\s*kilocode_change\b/])
+  return comment(line, [/^\{\/\*\s*kilocode_change\b/, /^\/\*\s*kilocode_change\b/, /^\/\/\s*kilocode_change\b/])
 }
 
-function comment(line: string, tokens: string[]) {
+function comment(line: string, tokens: RegExp[]) {
   let quote = ""
   let escape = false
 
@@ -189,8 +189,8 @@ function comment(line: string, tokens: string[]) {
       continue
     }
 
-    const token = tokens.find((item) => line.startsWith(item, i))
-    if (token && line.slice(i).includes("kilocode_change")) return line.slice(0, i).trimEnd()
+    const rest = line.slice(i)
+    if (tokens.some((item) => item.test(rest))) return line.slice(0, i).trimEnd()
   }
 
   return line
