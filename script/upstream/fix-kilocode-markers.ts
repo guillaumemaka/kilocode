@@ -443,6 +443,28 @@ function expand(found: Range[], marks: Marks) {
   )
 }
 
+function boundary(line: string | undefined, kind: RegExp) {
+  if (!line) return false
+  return standalone.some((item) => item.test(line)) && kind.test(line)
+}
+
+function gap(lines: string[], index: number) {
+  const next = lines.slice(index).findIndex((line) => line.trim() !== "")
+  return next === -1 ? -1 : index + next
+}
+
+function collapse(lines: string[]): string[] {
+  const index = lines.findIndex((line, pos) => {
+    if (!boundary(line, end)) return false
+    const next = gap(lines, pos + 1)
+    return next !== -1 && boundary(lines[next], start)
+  })
+  if (index === -1) return lines
+
+  const next = gap(lines, index + 1)
+  return collapse(lines.filter((_, pos) => pos !== index && pos !== next))
+}
+
 function saved(marks: Marks, range: Range) {
   return marks.blocks.find((block) => block.start === range.start && block.end === range.end)
 }
@@ -470,7 +492,7 @@ function annotate(file: string, clean: Clean, found: Range[]) {
     lines.splice(range.start, 0, pair.start)
   }
 
-  return join({ ...text, lines })
+  return join({ ...text, lines: collapse(lines) })
 }
 
 function fresh(file: string, clean: Clean) {
