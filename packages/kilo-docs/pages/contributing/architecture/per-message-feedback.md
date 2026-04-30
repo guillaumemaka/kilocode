@@ -28,7 +28,7 @@ Add a thumbs-up / thumbs-down widget next to the existing copy button on every a
 
 ### Telemetry Payload
 
-We deliberately collect fewer identifiers for non-Kilo providers, since those IDs can't be correlated to upstream data and add tracking surface without product benefit.
+We deliberately collect fewer identifiers for non-Kilo providers, since those IDs can't be correlated to upstream data and add tracking surface without product benefit. Users of non-Kilo GW models would also not expect or want us to collect that information in Kilo GW from other providers.
 
 **Third party providers (Anthropic, OpenAI, local, etc.):**
 `providerID`, `modelID`, `variant?`, `rating`, `previousRating?`
