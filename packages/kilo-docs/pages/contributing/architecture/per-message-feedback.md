@@ -13,7 +13,7 @@ We have no signal on which assistant responses are helpful and which aren't. Wit
 - Identify specific bad responses in the Kilo Gateway logs for investigation
 - Detect patterns where certain providers, models, or prompt paths consistently underperform
 
-Aggregate metrics like session completion rate or token cost are too coarse to understand individual response quality. A lightweight thumbs-up/down on each message gives us the missing feedback loop.
+Aggregate metrics like session completion rate or token cost are too coarse to understand individual response quality. A lightweight thumbs-up/down on each message can help close the feedback loop.
 
 ## Proposal
 
@@ -25,13 +25,12 @@ Add a thumbs-up / thumbs-down widget next to the existing copy button on every a
 |---|---|
 | VS Code extension | Thumbs buttons inline next to the copy button |
 | TUI | Keybinds (`<leader>+` / `<leader>-`) on the last assistant message |
-| Desktop / `kilo web` | Out of scope for the first pass |
 
 ### Telemetry Payload
 
 We deliberately collect fewer identifiers for non-Kilo providers, since those IDs can't be correlated to upstream data and add tracking surface without product benefit.
 
-**Direct providers (Anthropic, OpenAI, etc.):**
+**Third party providers (Anthropic, OpenAI, local, etc.):**
 `providerID`, `modelID`, `variant?`, `rating`, `previousRating?`
 
 **Kilo Gateway turns (`providerID` starts with `"kilo"`):**
@@ -43,7 +42,7 @@ Event name: `"Feedback Submitted"` — a single event string in both telemetry e
 
 - **Toggleable**: click the same button again to clear, or click the opposite to switch. Each change fires a new event with `rating` and `previousRating`.
 - **In-memory state**: ratings are keyed by message ID and held in the webview/TUI session. Persisting across reloads is deferred to a follow-up.
-- **Gated on telemetry**: if the user has VS Code telemetry disabled, the buttons don't render at all. The TUI keybinds are no-ops with a brief toast.
+- **Gated on telemetry**: if the user has VS Code telemetry disabled, the buttons don't render at all. For the CLI when telemetry is off, the keybinds are no-ops.
 
 ### Architecture (high level)
 
