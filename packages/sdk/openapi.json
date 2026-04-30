@@ -15218,6 +15218,19 @@
                     "family": {
                       "type": "string"
                     },
+                    "prompt": {
+                      "type": "string",
+                      "enum": [
+                        "codex",
+                        "gemini",
+                        "beast",
+                        "anthropic",
+                        "trinity",
+                        "anthropic_without_todo",
+                        "ling",
+                        "gpt55"
+                      ]
+                    },
                     "release_date": {
                       "type": "string"
                     },
@@ -16393,7 +16406,7 @@
           },
           "prompt": {
             "type": "string",
-            "enum": ["codex", "gemini", "beast", "anthropic", "trinity", "anthropic_without_todo", "ling"]
+            "enum": ["codex", "gemini", "beast", "anthropic", "trinity", "anthropic_without_todo", "ling", "gpt55"]
           },
           "isFree": {
             "type": "boolean"
