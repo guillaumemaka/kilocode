@@ -1,12 +1,12 @@
 package ai.kilocode.client.session.ui
 
 import ai.kilocode.client.plugin.KiloBundle
+import ai.kilocode.client.ui.UiStyle
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupShowOptions
 import com.intellij.ui.CollectionListModel
-import com.intellij.ui.JBColor
 import com.intellij.ui.ListUtil
 import com.intellij.ui.RoundedLineBorder
 import com.intellij.ui.ScrollPaneFactory
@@ -37,12 +37,6 @@ import javax.swing.SwingUtilities
 
 class ModePicker : JBLabel() {
 
-    companion object {
-        private const val RADIUS = 6
-        private const val HPAD = 8
-        private const val VPAD = 2
-    }
-
     data class Item(
         val id: String,
         val display: String,
@@ -58,10 +52,7 @@ class ModePicker : JBLabel() {
     private var selected: Item? = null
 
     init {
-        border = JBUI.Borders.compound(
-            RoundedLineBorder(JBColor.border(), JBUI.scale(RADIUS)),
-            JBUI.Borders.empty(VPAD, HPAD),
-        )
+        border = UiStyle.Borders.picker()
         isEnabled = false
         text = " "
 
@@ -156,41 +147,36 @@ internal class ModePickerRenderer(
 ) : JPanel(BorderLayout()), ListCellRenderer<ModePicker.Item> {
 
     companion object {
-        private const val GAP = 8
-        private const val BADGE_RADIUS = 3
-        private const val BADGE_PAD = 5
-        private const val ROW_VPAD = 6
-        private const val ROW_HPAD = 8
         const val MAX_ROWS = 8
         val checked: Icon = AllIcons.Actions.Checked
         val empty: Icon = EmptyIcon.create(checked)
     }
 
     private val icon = JBLabel().apply {
-        isOpaque = false
+        UiStyle.Components.transparent(this)
     }
     private val title = SimpleColoredComponent().apply {
-        isOpaque = false
+        UiStyle.Components.transparent(this)
     }
     private val desc = SimpleColoredComponent().apply {
-        isOpaque = false
+        UiStyle.Components.transparent(this)
     }
     private val badge = JBLabel(KiloBundle.message("mode.picker.deprecated")).apply {
-        isOpaque = false
+        UiStyle.Components.transparent(this)
     }
     private val head = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
-        isOpaque = false
+        UiStyle.Components.transparent(this)
         add(title)
         add(badge)
     }
     private val body = JPanel(BorderLayout()).apply {
-        isOpaque = false
+        UiStyle.Components.transparent(this)
     }
 
     init {
         isOpaque = true
-        (layout as BorderLayout).hgap = JBUI.scale(GAP)
-        border = JBUI.Borders.empty(ROW_VPAD, ROW_HPAD)
+        (layout as BorderLayout).hgap = UiStyle.Gap.inline()
+        border = JBUI.Borders.empty(UiStyle.Space.MD, UiStyle.Space.LG)
         icon.horizontalAlignment = SwingConstants.CENTER
         icon.verticalAlignment = SwingConstants.CENTER
         body.add(head, BorderLayout.NORTH)
@@ -209,8 +195,8 @@ internal class ModePickerRenderer(
         val focus = list.hasFocus() || focused
         val fg = UIUtil.getListForeground(selected, focus)
         val bg = UIUtil.getListBackground(selected, focus)
-        val weak = if (selected) fg else UIUtil.getContextHelpForeground()
-        val warn = if (selected) fg else JBUI.CurrentTheme.Label.warningForeground()
+        val weak = if (selected) fg else UiStyle.Colors.weak()
+        val warn = if (selected) fg else UiStyle.Colors.warning()
 
         background = bg
         title.clear()
@@ -225,8 +211,8 @@ internal class ModePickerRenderer(
         badge.border = JBUI.Borders.compound(
             JBUI.Borders.emptyLeft(JBUI.CurrentTheme.ActionsList.elementIconGap()),
             JBUI.Borders.compound(
-                RoundedLineBorder(warn, JBUI.scale(BADGE_RADIUS)),
-                JBUI.Borders.empty(0, BADGE_PAD),
+                RoundedLineBorder(warn, JBUI.scale(UiStyle.Space.SM)),
+                JBUI.Borders.empty(0, UiStyle.Space.MD),
             ),
         )
         icon.icon = icon(value)
