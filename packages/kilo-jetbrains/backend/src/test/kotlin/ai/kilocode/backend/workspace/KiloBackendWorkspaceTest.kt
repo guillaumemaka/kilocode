@@ -295,6 +295,7 @@ class KiloBackendWorkspaceTest {
         assertTrue(model.attachment)
         assertTrue(model.reasoning)
         assertTrue(model.toolCall)
+        assertEquals(2.0, model.recommendedIndex)
     }
 
     @Test
@@ -513,6 +514,7 @@ class KiloBackendWorkspaceTest {
                         "cost": {"input": 0, "output": 0, "cache": {"read": 0, "write": 0}},
                         "limit": {"context": 200000, "output": 16000},
                         "status": "active",
+                        "recommendedIndex": 2,
                         "options": {},
                         "headers": {},
                         "release_date": "2025-05-01"

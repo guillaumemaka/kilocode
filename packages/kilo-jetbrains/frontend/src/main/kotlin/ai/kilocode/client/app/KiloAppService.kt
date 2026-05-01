@@ -6,6 +6,8 @@ import ai.kilocode.rpc.KiloAppRpcApi
 import ai.kilocode.rpc.dto.HealthDto
 import ai.kilocode.rpc.dto.KiloAppStateDto
 import ai.kilocode.rpc.dto.KiloAppStatusDto
+import ai.kilocode.rpc.dto.ModelFavoriteUpdateDto
+import ai.kilocode.rpc.dto.ModelSelectionDto
 import com.intellij.openapi.components.Service
 import ai.kilocode.log.KiloLog
 import fleet.rpc.client.durable
@@ -45,6 +47,8 @@ class KiloAppService internal constructor(
 
     internal val _state = MutableStateFlow(init)
     val state: StateFlow<KiloAppStateDto> = _state.asStateFlow()
+    private val _favorites = MutableStateFlow<List<ModelSelectionDto>>(emptyList())
+    val favorites: StateFlow<List<ModelSelectionDto>> = _favorites.asStateFlow()
 
     // ------ RPC helper ------
 
@@ -60,9 +64,14 @@ class KiloAppService internal constructor(
         cs.launch { call { connect() } }
         cs.launch {
             val api = rpc
-            if (api != null) api.state().collect { _state.value = it }
-            else durable { KiloAppRpcApi.getInstance().state().collect { _state.value = it } }
+            if (api != null) api.state().collect { onState(it) }
+            else durable { KiloAppRpcApi.getInstance().state().collect { onState(it) } }
         }
+    }
+
+    private fun onState(state: KiloAppStateDto) {
+        _state.value = state
+        if (state.status == KiloAppStatusDto.READY) refreshModelFavoritesAsync()
     }
 
     /** One-shot health check. Returns null on failure. */
@@ -124,6 +133,36 @@ class KiloAppService internal constructor(
             }
             version = dto.version
             LOG.info("fetchVersion: CLI version is ${dto.version}")
+        }
+    }
+
+    fun refreshModelFavoritesAsync() {
+        cs.launch {
+            try {
+                _favorites.value = call { modelState() }.favorite
+            } catch (e: Exception) {
+                LOG.warn("model favorites refresh failed", e)
+            }
+        }
+    }
+
+    fun toggleModelFavorite(providerID: String, modelID: String) {
+        val key = providerID to modelID
+        val prev = _favorites.value
+        val exists = prev.any { it.providerID to it.modelID == key }
+        val action = if (exists) "remove" else "add"
+        _favorites.value = if (exists) {
+            prev.filterNot { it.providerID to it.modelID == key }
+        } else {
+            listOf(ModelSelectionDto(providerID, modelID)) + prev
+        }
+        cs.launch {
+            try {
+                _favorites.value = call { updateModelFavorite(ModelFavoriteUpdateDto(action, providerID, modelID)) }.favorite
+            } catch (e: Exception) {
+                LOG.warn("model favorite update failed", e)
+                _favorites.value = prev
+            }
         }
     }
 

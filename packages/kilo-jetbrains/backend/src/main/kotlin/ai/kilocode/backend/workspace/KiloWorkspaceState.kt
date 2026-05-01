@@ -55,6 +55,7 @@ data class ModelInfo(
     val toolCall: Boolean,
     val free: Boolean,
     val status: String?,
+    val recommendedIndex: Double?,
 )
 
 data class AgentData(

@@ -7,6 +7,8 @@ import ai.kilocode.rpc.dto.MessageDto
 import ai.kilocode.rpc.dto.MessageErrorDto
 import ai.kilocode.rpc.dto.MessageTimeDto
 import ai.kilocode.rpc.dto.MessageWithPartsDto
+import ai.kilocode.rpc.dto.ModelSelectionDto
+import ai.kilocode.rpc.dto.ModelStateDto
 import ai.kilocode.rpc.dto.PartDto
 import ai.kilocode.rpc.dto.PermissionAlwaysRulesDto
 import ai.kilocode.rpc.dto.PermissionReplyDto
@@ -29,6 +31,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
@@ -53,6 +56,7 @@ import java.util.concurrent.ConcurrentHashMap
 object KiloCliDataParser {
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val pretty = Json { ignoreUnknownKeys = true; prettyPrint = true }
     private val TYPE_REGEX = Regex(""""type"\s*:\s*"([^"]+)"""")
     private val FIELD_RE = ConcurrentHashMap<String, Regex>()
 
@@ -254,6 +258,21 @@ object KiloCliDataParser {
         }
     }
 
+    fun parseModelState(raw: String): ModelStateDto {
+        val obj = tryParseObject(raw) ?: return ModelStateDto()
+        return ModelStateDto(favorite = parseModelFavorites(obj["favorite"]))
+    }
+
+    fun buildModelStateJson(raw: String?, favorite: List<ModelSelectionDto>): String {
+        val data = raw
+            ?.takeIf { it.isNotBlank() }
+            ?.let(::tryParseObject)
+            ?.toMutableMap()
+            ?: mutableMapOf()
+        data["favorite"] = JsonArray(favorite.map(::modelSelection))
+        return pretty.encodeToString(JsonObject.serializer(), JsonObject(data))
+    }
+
     // ================================================================
     // JSON serialization (DTO → JSON for outgoing requests)
     // ================================================================
@@ -404,6 +423,21 @@ object KiloCliDataParser {
         val ref = toolRef(obj)
         return QuestionRequestDto(id, sid, questions, ref)
     }
+
+    internal fun parseModelFavorites(raw: JsonElement?): List<ModelSelectionDto> {
+        val array = runCatching { raw?.jsonArray }.getOrNull() ?: return emptyList()
+        return array.mapNotNull { elem ->
+            val obj = runCatching { elem.jsonObject }.getOrNull() ?: return@mapNotNull null
+            val pid = obj.str("providerID") ?: return@mapNotNull null
+            val mid = obj.str("modelID") ?: return@mapNotNull null
+            ModelSelectionDto(pid, mid)
+        }
+    }
+
+    private fun modelSelection(item: ModelSelectionDto) = JsonObject(mapOf(
+        "providerID" to JsonPrimitive(item.providerID),
+        "modelID" to JsonPrimitive(item.modelID),
+    ))
 
     private fun parseSessionObject(obj: JsonObject): SessionDto {
         val time = obj["time"]?.jsonObject

@@ -12,6 +12,7 @@ data class ModelDto(
     val toolCall: Boolean = false,
     val free: Boolean = false,
     val status: String? = null,
+    val recommendedIndex: Double? = null,
 )
 
 @Serializable

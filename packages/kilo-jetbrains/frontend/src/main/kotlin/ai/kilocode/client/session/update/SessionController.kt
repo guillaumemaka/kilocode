@@ -25,6 +25,7 @@ import ai.kilocode.rpc.dto.LoadErrorDto
 import ai.kilocode.rpc.dto.PermissionAlwaysRulesDto
 import ai.kilocode.rpc.dto.PermissionReplyDto
 import ai.kilocode.rpc.dto.PermissionRequestDto
+import ai.kilocode.rpc.dto.ProvidersDto
 import ai.kilocode.rpc.dto.QuestionReplyDto
 import ai.kilocode.rpc.dto.QuestionRequestDto
 import ai.kilocode.rpc.dto.SessionDto
@@ -309,17 +310,30 @@ class SessionController(
 
                     model.models = state.providers?.let { providers ->
                         providers.providers
-                            .filter { it.id in providers.connected }
+                            .filter { it.id == KILO_PROVIDER || it.id in providers.connected }
                             .flatMap { provider ->
                                 provider.models.map { (id, info) ->
-                                    ModelItem(id, info.name, provider.id)
+                                    ModelItem(
+                                        id,
+                                        info.name,
+                                        provider.id,
+                                        provider.name,
+                                        info.recommendedIndex,
+                                        info.free,
+                                    )
                                 }
                             }
                     } ?: emptyList()
 
-                    if (this@SessionController.model.agent == null) this@SessionController.model.agent = state.agents?.default
+                    if (this@SessionController.model.agent == null) {
+                        this@SessionController.model.agent = state.agents?.default
+                    }
                     if (this@SessionController.model.model == null) {
-                        this@SessionController.model.model = state.providers?.defaults?.entries?.firstOrNull()?.let { "${it.key}/${it.value}" }
+                        this@SessionController.model.model = defaultModel(
+                            state.providers,
+                            this@SessionController.model.agent,
+                            this@SessionController.model.models,
+                        )
                     }
                 }
 
@@ -834,6 +848,22 @@ private fun title(name: String): String = name
     .filter { it.isNotEmpty() }
     .joinToString(" ") { it.replaceFirstChar { c -> c.titlecase() } }
     .ifEmpty { name }
+
+private const val KILO_PROVIDER = "kilo"
+
+private fun defaultModel(providers: ProvidersDto?, agent: String?, models: List<ModelItem>): String? {
+    val defaults = providers?.defaults ?: emptyMap()
+    val mode = agent?.let(defaults::get)?.takeIf(::fullModel)
+    if (mode != null) return mode
+    val first = defaults.values.firstOrNull(::fullModel)
+    if (first != null) return first
+    return models.firstOrNull()?.key
+}
+
+private fun fullModel(value: String): Boolean {
+    val slash = value.indexOf('/')
+    return slash > 0 && slash < value.length - 1
+}
 
 private sealed interface RecentsState {
     data object Idle : RecentsState

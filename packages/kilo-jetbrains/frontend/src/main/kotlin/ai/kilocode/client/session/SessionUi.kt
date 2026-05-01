@@ -8,8 +8,8 @@ import ai.kilocode.client.session.model.SessionModelEvent
 import ai.kilocode.client.session.model.SessionState
 import ai.kilocode.client.session.ui.ConnectionPanel
 import ai.kilocode.client.session.ui.EmptySessionPanel
-import ai.kilocode.client.session.ui.LabelPicker
 import ai.kilocode.client.session.ui.ModePicker
+import ai.kilocode.client.session.ui.ModelPicker
 import ai.kilocode.client.session.ui.PermissionPanel
 import ai.kilocode.client.session.ui.PromptPanel
 import ai.kilocode.client.session.ui.QuestionPanel
@@ -85,6 +85,7 @@ class SessionUi private constructor(
     }
 
     private val project = project
+    private val app = app
     private val flushMs =
         Registry.intValue("kilo.session.flushMs", EVENT_FLUSH_MS.toInt())
             .takeIf { it > 0 }
@@ -185,10 +186,9 @@ class SessionUi private constructor(
 
     private fun bindUi() {
         prompt.mode.onSelect = { item -> controller.selectAgent(item.id) }
-        prompt.model.onSelect = picker@{ item ->
-            val group = item.group ?: return@picker
-            controller.selectModel(group, item.id)
-        }
+        prompt.model.onSelect = { item -> controller.selectModel(item.provider, item.id) }
+        prompt.model.favorites = { app.favorites.value }
+        prompt.model.onFavoriteToggle = { item -> app.toggleModelFavorite(item.provider, item.id) }
 
         controller.addListener(this) { event ->
             when (event) {
@@ -203,14 +203,17 @@ class SessionUi private constructor(
                         )
                     }, m.agent)
                     val items = m.models.map {
-                        LabelPicker.Item(
+                        ModelPicker.Item(
                             it.id,
                             it.display,
-                            it.provider
+                            it.provider,
+                            it.providerName,
+                            it.recommendedIndex,
+                            it.free,
                         )
                     }
                     val selected =
-                        m.model?.let { full -> items.firstOrNull { "${it.group}/${it.id}" == full }?.id }
+                        m.model?.let { full -> items.firstOrNull { it.key == full }?.key }
                     prompt.model.setItems(items, selected)
                     prompt.setReady(m.isReady())
                 }

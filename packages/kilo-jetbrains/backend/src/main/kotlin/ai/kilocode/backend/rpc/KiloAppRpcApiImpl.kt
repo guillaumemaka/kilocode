@@ -15,6 +15,8 @@ import ai.kilocode.rpc.dto.KiloAppStateDto
 import ai.kilocode.rpc.dto.KiloAppStatusDto
 import ai.kilocode.rpc.dto.LoadErrorDto
 import ai.kilocode.rpc.dto.LoadProgressDto
+import ai.kilocode.rpc.dto.ModelFavoriteUpdateDto
+import ai.kilocode.rpc.dto.ModelStateDto
 import ai.kilocode.rpc.dto.ProfileStatusDto
 import com.intellij.openapi.components.service
 import kotlinx.coroutines.flow.Flow
@@ -43,6 +45,10 @@ class KiloAppRpcApiImpl : KiloAppRpcApi {
     override suspend fun restart() = app.restart()
 
     override suspend fun reinstall() = app.reinstall()
+
+    override suspend fun modelState(): ModelStateDto = app.models.state()
+
+    override suspend fun updateModelFavorite(update: ModelFavoriteUpdateDto): ModelStateDto = app.models.favorite(update)
 
     private fun dto(state: KiloAppState): KiloAppStateDto =
         when (state) {

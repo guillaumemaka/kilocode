@@ -140,6 +140,7 @@ class KiloWorkspaceRpcApiImpl : KiloWorkspaceRpcApi {
         toolCall = m.toolCall,
         free = m.free,
         status = m.status,
+        recommendedIndex = m.recommendedIndex,
     )
 
     private fun agents(d: AgentData) = AgentsDto(

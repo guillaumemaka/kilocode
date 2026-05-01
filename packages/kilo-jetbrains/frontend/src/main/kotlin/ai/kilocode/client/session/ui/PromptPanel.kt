@@ -47,7 +47,7 @@ class PromptPanel(
     }
 
     val mode = ModePicker()
-    val model = LabelPicker()
+    val model = ModelPicker()
     private var style = SessionStyle.current()
 
     private val editor = EditorTextField(project, PlainTextFileType.INSTANCE).apply {

@@ -423,7 +423,16 @@ data class AgentItem(
     val deprecated: Boolean,
 )
 
-data class ModelItem(val id: String, val display: String, val provider: String)
+data class ModelItem(
+    val id: String,
+    val display: String,
+    val provider: String,
+    val providerName: String,
+    val recommendedIndex: Double?,
+    val free: Boolean,
+) {
+    val key: String get() = "$provider/$id"
+}
 
 private fun renderMessage(msg: Message): List<String> {
     val out = mutableListOf<String>()

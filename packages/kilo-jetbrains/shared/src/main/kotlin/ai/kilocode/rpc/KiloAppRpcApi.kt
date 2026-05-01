@@ -2,6 +2,8 @@ package ai.kilocode.rpc
 
 import ai.kilocode.rpc.dto.HealthDto
 import ai.kilocode.rpc.dto.KiloAppStateDto
+import ai.kilocode.rpc.dto.ModelFavoriteUpdateDto
+import ai.kilocode.rpc.dto.ModelStateDto
 import com.intellij.platform.rpc.RemoteApiProviderService
 import fleet.rpc.RemoteApi
 import fleet.rpc.Rpc
@@ -39,4 +41,10 @@ interface KiloAppRpcApi : RemoteApi<Unit> {
 
     /** Kill the CLI process, re-extract the binary, and restart. */
     suspend fun reinstall()
+
+    /** Load persisted CLI model state such as favorites. */
+    suspend fun modelState(): ModelStateDto
+
+    /** Toggle a persisted CLI model favorite. */
+    suspend fun updateModelFavorite(update: ModelFavoriteUpdateDto): ModelStateDto
 }
