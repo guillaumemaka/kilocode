@@ -10,7 +10,6 @@ import ai.kilocode.client.ui.UiStyle
 import ai.kilocode.client.ui.md.MdView
 import com.intellij.icons.AllIcons
 import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
@@ -29,12 +28,12 @@ class ReasoningView(reasoning: Reasoning) : PartView() {
     private val body = JPanel(BorderLayout()).apply {
         isOpaque = true
         background = UiStyle.Colors.surface()
-        border = UiStyle.Insets.body()
+        border = UiStyle.Card.bodyInsets()
     }
-    private val header = JPanel(UiStyle.Gap.layout(UiStyle.Space.REASONING)).apply {
+    private val header = JPanel(UiStyle.Card.layout()).apply {
         isOpaque = true
         background = UiStyle.Colors.header()
-        border = JBUI.Borders.empty(UiStyle.Space.LG, UiStyle.Space.LG)
+        border = UiStyle.Card.headerInsets()
     }
     private val title = JBLabel(KiloBundle.message("session.part.reasoning")).apply {
         foreground = UiStyle.Colors.weak()
@@ -70,12 +69,9 @@ class ReasoningView(reasoning: Reasoning) : PartView() {
     init {
         layout = BorderLayout()
         isOpaque = false
-        border = JBUI.Borders.compound(
-            JBUI.Borders.customLine(UiStyle.Colors.line(), 0, 2, 0, 0),
-            JBUI.Borders.empty(0, 0, 0, 0),
-        )
+        border = UiStyle.Card.border()
 
-        val left = JPanel(UiStyle.Gap.layout(UiStyle.Space.REASONING)).apply {
+        val left = JPanel(UiStyle.Card.layout()).apply {
             isOpaque = false
             add(icon, BorderLayout.WEST)
             add(title, BorderLayout.CENTER)

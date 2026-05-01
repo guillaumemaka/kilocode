@@ -22,7 +22,7 @@ import ai.kilocode.client.ui.UiStyle
 class MessageView(
     val msg: Message,
     private var style: SessionStyle = SessionStyle.current(),
-) : ai.kilocode.client.session.ui.SessionLayoutPanel(), SessionStyleTarget {
+) : ai.kilocode.client.session.ui.SessionLayoutPanel(UiStyle.Card.groupGap()), SessionStyleTarget {
 
     constructor(msg: Message) : this(msg, SessionStyle.current())
 
@@ -35,7 +35,7 @@ class MessageView(
         border = if (msg.info.role == "user") {
             UiStyle.Borders.user()
         } else {
-            UiStyle.Borders.assistant()
+            UiStyle.Borders.assistant(msg.parts.isEmpty())
         }
 
         // Populate content that already exists (e.g. after loadHistory)
@@ -60,6 +60,7 @@ class MessageView(
         view.applyStyle(style)
         parts[content.id] = view
         add(view)
+        syncBorder()
         revalidate()
         repaint()
     }
@@ -68,8 +69,14 @@ class MessageView(
     fun removePart(contentId: String) {
         val view = parts.remove(contentId) ?: return
         remove(view)
+        syncBorder()
         revalidate()
         repaint()
+    }
+
+    private fun syncBorder() {
+        if (msg.info.role != "assistant") return
+        border = UiStyle.Borders.assistant(parts.isEmpty())
     }
 
     /** Append a streaming delta to the renderer for [contentId]. */

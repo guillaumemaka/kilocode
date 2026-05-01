@@ -41,12 +41,12 @@ class ToolView(tool: Tool) : PartView() {
     private val root = JPanel(BorderLayout()).apply {
         isOpaque = true
         background = UiStyle.Colors.surface()
-        border = UiStyle.Borders.card()
+        border = UiStyle.Card.border()
     }
-    private val header = JPanel(UiStyle.Gap.layout()).apply {
+    private val header = JPanel(UiStyle.Card.layout()).apply {
         isOpaque = true
         background = UiStyle.Colors.header()
-        border = UiStyle.Insets.header()
+        border = UiStyle.Card.headerInsets()
     }
     private val glyph = JBLabel()
     private val title = JBLabel()
@@ -68,10 +68,10 @@ class ToolView(tool: Tool) : PartView() {
         wrapStyleWord = false
         foreground = UiStyle.Colors.fg()
         background = UiStyle.Colors.surface()
-        border = UiStyle.Insets.body()
+        border = UiStyle.Card.bodyInsets()
     }
     private val scroll = JBScrollPane(text).apply {
-        border = UiStyle.Borders.cardTop()
+        border = UiStyle.Card.divider()
         isOpaque = true
         background = UiStyle.Colors.surface()
         viewport.background = UiStyle.Colors.surface()
@@ -236,7 +236,7 @@ class ToolView(tool: Tool) : PartView() {
         header.add(end, BorderLayout.EAST)
     }
 
-    private fun center() = JPanel(UiStyle.Gap.layout()).apply {
+    private fun center() = JPanel(UiStyle.Card.layout()).apply {
         isOpaque = false
         addMouseListener(click)
         bind(this)
@@ -253,7 +253,7 @@ class ToolView(tool: Tool) : PartView() {
         view.addMouseListener(click)
         bind(view)
         if (copied) view.add(copy)
-        if (copied && expand) view.add(Box.createHorizontalStrut(UiStyle.Gap.regular()))
+        if (copied && expand) view.add(Box.createHorizontalStrut(UiStyle.Card.controlGap()))
         if (expand) view.add(arrow)
         box = view
         return view

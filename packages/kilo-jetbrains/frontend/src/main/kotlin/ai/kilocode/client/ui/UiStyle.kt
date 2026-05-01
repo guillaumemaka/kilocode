@@ -30,7 +30,6 @@ object UiStyle {
         const val MD = 6
         const val LG = 8
         const val PAD = 12
-        const val REASONING = 6
         const val LOGO = 14
         const val RECENT = 28
     }
@@ -45,16 +44,19 @@ object UiStyle {
 
         fun weak(): Color = UIUtil.getContextHelpForeground()
 
+        /** Creates a visible separator against editor-derived transcript surfaces. */
         fun line(): Color = JBColor.lazy { contrast(panel(), BORDER_DELTA) }
 
         fun surface(): Color = panel()
 
+        /** Uses the editor background so chat cards feel native beside editor content. */
         fun panel(): Color = JBColor.lazy { EditorColorsManager.getInstance().globalScheme.defaultBackground }
 
         fun panelHover(): Color = JBColor.lazy { blend(panel(), line(), HOVER_ALPHA) }
 
         fun header(): Color = panel()
 
+        /** Local hover color for collapsible transcript card headers. */
         fun headerHover(): Color = panelHover()
 
         fun error(): Color = JBColor.namedColor("Label.errorForeground", UIUtil.getErrorForeground())
@@ -124,7 +126,24 @@ object UiStyle {
             JBUI.Borders.empty(Space.LG, 0, Space.SM, 0),
         )!!
 
-        fun assistant(): Border = JBUI.Borders.empty(Space.SM, 0)
+        fun assistant(empty: Boolean = false): Border = JBUI.Borders.empty(if (empty) Space.SM else 0, 0)
+    }
+
+    /** Shared geometry for collapsible transcript cards such as tools and reasoning. */
+    object Card {
+        fun layout(): BorderLayout = Gap.layout(Space.LG)
+
+        fun groupGap(): Int = Gap.small()
+
+        fun headerInsets(): Border = JBUI.Borders.empty(Space.LG, Space.LG)
+
+        fun bodyInsets(): Border = JBUI.Borders.empty(Space.LG, Space.PAD)
+
+        fun border(): Border = Borders.card()
+
+        fun divider(): Border = Borders.cardTop()
+
+        fun controlGap(): Int = Gap.regular()
     }
 
     object Dock {

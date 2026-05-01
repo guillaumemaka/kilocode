@@ -34,4 +34,14 @@ class UiStyleTest : BasePlatformTestCase() {
         assertEquals(hover.red, hover.green)
         assertEquals(hover.green, hover.blue)
     }
+
+    fun `test card helpers provide shared geometry`() {
+        assertNotNull(UiStyle.Card.layout())
+        assertNotNull(UiStyle.Card.border())
+        assertNotNull(UiStyle.Card.divider())
+        assertNotNull(UiStyle.Card.headerInsets())
+        assertNotNull(UiStyle.Card.bodyInsets())
+        assertTrue(UiStyle.Card.groupGap() > 0)
+        assertTrue(UiStyle.Card.controlGap() > 0)
+    }
 }

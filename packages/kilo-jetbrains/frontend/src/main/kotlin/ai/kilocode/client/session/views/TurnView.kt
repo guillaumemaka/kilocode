@@ -1,9 +1,15 @@
 package ai.kilocode.client.session.views
 
 import ai.kilocode.client.session.model.Message
+import ai.kilocode.client.session.ui.SessionLayoutPanel
 import ai.kilocode.client.session.ui.SessionStyle
 import ai.kilocode.client.session.ui.SessionStyleTarget
 import ai.kilocode.client.ui.UiStyle
+import com.intellij.util.ui.JBDimension
+import java.awt.Component
+import java.awt.Container
+import java.awt.Dimension
+import java.awt.LayoutManager
 
 /**
  * Top-level transcript item representing one conversational turn.
@@ -17,7 +23,7 @@ import ai.kilocode.client.ui.UiStyle
 class TurnView(
     val id: String,
     private var style: SessionStyle = SessionStyle.current(),
-) : ai.kilocode.client.session.ui.SessionLayoutPanel(UiStyle.Gap.turn()), SessionStyleTarget {
+) : SessionLayoutPanel(), SessionStyleTarget {
 
     constructor(id: String) : this(id, SessionStyle.current())
 
@@ -25,6 +31,7 @@ class TurnView(
 
     init {
         isOpaque = false
+        layout = TurnLayout()
     }
 
     /** Add a new [MessageView] for [msg] at the end of this turn. */
@@ -57,5 +64,50 @@ class TurnView(
         for (view in messages.values) view.applyStyle(style)
         revalidate()
         repaint()
+    }
+}
+
+private class TurnLayout : LayoutManager {
+
+    override fun addLayoutComponent(name: String, comp: Component) = Unit
+    override fun removeLayoutComponent(comp: Component) = Unit
+
+    override fun preferredLayoutSize(parent: Container): Dimension {
+        val ins = parent.insets
+        val w = maxOf(0, parent.width - ins.left - ins.right)
+        var h = ins.top + ins.bottom
+        var prev: MessageView? = null
+        for (comp in parent.components) {
+            if (!comp.isVisible) continue
+            if (prev != null) h += gap(prev, comp)
+            comp.setSize(w, comp.height.coerceAtLeast(1))
+            h += comp.preferredSize.height
+            prev = comp as? MessageView
+        }
+        return JBDimension(w + ins.left + ins.right, h)
+    }
+
+    override fun minimumLayoutSize(parent: Container): Dimension = preferredLayoutSize(parent)
+
+    override fun layoutContainer(parent: Container) {
+        val ins = parent.insets
+        val w = maxOf(0, parent.width - ins.left - ins.right)
+        var y = ins.top
+        var prev: MessageView? = null
+        for (comp in parent.components) {
+            if (!comp.isVisible) continue
+            if (prev != null) y += gap(prev, comp)
+            comp.setSize(w, comp.height.coerceAtLeast(1))
+            val h = comp.preferredSize.height
+            comp.setBounds(ins.left, y, w, h)
+            y += h
+            prev = comp as? MessageView
+        }
+    }
+
+    private fun gap(prev: MessageView?, comp: Component): Int {
+        val next = comp as? MessageView ?: return UiStyle.Gap.turn()
+        if (prev?.role == "assistant" && next.role == "assistant") return UiStyle.Card.groupGap()
+        return UiStyle.Gap.turn()
     }
 }
