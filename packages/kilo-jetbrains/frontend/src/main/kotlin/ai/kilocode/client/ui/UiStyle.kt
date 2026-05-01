@@ -1,5 +1,6 @@
 package ai.kilocode.client.ui
 
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.RoundedLineBorder
 import com.intellij.util.ui.JBUI
@@ -28,24 +29,33 @@ object UiStyle {
         const val SM = 4
         const val MD = 6
         const val LG = 8
-        const val XL = 10
         const val PAD = 12
+        const val REASONING = 6
         const val LOGO = 14
         const val RECENT = 28
     }
 
     object Colors {
+        internal const val BORDER_DELTA = 64
+        internal const val HOVER_ALPHA = 0.35f
+
         fun bg(): Color = UIUtil.getPanelBackground()
 
         fun fg(): Color = UIUtil.getLabelForeground()
 
         fun weak(): Color = UIUtil.getContextHelpForeground()
 
-        fun line(): Color = JBColor.border()
+        fun line(): Color = JBColor.lazy { contrast(panel(), BORDER_DELTA) }
 
-        fun surface(): Color = JBColor.lazy {
-            UIManager.getColor("TextField.background") ?: UIUtil.getPanelBackground()
-        }
+        fun surface(): Color = panel()
+
+        fun panel(): Color = JBColor.lazy { EditorColorsManager.getInstance().globalScheme.defaultBackground }
+
+        fun panelHover(): Color = JBColor.lazy { blend(panel(), line(), HOVER_ALPHA) }
+
+        fun header(): Color = panel()
+
+        fun headerHover(): Color = panelHover()
 
         fun error(): Color = JBColor.namedColor("Label.errorForeground", UIUtil.getErrorForeground())
 
@@ -56,6 +66,29 @@ object UiStyle {
         }
 
         fun running(): Color = JBColor.namedColor("ProgressBar.foreground", UIUtil.getLabelForeground())
+
+        internal fun contrast(base: Color, delta: Int): Color {
+            val step = if (bright(base)) -delta else delta
+            return Color(
+                (base.red + step).coerceIn(0, 255),
+                (base.green + step).coerceIn(0, 255),
+                (base.blue + step).coerceIn(0, 255),
+                base.alpha,
+            )
+        }
+
+        internal fun blend(base: Color, over: Color, alpha: Float): Color {
+            val inv = 1f - alpha
+            return Color(
+                (base.red * inv + over.red * alpha).toInt().coerceIn(0, 255),
+                (base.green * inv + over.green * alpha).toInt().coerceIn(0, 255),
+                (base.blue * inv + over.blue * alpha).toInt().coerceIn(0, 255),
+                base.alpha,
+            )
+        }
+
+        internal fun bright(color: Color): Boolean =
+            (color.red * 0.299 + color.green * 0.587 + color.blue * 0.114) >= 128
     }
 
     object Insets {
@@ -65,15 +98,17 @@ object UiStyle {
 
         fun prompt(): Border = JBUI.Borders.empty(Space.LG, Space.PAD, Space.LG, Space.PAD)
 
-        fun header(): Border = JBUI.Borders.empty(Space.LG, Space.XL)
+        fun header(): Border = JBUI.Borders.empty(Space.LG, Space.LG)
 
-        fun body(): Border = JBUI.Borders.empty(Space.LG, Space.XL)
+        fun body(): Border = JBUI.Borders.empty(Space.LG, Space.PAD)
 
         fun progress(): Border = JBUI.Borders.empty(Space.MD, 0, Space.SM, 0)
     }
 
     object Borders {
-        fun card(): Border = JBUI.Borders.customLine(Colors.line(), 1)
+        fun card(): Border = cardBorder()
+
+        fun cardBorder(): Border = JBUI.Borders.customLine(Colors.line(), 1)
 
         fun cardTop(): Border = JBUI.Borders.customLineTop(Colors.line())
 

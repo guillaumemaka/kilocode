@@ -7,50 +7,60 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 @Suppress("UnstableApiUsage")
 class ReasoningViewTest : BasePlatformTestCase() {
 
-    fun `test completed reasoning is collapsed by default`() {
+    fun `test completed reasoning is expanded by default`() {
         val view = ReasoningView(reasoning("p1", done = true, text = "one\ntwo\nthree\nfour"))
 
-        assertFalse(view.isExpanded())
+        assertTrue(view.isExpanded())
         assertEquals("Reasoning", view.headerText())
         assertEquals("one\ntwo\nthree\nfour", view.markdown())
-        assertEquals("one\ntwo\nthree", view.previewMarkdown())
         assertTrue(view.hasToggle())
+        assertTrue(view.bodyVisible())
     }
 
-    fun `test short completed reasoning has no toggle`() {
+    fun `test short completed reasoning is collapsible`() {
         val view = ReasoningView(reasoning("p1", done = true, text = "one\ntwo\nthree"))
 
-        assertFalse(view.isExpanded())
-        assertFalse(view.hasToggle())
-        assertEquals("one\ntwo\nthree", view.previewMarkdown())
+        assertTrue(view.isExpanded())
+        assertTrue(view.hasToggle())
         view.toggle()
         assertFalse(view.isExpanded())
+        assertFalse(view.bodyVisible())
     }
 
-    fun `test streaming reasoning is collapsed by default`() {
+    fun `test streaming reasoning is expanded by default`() {
         val view = ReasoningView(reasoning("p1", done = false, text = "one\ntwo\nthree\nfour"))
 
-        assertFalse(view.isExpanded())
+        assertTrue(view.isExpanded())
         assertTrue(view.hasToggle())
     }
 
-    fun `test update to done collapses reasoning`() {
+    fun `test update preserves automatic open reasoning`() {
         val view = ReasoningView(reasoning("p1", done = false, text = "one\ntwo\nthree\nfour"))
 
         view.update(reasoning("p1", done = true, text = "one\ntwo\nthree\nfour"))
 
-        assertFalse(view.isExpanded())
+        assertTrue(view.isExpanded())
         assertEquals("one\ntwo\nthree\nfour", view.markdown())
-        assertEquals("one\ntwo\nthree", view.previewMarkdown())
     }
 
     fun `test toggle opens and closes reasoning`() {
         val view = ReasoningView(reasoning("p1", done = true, text = "one\ntwo\nthree\nfour"))
 
-        view.toggle()
         assertTrue(view.isExpanded())
         view.toggle()
         assertFalse(view.isExpanded())
+        view.toggle()
+        assertTrue(view.isExpanded())
+    }
+
+    fun `test collapsed reasoning stays collapsed on update`() {
+        val view = ReasoningView(reasoning("p1", done = false, text = "one\ntwo"))
+
+        view.toggle()
+        view.update(reasoning("p1", done = true, text = "one\ntwo\nthree"))
+
+        assertFalse(view.isExpanded())
+        assertEquals("one\ntwo\nthree", view.markdown())
     }
 
     fun `test appendDelta preserves markdown`() {
@@ -61,12 +71,18 @@ class ReasoningViewTest : BasePlatformTestCase() {
         assertEquals("ab", view.markdown())
     }
 
+    fun `test blank reasoning has no toggle`() {
+        val view = ReasoningView(reasoning("p1", done = true, text = ""))
+
+        assertFalse(view.isExpanded())
+        assertFalse(view.hasToggle())
+    }
+
     fun `test reasoning markdown uses editor font settings`() {
         val style = SessionStyle.current()
         val view = ReasoningView(reasoning("p1", done = true, text = "one\ntwo\nthree\nfour"))
 
         assertEditorSheet(view.md.overrideSheet(), style)
-        assertEditorSheet(view.previewSheet(), style)
     }
 
     fun `test reasoning header uses smaller editor-derived font`() {
@@ -87,7 +103,6 @@ class ReasoningViewTest : BasePlatformTestCase() {
 
         assertSame(component, view.md.component)
         assertEditorSheet(view.md.overrideSheet(), style)
-        assertEditorSheet(view.previewSheet(), style)
         assertEquals("Courier New", view.headerFont().name)
         assertTrue(view.headerFont().size < style.editorSize)
     }

@@ -76,8 +76,10 @@ class ToolViewTest : BasePlatformTestCase() {
         assertEquals("git remote -v", view.commandText())
         assertEquals("origin git@example.com:repo.git", view.outputText())
         assertEquals("git remote -v\n\norigin git@example.com:repo.git", view.copyText())
-        assertFalse(view.isExpanded())
-        assertFalse(view.hasToggle())
+        assertEquals("$ git remote -v\n\norigin git@example.com:repo.git", view.bodyText())
+        assertTrue(view.isExpanded())
+        assertTrue(view.hasToggle())
+        assertTrue(view.bodyVisible())
     }
 
     fun `test bash toggle collapses and expands`() {
@@ -87,38 +89,66 @@ class ToolViewTest : BasePlatformTestCase() {
         }
         val view = ToolView(t)
 
-        assertFalse(view.isExpanded())
-        view.toggle()
         assertTrue(view.isExpanded())
         view.toggle()
         assertFalse(view.isExpanded())
+        view.toggle()
+        assertTrue(view.isExpanded())
     }
 
-    fun `test collapsed bash shows first three body lines`() {
+    fun `test collapsed bash hides body`() {
         val t = tool("p1", "bash", ToolExecState.COMPLETED).also {
             it.input = mapOf("command" to "git log")
             it.output = "one\ntwo\nthree\nfour"
         }
         val view = ToolView(t)
 
-        assertFalse(view.isExpanded())
-        assertEquals("$ git log\n\none", view.previewText())
         assertEquals("$ git log\n\none\ntwo\nthree\nfour", view.bodyText())
         assertTrue(view.hasToggle())
+        assertTrue(view.bodyVisible())
+        view.toggle()
+        assertFalse(view.bodyVisible())
     }
 
-    fun `test short bash has no toggle and shows preview`() {
+    fun `test short bash is still collapsible`() {
         val t = tool("p1", "bash", ToolExecState.COMPLETED).also {
             it.input = mapOf("command" to "pwd")
             it.output = "/tmp"
         }
         val view = ToolView(t)
 
-        assertFalse(view.isExpanded())
-        assertFalse(view.hasToggle())
-        assertEquals("$ pwd\n\n/tmp", view.previewText())
+        assertTrue(view.isExpanded())
+        assertTrue(view.hasToggle())
+        assertEquals("$ pwd\n\n/tmp", view.bodyText())
         view.toggle()
         assertFalse(view.isExpanded())
+    }
+
+    fun `test generic tool with output is collapsible`() {
+        val t = tool("p1", "glob", ToolExecState.COMPLETED).also {
+            it.input = mapOf("path" to "/tmp", "pattern" to "**/*.kt")
+            it.output = "/tmp/A.kt"
+        }
+        val view = ToolView(t)
+
+        assertTrue(view.labelText().contains("Glob"))
+        assertTrue(view.labelText().contains("/tmp"))
+        assertEquals("/tmp/A.kt", view.bodyText())
+        assertTrue(view.hasToggle())
+        assertFalse(view.isExpanded())
+        assertFalse(view.bodyVisible())
+        view.toggle()
+        assertTrue(view.bodyVisible())
+    }
+
+    fun `test read tool handles windows path`() {
+        val t = tool("p1", "read", ToolExecState.COMPLETED).also {
+            it.input = mapOf("filePath" to "C:\\repo\\README.MD")
+        }
+
+        val view = ToolView(t)
+
+        assertTrue(view.labelText().contains("README.MD"))
     }
 
     fun `test bash output uses editor font settings`() {
@@ -126,7 +156,7 @@ class ToolViewTest : BasePlatformTestCase() {
         val view = ToolView(tool("p1", "bash", ToolExecState.COMPLETED))
 
         assertEditorFont(view.bodyFont(), style)
-        assertEditorFont(view.previewFont(), style)
+        assertFalse(view.bodyEditable())
     }
 
     fun `test tool header uses editor-derived fonts`() {
@@ -146,11 +176,21 @@ class ToolViewTest : BasePlatformTestCase() {
         view.applyStyle(style)
 
         assertEditorFont(view.bodyFont(), style)
-        assertEditorFont(view.previewFont(), style)
         assertEditorFont(view.titleFont(), style)
         assertTrue(view.titleFont().isBold)
         assertSmallEditorFont(view.subtitleFont(), style)
         assertSmallEditorFont(view.stateFont(), style)
+    }
+
+    fun `test copy and arrow controls share one container`() {
+        val t = tool("p1", "bash", ToolExecState.COMPLETED).also {
+            it.input = mapOf("command" to "pwd")
+            it.output = "/tmp"
+        }
+
+        val view = ToolView(t)
+
+        assertEquals(2, view.controlCount())
     }
 
     // ---- update ------

@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package ai.kilocode.client.session.views
 
 import ai.kilocode.client.plugin.KiloBundle
@@ -12,23 +14,29 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.Cursor
 import java.awt.datatransfer.StringSelection
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.io.File
+import javax.swing.Box
 import javax.swing.JButton
+import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants
+import javax.swing.SwingUtilities
 
-/** Renders tool calls with VS Code-inspired rows/cards for read and bash. */
+/** Renders tool calls with VS Code-inspired rows/cards. */
 class ToolView(tool: Tool) : PartView() {
 
     override val contentId: String = tool.id
 
     private var item = tool
-    private var open = false
+    private var open = tool.name == "bash" && body(tool).isNotBlank()
     private var mode = tool.name
+    private var touched = false
+    private var hover = false
+    private var box: JComponent? = null
 
     private val root = JPanel(BorderLayout()).apply {
         isOpaque = true
@@ -37,7 +45,7 @@ class ToolView(tool: Tool) : PartView() {
     }
     private val header = JPanel(UiStyle.Gap.layout()).apply {
         isOpaque = true
-        background = UiStyle.Colors.surface()
+        background = UiStyle.Colors.header()
         border = UiStyle.Insets.header()
     }
     private val glyph = JBLabel()
@@ -62,14 +70,6 @@ class ToolView(tool: Tool) : PartView() {
         background = UiStyle.Colors.surface()
         border = UiStyle.Insets.body()
     }
-    private val mini = JBTextArea().apply {
-        isEditable = false
-        lineWrap = false
-        wrapStyleWord = false
-        foreground = UiStyle.Colors.weak()
-        background = UiStyle.Colors.surface()
-        border = UiStyle.Insets.body()
-    }
     private val scroll = JBScrollPane(text).apply {
         border = UiStyle.Borders.cardTop()
         isOpaque = true
@@ -78,30 +78,35 @@ class ToolView(tool: Tool) : PartView() {
         horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
         verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
     }
-    private val preview = JPanel(BorderLayout()).apply {
-        isOpaque = true
-        background = UiStyle.Colors.surface()
-        border = UiStyle.Borders.cardTop()
-        add(mini, BorderLayout.CENTER)
-    }
 
     private val click = object : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent) {
-            if (mode != "bash") return
             if (!canExpand(item)) return
+            touched = true
             open = !open
             render()
+        }
+    }
+
+    private val mouse = object : MouseAdapter() {
+        override fun mouseEntered(e: MouseEvent) {
+            setHover(true)
+        }
+
+        override fun mouseExited(e: MouseEvent) {
+            if (inside(e)) return
+            setHover(false)
         }
     }
 
     init {
         layout = BorderLayout()
         isOpaque = false
-        header.addMouseListener(click)
-        glyph.addMouseListener(click)
-        title.addMouseListener(click)
-        sub.addMouseListener(click)
-        arrow.addMouseListener(click)
+        listOf(header, glyph, title, sub, state, arrow).forEach {
+            bind(it)
+            it.addMouseListener(click)
+        }
+        copy.addMouseListener(mouse)
         applyStyle(SessionStyle.current())
         add(root, BorderLayout.CENTER)
         render()
@@ -112,7 +117,10 @@ class ToolView(tool: Tool) : PartView() {
         val was = mode
         item = content
         mode = content.name
-        if (was != mode) open = false
+        if (was != mode) {
+            touched = false
+            open = mode == "bash" && body(content).isNotBlank()
+        }
         render()
     }
 
@@ -122,17 +130,9 @@ class ToolView(tool: Tool) : PartView() {
 
     fun outputText(): String = output(item)
 
-    fun bodyText(): String = shellBody(item)
+    fun bodyText(): String = body(item)
 
-    fun previewText(): String = preview(shellBody(item))
-
-    fun copyText(): String {
-        val cmd = command(item)
-        val out = output(item)
-        if (cmd.isBlank()) return out
-        if (out.isBlank()) return cmd
-        return "$cmd\n\n$out"
-    }
+    fun copyText(): String = if (mode == "bash") shellCopy(item) else plainBody(item)
 
     fun isExpanded(): Boolean = open
 
@@ -140,27 +140,30 @@ class ToolView(tool: Tool) : PartView() {
 
     internal fun bodyFont() = text.font
 
-    internal fun previewFont() = mini.font
-
     internal fun titleFont() = title.font
 
     internal fun subtitleFont() = sub.font
 
     internal fun stateFont() = state.font
 
+    internal fun bodyEditable() = text.isEditable
+
+    internal fun bodyVisible() = scroll.parent === root
+
+    internal fun controlCount() = box?.components?.count { it === copy || it === arrow } ?: 0
+
     override fun applyStyle(style: SessionStyle) {
         title.font = style.boldEditorFont
         sub.font = style.smallEditorFont
         state.font = style.smallEditorFont
         text.font = style.transcriptFont
-        mini.font = style.transcriptFont
         revalidate()
         repaint()
     }
 
     fun toggle() {
-        if (mode != "bash") return
         if (!canExpand(item)) return
+        touched = true
         open = !open
         render()
     }
@@ -168,85 +171,112 @@ class ToolView(tool: Tool) : PartView() {
     private fun render() {
         root.removeAll()
         header.removeAll()
-        val expand = mode == "bash" && canExpand(item)
-        if (!expand) open = false
-        header.cursor = if (expand) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) else Cursor.getDefaultCursor()
+        box = null
+        val expand = canExpand(item)
+        syncOpen(expand)
+        syncState(expand)
+
+        when (mode) {
+            "read" -> renderRead(expand)
+            "bash" -> renderShell(expand)
+            else -> renderGeneric(expand)
+        }
+
+        root.add(header, BorderLayout.NORTH)
+        if (open && expand) root.add(scroll, BorderLayout.CENTER)
+        revalidate()
+        repaint()
+    }
+
+    private fun syncOpen(expand: Boolean) {
+        if (!expand) {
+            touched = false
+            open = false
+            return
+        }
+        if (expand && !touched && mode == "bash") open = true
+    }
+
+    private fun syncState(expand: Boolean) {
+        val cursor = if (expand) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) else Cursor.getDefaultCursor()
+        listOf(header, glyph, title, sub, state, arrow).forEach { it.cursor = cursor }
+        arrow.isVisible = expand
+        arrow.icon = if (open) AllIcons.General.ArrowDown else AllIcons.General.ArrowRight
         glyph.icon = icon(item)
         glyph.foreground = color(item)
         title.foreground = if (item.state == ToolExecState.ERROR) UiStyle.Colors.error() else UiStyle.Colors.fg()
         state.text = stateText(item)
         state.foreground = color(item)
-
-        when (mode) {
-            "read" -> renderRead()
-            "bash" -> renderShell()
-            else -> renderGeneric()
-        }
-
-        root.add(header, BorderLayout.NORTH)
-        if (mode == "bash" && open && expand) root.add(scroll, BorderLayout.CENTER)
-        if (mode == "bash" && (!open || !expand) && shellBody(item).isNotBlank()) root.add(preview, BorderLayout.CENTER)
-        revalidate()
-        repaint()
+        text.text = body(item)
+        text.foreground = if (item.state == ToolExecState.ERROR) UiStyle.Colors.error() else UiStyle.Colors.fg()
+        syncHeader()
     }
 
-    private fun renderRead() {
+    private fun renderRead(expand: Boolean) {
         title.text = KiloBundle.message("session.part.tool.read")
         sub.text = readPath(item)
-        val main = JPanel(UiStyle.Gap.layout()).apply {
-            isOpaque = false
-            add(title, BorderLayout.WEST)
-            add(sub, BorderLayout.CENTER)
-        }
-        header.add(glyph, BorderLayout.WEST)
-        header.add(main, BorderLayout.CENTER)
-        header.add(state, BorderLayout.EAST)
+        addHeader(center(), end(expand))
     }
 
-    private fun renderShell() {
+    private fun renderShell(expand: Boolean) {
         title.text = KiloBundle.message("session.part.tool.shell")
         sub.text = shellTitle(item)
-        val expand = canExpand(item)
-        arrow.isVisible = expand
-        arrow.icon = if (open) AllIcons.General.ArrowDown else AllIcons.General.ArrowRight
-        val cursor = if (expand) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) else Cursor.getDefaultCursor()
-        glyph.cursor = cursor
-        title.cursor = cursor
-        sub.cursor = cursor
-        arrow.cursor = cursor
-        val main = JPanel(UiStyle.Gap.layout()).apply {
-            isOpaque = false
-            add(title, BorderLayout.WEST)
-            add(sub, BorderLayout.CENTER)
-        }
-        val right = JPanel(UiStyle.Gap.layout(UiStyle.Space.SM)).apply {
-            isOpaque = false
-            val controls = JPanel(UiStyle.Gap.layout(UiStyle.Space.SM)).apply {
-                isOpaque = false
-                if (copyText().isNotBlank()) add(copy, BorderLayout.WEST)
-                add(arrow, BorderLayout.EAST)
-            }
-            add(controls, BorderLayout.EAST)
-        }
-        text.text = shellBody(item)
-        mini.text = preview(shellBody(item))
-        text.foreground = if (item.state == ToolExecState.ERROR) UiStyle.Colors.error() else UiStyle.Colors.fg()
-        header.add(glyph, BorderLayout.WEST)
-        header.add(main, BorderLayout.CENTER)
-        header.add(right, BorderLayout.EAST)
+        addHeader(center(), end(expand))
     }
 
-    private fun renderGeneric() {
-        title.text = item.title?.takeIf { it.isNotBlank() } ?: item.name
-        sub.text = item.name.takeIf { title.text != it } ?: ""
-        val main = JPanel(UiStyle.Gap.layout()).apply {
-            isOpaque = false
-            add(title, BorderLayout.WEST)
-            add(sub, BorderLayout.CENTER)
-        }
+    private fun renderGeneric(expand: Boolean) {
+        title.text = toolTitle(item)
+        sub.text = toolSubtitle(item)
+        addHeader(center(), end(expand))
+    }
+
+    private fun addHeader(center: Component, end: Component) {
         header.add(glyph, BorderLayout.WEST)
-        header.add(main, BorderLayout.CENTER)
-        header.add(state, BorderLayout.EAST)
+        header.add(center, BorderLayout.CENTER)
+        header.add(end, BorderLayout.EAST)
+    }
+
+    private fun center() = JPanel(UiStyle.Gap.layout()).apply {
+        isOpaque = false
+        addMouseListener(click)
+        bind(this)
+        add(title, BorderLayout.WEST)
+        add(sub, BorderLayout.CENTER)
+    }
+
+    private fun end(expand: Boolean): Component = controls(expand) ?: state
+
+    private fun controls(expand: Boolean): JComponent? {
+        val copied = copyText().isNotBlank()
+        if (!copied && !expand) return null
+        val view = Box.createHorizontalBox()
+        view.addMouseListener(click)
+        bind(view)
+        if (copied) view.add(copy)
+        if (copied && expand) view.add(Box.createHorizontalStrut(UiStyle.Gap.regular()))
+        if (expand) view.add(arrow)
+        box = view
+        return view
+    }
+
+    private fun setHover(value: Boolean) {
+        if (hover == value) return
+        hover = value
+        syncHeader()
+        header.repaint()
+    }
+
+    private fun syncHeader() {
+        header.background = if (hover) UiStyle.Colors.headerHover() else UiStyle.Colors.header()
+    }
+
+    private fun inside(e: MouseEvent): Boolean {
+        val point = SwingUtilities.convertPoint(e.component, e.point, header)
+        return header.contains(point)
+    }
+
+    private fun bind(component: Component) {
+        component.addMouseListener(mouse)
     }
 
     private fun copyShell() {
@@ -285,7 +315,7 @@ private fun stateText(tool: Tool) = when (tool.state) {
 
 private fun readPath(tool: Tool): String {
     val path = tool.input["filePath"] ?: tool.input["path"] ?: tool.title ?: return tool.name
-    return File(path).name.ifBlank { path }
+    return tail(path).ifBlank { path }
 }
 
 private fun shellTitle(tool: Tool): String =
@@ -305,6 +335,8 @@ private fun output(tool: Tool): String =
         ?: tool.metadata["output"]?.takeIf { it.isNotBlank() }
         ?: ""
 
+private fun body(tool: Tool): String = if (tool.name == "bash") shellBody(tool) else plainBody(tool)
+
 private fun shellBody(tool: Tool): String {
     val cmd = command(tool)
     val out = output(tool)
@@ -322,10 +354,37 @@ private fun shellBody(tool: Tool): String {
     }
 }
 
-private const val PREVIEW_LINES = 3
+private fun shellCopy(tool: Tool): String {
+    val cmd = command(tool)
+    val out = output(tool)
+    val err = tool.error?.takeIf { it.isNotBlank() }
+    return listOf(cmd, out, err).filter { !it.isNullOrBlank() }.joinToString("\n\n")
+}
 
-private fun canExpand(tool: Tool): Boolean = lines(shellBody(tool)) > PREVIEW_LINES
+private fun plainBody(tool: Tool): String {
+    val out = output(tool)
+    val err = tool.error?.takeIf { it.isNotBlank() }
+    return listOf(out, err).filter { !it.isNullOrBlank() }.joinToString("\n\n")
+}
 
-private fun preview(text: String): String = text.lineSequence().take(PREVIEW_LINES).joinToString("\n")
+private fun canExpand(tool: Tool): Boolean = body(tool).isNotBlank()
 
-private fun lines(text: String): Int = if (text.isBlank()) 0 else text.lineSequence().count()
+private fun toolTitle(tool: Tool): String =
+    tool.title?.takeIf { it.isNotBlank() }
+        ?: tool.name.replace('_', ' ').replaceFirstChar { it.titlecase() }
+
+private fun toolSubtitle(tool: Tool): String {
+    val base = listOf("description", "query", "url", "filePath", "path", "name")
+        .mapNotNull { tool.input[it]?.takeIf { value -> value.isNotBlank() } }
+        .firstOrNull()
+    val args = listOf("pattern", "include", "offset", "limit")
+        .mapNotNull { key -> tool.input[key]?.takeIf { it.isNotBlank() }?.let { "$key=$it" } }
+    return listOfNotNull(base).plus(args).joinToString(" ")
+}
+
+private fun tail(path: String): String {
+    val value = path.trimEnd('/', '\\')
+    val index = maxOf(value.lastIndexOf('/'), value.lastIndexOf('\\'))
+    if (index < 0) return value
+    return value.substring(index + 1)
+}
