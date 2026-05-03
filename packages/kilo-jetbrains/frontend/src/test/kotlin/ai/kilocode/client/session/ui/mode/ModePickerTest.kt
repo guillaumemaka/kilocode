@@ -105,4 +105,5 @@ class ModePickerTest : BasePlatformTestCase() {
         cell.getListCellRendererComponent(list, code, 1, false, false)
         assertFalse(renderer.badgeVisible())
     }
+
 }

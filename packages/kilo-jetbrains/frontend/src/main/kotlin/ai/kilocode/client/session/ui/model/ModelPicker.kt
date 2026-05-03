@@ -119,6 +119,7 @@ class ModelPicker : JBLabel() {
             emptyText.text = KiloBundle.message("model.picker.no.matches")
             background = popupBackground
             border = JBUI.Borders.empty(PopupUtil.getListInsets(false, false))
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         }
         list.cellRenderer = ModelPickerRenderer(
             model = model,

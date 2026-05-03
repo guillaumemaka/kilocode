@@ -1,9 +1,11 @@
 package ai.kilocode.client.session.ui.model
 
 import ai.kilocode.client.plugin.KiloBundle
+import ai.kilocode.client.session.ui.PickerRow
 import ai.kilocode.client.ui.UiStyle
 import com.intellij.icons.AllIcons
 import com.intellij.ui.CollectionListModel
+import com.intellij.ui.ExperimentalUI
 import com.intellij.ui.GroupHeaderSeparator
 import com.intellij.ui.JBColor
 import com.intellij.ui.SimpleColoredComponent
@@ -41,11 +43,20 @@ internal class ModelPickerRenderer(
 
         fun isFavoriteClick(list: JList<*>, bounds: Rectangle, point: Point): Boolean {
             val width = JBUI.scale(FAVORITE_CLICK_AREA_WIDTH)
-            return if (list.componentOrientation.isLeftToRight) {
-                point.x >= bounds.x + bounds.width - width
-            } else {
-                point.x <= bounds.x + width
+            val inset = favoriteInset(list)
+            if (list.componentOrientation.isLeftToRight) {
+                val right = bounds.x + bounds.width - inset
+                return point.x in (right - width)..right
             }
+            val left = bounds.x + inset
+            return point.x in left..(left + width)
+        }
+
+        private fun favoriteInset(list: JList<*>): Int {
+            if (!ExperimentalUI.isNewUI()) return 0
+            val inner = JBUI.CurrentTheme.Popup.Selection.innerInsets()
+            val edge = JBUI.CurrentTheme.Popup.Selection.LEFT_RIGHT_INSET.get()
+            return edge + if (list.componentOrientation.isLeftToRight) inner.right else inner.left
         }
     }
 
@@ -77,11 +88,12 @@ internal class ModelPickerRenderer(
         add(head, BorderLayout.CENTER)
         add(star, BorderLayout.EAST)
     }
+    private val wrap = PickerRow()
 
     init {
         isOpaque = true
         top.isOpaque = true
-        row.isOpaque = true
+        UiStyle.Components.transparent(row)
         UiStyle.Components.transparent(check)
         UiStyle.Components.transparent(title)
         UiStyle.Components.transparent(head)
@@ -93,8 +105,9 @@ internal class ModelPickerRenderer(
             UiStyle.Space.MD,
             UiStyle.Space.LG + UiStyle.Space.SM,
         )
+        wrap.setContent(row)
         add(top, BorderLayout.NORTH)
-        add(row, BorderLayout.CENTER)
+        add(wrap, BorderLayout.CENTER)
     }
 
     override fun getListCellRendererComponent(
@@ -103,17 +116,16 @@ internal class ModelPickerRenderer(
         index: Int,
         selected: Boolean,
         focused: Boolean,
-    ): Component {
+    ): JPanel {
         val focus = selected || list.hasFocus() || focused
         val fg = UIUtil.getListForeground(selected, focus)
-        val bg = if (selected) UIUtil.getListBackground(true, focus) else list.background
         val weak = if (selected) fg else UiStyle.Colors.weak()
         val current = model.items.getOrNull(index)
         val section = if (current === value) modelPickerSectionTitle(model.items, index) else null
 
         background = list.background
         top.background = list.background
-        row.background = bg
+        wrap.update(list, selected, focus)
         sep.caption = section
         sep.setHideLine(index == 0)
         top.isVisible = section != null

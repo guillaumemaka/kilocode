@@ -3,9 +3,11 @@ package ai.kilocode.client.session.ui.model
 import ai.kilocode.rpc.dto.ModelSelectionDto
 import com.intellij.icons.AllIcons
 import com.intellij.ui.CollectionListModel
+import com.intellij.ui.ExperimentalUI
 import com.intellij.ui.components.JBList
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ui.EmptyIcon
+import com.intellij.util.ui.JBUI
 import java.awt.ComponentOrientation
 import java.awt.Point
 import java.awt.Rectangle
@@ -228,13 +230,26 @@ class ModelPickerTest : BasePlatformTestCase() {
     fun `test favorite click area uses trailing edge in both orientations`() {
         val list = JBList(listOf<ModelPickerRow>())
         val bounds = Rectangle(10, 0, 100, 20)
+        val inset = favoriteInset(list)
 
-        assertTrue(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(100, 10)))
+        assertTrue(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(100 - inset, 10)))
         assertFalse(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(20, 10)))
 
         list.componentOrientation = ComponentOrientation.RIGHT_TO_LEFT
-        assertTrue(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(20, 10)))
+        val rtl = favoriteInset(list)
+        assertTrue(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(20 + rtl, 10)))
         assertFalse(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(100, 10)))
+    }
+
+    fun `test favorite click area ignores popup selection inset outside row content`() {
+        val list = JBList(listOf<ModelPickerRow>())
+        val bounds = Rectangle(10, 0, 100, 20)
+        val inset = favoriteInset(list)
+
+        if (inset <= 0) return
+
+        assertFalse(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(bounds.x + bounds.width - 1, 10)))
+        assertTrue(ModelPickerRenderer.isFavoriteClick(list, bounds, Point(bounds.x + bounds.width - inset, 10)))
     }
 
     fun `test renderer shows free badge for free model`() {
@@ -256,4 +271,11 @@ class ModelPickerTest : BasePlatformTestCase() {
         index: Double? = null,
         free: Boolean = false,
     ) = ModelPicker.Item(id, display, provider, name, index, free = free)
+
+    private fun favoriteInset(list: JBList<*>): Int {
+        if (!ExperimentalUI.isNewUI()) return 0
+        val inner = JBUI.CurrentTheme.Popup.Selection.innerInsets()
+        val edge = JBUI.CurrentTheme.Popup.Selection.LEFT_RIGHT_INSET.get()
+        return edge + if (list.componentOrientation.isLeftToRight) inner.right else inner.left
+    }
 }

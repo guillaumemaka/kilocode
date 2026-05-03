@@ -1,6 +1,7 @@
 package ai.kilocode.client.session.ui.mode
 
 import ai.kilocode.client.plugin.KiloBundle
+import ai.kilocode.client.session.ui.PickerRow
 import ai.kilocode.client.ui.UiStyle
 import com.intellij.icons.AllIcons
 import com.intellij.ui.RoundedLineBorder
@@ -51,10 +52,11 @@ internal class ModePickerRenderer(
         UiStyle.Components.transparent(this)
     }
     private val row = JPanel(BorderLayout())
+    private val wrap = PickerRow()
 
     init {
-        isOpaque = true
-        row.isOpaque = true
+        UiStyle.Components.transparent(this)
+        UiStyle.Components.transparent(row)
         (row.layout as BorderLayout).hgap = UiStyle.Gap.inline()
         row.border = JBUI.Borders.empty(
             UiStyle.Space.MD,
@@ -66,7 +68,8 @@ internal class ModePickerRenderer(
         body.add(desc, BorderLayout.CENTER)
         row.add(icon, BorderLayout.WEST)
         row.add(body, BorderLayout.CENTER)
-        add(row, BorderLayout.CENTER)
+        wrap.setContent(row)
+        add(wrap, BorderLayout.CENTER)
     }
 
     override fun getListCellRendererComponent(
@@ -78,12 +81,11 @@ internal class ModePickerRenderer(
     ): JPanel {
         val focus = selected || list.hasFocus() || focused
         val fg = UIUtil.getListForeground(selected, focus)
-        val bg = if (selected) UIUtil.getListBackground(true, focus) else list.background
         val weak = if (selected) fg else UiStyle.Colors.weak()
         val warn = if (selected) fg else UiStyle.Colors.warning()
 
         background = list.background
-        row.background = bg
+        wrap.update(list, selected, focus)
         title.clear()
         title.append(value.display, SimpleTextAttributes(SimpleTextAttributes.STYLE_BOLD, fg))
         desc.clear()

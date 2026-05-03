@@ -79,6 +79,7 @@ class ModePicker : JBLabel() {
             .setCancelKeyEnabled(true)
             .setResizable(false)
             .setMovable(false)
+            .setAutoselectOnMouseMove(true)
             .setItemChosenCallback { value ->
                 selected = value
                 refresh()
