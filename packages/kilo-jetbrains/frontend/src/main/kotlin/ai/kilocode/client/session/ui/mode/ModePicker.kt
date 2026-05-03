@@ -3,13 +3,12 @@ package ai.kilocode.client.session.ui.mode
 import ai.kilocode.client.ui.UiStyle
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupShowOptions
-import com.intellij.ui.components.JBLabel
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.ListSelectionModel
 
-class ModePicker : JBLabel() {
+class ModePicker : UiStyle.Pickers.Label() {
 
     data class Item(
         val id: String,
@@ -26,7 +25,6 @@ class ModePicker : JBLabel() {
     private var selected: Item? = null
 
     init {
-        border = UiStyle.Borders.picker()
         isEnabled = false
         text = " "
 

@@ -7,7 +7,6 @@ import com.intellij.openapi.ui.popup.ListPopup
 import com.intellij.openapi.ui.popup.PopupShowOptions
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
-import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.EmptyIcon
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
@@ -15,13 +14,13 @@ import java.awt.event.MouseEvent
 import javax.swing.Icon
 
 /**
- * Clickable label-style dropdown picker with a rounded outline.
+ * Clickable label-style dropdown picker with a native filled background.
  *
  * Shows the selected item's display text with an up-arrow. On click,
  * opens a list popup above the picker. Disabled (greyed out, not
  * clickable) when no items are loaded.
  */
-class ReasoningPicker : JBLabel() {
+class ReasoningPicker : UiStyle.Pickers.Label() {
 
     private companion object {
         val checked: Icon = AllIcons.Actions.Checked
@@ -38,7 +37,6 @@ class ReasoningPicker : JBLabel() {
     private var selected: Item? = null
 
     init {
-        border = UiStyle.Borders.picker()
         isEnabled = false
         isVisible = false
         text = " "

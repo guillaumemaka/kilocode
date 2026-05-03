@@ -15,7 +15,6 @@ import com.intellij.ui.ListUtil
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.ScrollingUtil
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.popup.AbstractPopup
 import com.intellij.util.ui.JBUI
@@ -46,7 +45,7 @@ private const val MODEL_PICKER_MAX_WIDTH = 760
 private const val MODEL_PICKER_MAX_VISIBLE_ROWS = 10
 private const val MODEL_PICKER_EMPTY_LIST_HEIGHT = 120
 
-class ModelPicker : JBLabel() {
+class ModelPicker : UiStyle.Pickers.Label() {
 
     data class Item(
         val id: String,
@@ -70,7 +69,6 @@ class ModelPicker : JBLabel() {
     private var selected: Item? = null
 
     init {
-        border = UiStyle.Borders.picker()
         isEnabled = false
         text = " "
 

@@ -21,6 +21,7 @@ import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.Icon
 import javax.swing.JButton
+import javax.swing.JComponent
 import javax.swing.ScrollPaneConstants
 
 /**
@@ -90,13 +91,11 @@ class PromptPanel(
         }
     }
 
-    private val reset = JButton(AllIcons.Actions.Cancel).apply {
-        UiStyle.Buttons.icon(this)
-        isFocusPainted = false
+    private val reset = UiStyle.Buttons.HoverIcon().apply {
+        icon = AllIcons.Actions.Cancel
         toolTipText = KiloBundle.message("model.picker.reset")
         accessibleContext.accessibleName = KiloBundle.message("model.picker.reset")
         isVisible = false
-        preferredSize = JBUI.size(UiStyle.Size.BUTTON, UiStyle.Size.BUTTON)
         addActionListener { onReset() }
     }
 
@@ -115,11 +114,11 @@ class PromptPanel(
             border = JBUI.Borders.emptyTop(UiStyle.Space.SM)
         }
         bar.add(mode)
-        bar.add(Box.createHorizontalStrut(UiStyle.Gap.small()))
+        bar.add(Box.createHorizontalStrut(UiStyle.Gap.xs()))
         bar.add(model)
-        bar.add(Box.createHorizontalStrut(UiStyle.Gap.small()))
+        bar.add(Box.createHorizontalStrut(UiStyle.Gap.xs()))
         bar.add(reasoning)
-        bar.add(Box.createHorizontalStrut(UiStyle.Gap.small()))
+        bar.add(Box.createHorizontalStrut(UiStyle.Gap.xs()))
         bar.add(reset)
         bar.add(Box.createHorizontalGlue())
         bar.add(button)
@@ -151,6 +150,8 @@ class PromptPanel(
     internal fun inputFont() = editor.font
 
     internal fun resetVisibleForTest() = reset.isVisible
+
+    internal fun resetForTest(): JComponent = reset
 
     override fun applyStyle(style: SessionStyle) {
         this.style = style
