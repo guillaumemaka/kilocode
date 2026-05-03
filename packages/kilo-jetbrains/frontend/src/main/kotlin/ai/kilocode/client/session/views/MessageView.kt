@@ -14,10 +14,8 @@ import ai.kilocode.client.ui.UiStyle
  * part view gets the full available width and height is computed correctly
  * for HTML-backed views.
  *
- * Styling:
- * - User messages: 1 px top separator + extra top padding to create a
- *   visual turn boundary.
- * - Assistant messages: light padding only.
+ * Styling: user messages keep a 1 px top separator. Spacing around
+ * messages and parts is owned by [ai.kilocode.client.session.ui.SessionLayout].
  */
 class MessageView(
     val msg: Message,

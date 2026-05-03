@@ -94,7 +94,9 @@ object UiStyle {
     }
 
     object Insets {
-        fun transcript(): Border = JBUI.Borders.empty(Space.PAD, Space.PAD)
+        fun none(): java.awt.Insets = JBUI.emptyInsets()
+
+        fun transcript(): java.awt.Insets = JBUI.insets(Space.PAD, Space.PAD, Space.PAD, Space.PAD)
 
         fun empty(): Border = JBUI.Borders.empty(Space.PAD)
 
@@ -103,8 +105,6 @@ object UiStyle {
         fun header(): Border = JBUI.Borders.empty(Space.LG, Space.LG)
 
         fun body(): Border = JBUI.Borders.empty(Space.LG, Space.PAD)
-
-        fun progress(): Border = JBUI.Borders.empty(Space.MD, 0, Space.SM, 0)
     }
 
     object Borders {
@@ -121,10 +121,7 @@ object UiStyle {
             JBUI.Borders.empty(Space.XS, Space.LG),
         )!!
 
-        fun user(): Border = JBUI.Borders.compound(
-            JBUI.Borders.customLineTop(Colors.line()),
-            JBUI.Borders.empty(Space.LG, 0, Space.SM, 0),
-        )!!
+        fun user(): Border = JBUI.Borders.customLineTop(Colors.line())
 
         fun assistant(): Border = JBUI.Borders.empty()
     }
