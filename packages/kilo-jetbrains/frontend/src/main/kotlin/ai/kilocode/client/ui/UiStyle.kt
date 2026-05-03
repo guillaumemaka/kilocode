@@ -23,8 +23,11 @@ object UiStyle {
         const val BUTTON = 24
         const val SCROLL = 16
         const val USER_PROMPT = 100
+        const val TOOL_BODY = 20_000
 
         fun userPromptMin(): Int = JBUI.scale(USER_PROMPT)
+
+        fun toolBodyLimit(): Int = TOOL_BODY
     }
 
     object Space {
