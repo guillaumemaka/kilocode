@@ -139,6 +139,7 @@ class SessionController(
     fun prompt(text: String) {
         assertEdt()
         val sid = sessionId ?: "pending"
+        val dto = promptDto(text)
         LOG.debug { "${ChatLogSummary.sid(sid)} ${ChatLogSummary.prompt(text)} ${ChatLogSummary.dir(directory)}" }
         showMessages()
         cs.launch {
@@ -153,7 +154,7 @@ class SessionController(
                     subscribeEvents()
                     session.id
                 }
-                sessions.prompt(id, directory, promptDto(text))
+                sessions.prompt(id, directory, dto)
                 LOG.debug { "${ChatLogSummary.sid(id)} kind=prompt dispatched=true" }
             } catch (e: Exception) {
                 LOG.warn("${ChatLogSummary.sid(sessionId ?: sid)} kind=prompt dir=${ChatLogSummary.dir(directory)} failed message=${e.message}", e)
