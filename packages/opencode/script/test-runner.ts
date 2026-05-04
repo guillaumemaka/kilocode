@@ -280,9 +280,11 @@ async function merge() {
       const extracted = extract(content)
       if (extracted) {
         suites.push(extracted)
+        // kilocode_change start - count nested suites without matching the root testsuites tag.
         counts.tests += sum(extracted, "tests")
         counts.failures += sum(extracted, "failures")
         counts.errors += sum(extracted, "errors")
+        // kilocode_change end
         continue
       }
     }
@@ -321,7 +323,7 @@ async function merge() {
 
 function extract(content: string, from = 0): string {
   const close = "</testsuite>"
-  const s = open(content, from)
+  const s = open(content, from) // kilocode_change
   if (s === -1) return ""
   const e = content.indexOf(close, s)
   if (e === -1) return ""
@@ -330,6 +332,7 @@ function extract(content: string, from = 0): string {
   return rest ? suite + "\n" + rest : suite
 }
 
+// kilocode_change start
 function open(content: string, from: number): number {
   const tag = "<testsuite"
   const s = content.indexOf(tag, from)
@@ -342,6 +345,7 @@ function open(content: string, from: number): number {
 function sum(content: string, name: string): number {
   return Array.from(content.matchAll(new RegExp(`${name}="(\\d+)"`, "g"))).reduce((n, m) => n + Number(m[1]), 0)
 }
+// kilocode_change end
 
 function esc(s: string): string {
   return s

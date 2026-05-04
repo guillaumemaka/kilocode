@@ -786,13 +786,14 @@ export const layer = Layer.effect(
       }).pipe(
         Effect.catch((error) => {
           if (error instanceof UnauthorizedError && capturedUrl) {
+            // kilocode_change start - bind the callback port only when browser auth is actually needed.
             const url = capturedUrl.toString()
             return Effect.gen(function* () {
-              // kilocode_change - bind the callback port only when browser auth is actually needed.
               yield* Effect.promise(() => McpOAuthCallback.ensureRunning(oauthConfig?.redirectUri))
               pendingOAuthTransports.set(mcpName, transport)
               return { authorizationUrl: url, oauthState } satisfies AuthResult
             })
+            // kilocode_change end
           }
           return Effect.die(error)
         }),
