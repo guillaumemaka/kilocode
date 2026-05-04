@@ -40,6 +40,7 @@
     "mime-types": "3.0.2",
     "minimatch": "10.2.5",
     "npm-package-arg": "13.0.2",
+    "rotating-file-stream": "3.2.9",
     "semver": "^7.6.3",
     "xdg-basedir": "5.1.0",
     "zod": "catalog:"

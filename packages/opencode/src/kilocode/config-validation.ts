@@ -82,7 +82,9 @@ export namespace ConfigValidation {
     } else {
       const result = ConfigAgent.Info.zod.safeParse(config)
       if (!result.success) {
-        const issues = result.error.issues.map((i: z.core.$ZodIssue) => `  ${i.path.join(".")}: ${i.message}`).join("\n")
+        const issues = result.error.issues
+          .map((i: z.core.$ZodIssue) => `  ${i.path.join(".")}: ${i.message}`)
+          .join("\n")
         return `\n\n<config_validation>\nWARNING: Configuration is invalid at ${label(filepath)}\n${issues}\n</config_validation>`
       }
     }

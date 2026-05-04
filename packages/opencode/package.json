@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "version": "7.2.30",
+  "version": "7.2.34",
   "name": "@kilocode/cli",
   "type": "module",
   "license": "MIT",
@@ -74,7 +74,6 @@
     "vscode-languageserver-types": "3.17.5",
     "why-is-node-running": "3.2.2",
     "zod-to-json-schema": "3.24.5",
-    "@opencode-ai/shared": "workspace:*",
     "@types/npmcli__arborist": "6.3.3"
   },
   "dependencies": {

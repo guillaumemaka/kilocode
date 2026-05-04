@@ -12307,6 +12307,58 @@
         },
         "required": ["type", "properties"]
       },
+      "Event.kilocode.agent_manager.start": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "kilocode.agent_manager.start"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "requestID": {
+                "type": "string"
+              },
+              "sessionID": {
+                "type": "string",
+                "pattern": "^ses.*"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["worktree", "local"]
+              },
+              "versions": {
+                "type": "boolean"
+              },
+              "tasks": {
+                "minItems": 1,
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "prompt": {
+                      "description": "Initial prompt to send to the new session",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Short display name for the Agent Manager card",
+                      "type": "string"
+                    },
+                    "branchName": {
+                      "description": "Git branch name seed for worktree mode",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["requestID", "sessionID", "mode", "tasks"]
+          }
+        },
+        "required": ["type", "properties"]
+      },
       "Event.vcs.branch.updated": {
         "type": "object",
         "properties": {
@@ -14671,6 +14723,9 @@
                 "$ref": "#/components/schemas/Event.command.executed"
               },
               {
+                "$ref": "#/components/schemas/Event.kilocode.agent_manager.start"
+              },
+              {
                 "$ref": "#/components/schemas/Event.vcs.branch.updated"
               },
               {
@@ -15064,6 +15119,9 @@
               },
               "skill": {
                 "$ref": "#/components/schemas/PermissionRuleConfig"
+              },
+              "agent_manager": {
+                "$ref": "#/components/schemas/PermissionRuleConfig"
               }
             },
             "additionalProperties": {
@@ -15252,6 +15310,19 @@
                     },
                     "family": {
                       "type": "string"
+                    },
+                    "prompt": {
+                      "type": "string",
+                      "enum": [
+                        "codex",
+                        "gemini",
+                        "beast",
+                        "anthropic",
+                        "trinity",
+                        "anthropic_without_todo",
+                        "ling",
+                        "gpt55"
+                      ]
                     },
                     "release_date": {
                       "type": "string"
@@ -15676,8 +15747,17 @@
             "description": "Enable remote control of sessions via Kilo Cloud. Equivalent to running /remote on startup.",
             "type": "boolean"
           },
+          "auto_collapse_reasoning": {
+            "description": "Automatically collapse reasoning blocks after the agent finishes writing them",
+            "type": "boolean"
+          },
           "indexing": {
             "$ref": "#/components/schemas/IndexingConfig"
+          },
+          "terminal_command_display": {
+            "description": "Controls whether terminal command blocks are expanded or collapsed by default in the VS Code chat UI",
+            "type": "string",
+            "enum": ["expanded", "collapsed"]
           },
           "model": {
             "description": "Model to use in the format of provider/model, eg anthropic/claude-2",
@@ -16015,6 +16095,10 @@
               },
               "semantic_indexing": {
                 "description": "Enable semantic codebase indexing and the semantic_search tool",
+                "type": "boolean"
+              },
+              "agent_manager_tool": {
+                "description": "Enable the VS Code Agent Manager orchestration tool",
                 "type": "boolean"
               },
               "openTelemetry": {
@@ -16418,7 +16502,7 @@
           },
           "prompt": {
             "type": "string",
-            "enum": ["codex", "gemini", "beast", "anthropic", "trinity", "anthropic_without_todo", "ling"]
+            "enum": ["codex", "gemini", "beast", "anthropic", "trinity", "anthropic_without_todo", "ling", "gpt55"]
           },
           "isFree": {
             "type": "boolean"
@@ -17299,6 +17383,9 @@
           },
           {
             "$ref": "#/components/schemas/Event.command.executed"
+          },
+          {
+            "$ref": "#/components/schemas/Event.kilocode.agent_manager.start"
           },
           {
             "$ref": "#/components/schemas/Event.vcs.branch.updated"
