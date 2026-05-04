@@ -8,8 +8,10 @@ import * as Log from "@opencode-ai/core/util/log"
 import { NamedError } from "@opencode-ai/core/util/error"
 import { Glob } from "@opencode-ai/core/util/glob"
 import { configEntryNameFromPath } from "./entry-name"
+import { ConfigError } from "./error"
 import * as ConfigMarkdown from "./markdown"
 import { ConfigModelID } from "./model-id"
+import { ConfigParse } from "./parse"
 import { ConfigPermission } from "./permission"
 // kilocode_change start
 import { KilocodeConfig } from "@/kilocode/config/config"
@@ -157,13 +159,16 @@ export async function load(dir: string, warnings?: Warning[]) {
       ...md.data,
       prompt: md.content.trim(),
     }
-    // kilocode_change start - non-fatal validation via KilocodeConfig.handleInvalid
-    const parsed = Info.zod.safeParse(config)
-    if (parsed.success) {
-      result[config.name] = parsed.data as Info
-      continue
+    // kilocode_change start - use Effect schema (propertyOrder: original) + non-fatal handleInvalid
+    try {
+      result[config.name] = ConfigParse.effectSchema(Info, config, item) as Info
+    } catch (err) {
+      if (ConfigError.InvalidError.isInstance(err)) {
+        await KilocodeConfig.handleInvalid("agent", item, err.data.issues ?? [], err, warnings)
+        continue
+      }
+      throw err
     }
-    await KilocodeConfig.handleInvalid("agent", item, parsed.error.issues, parsed.error, warnings)
     // kilocode_change end
   }
   return result
@@ -202,16 +207,19 @@ export async function loadMode(dir: string, warnings?: Warning[]) {
       ...md.data,
       prompt: md.content.trim(),
     }
-    // kilocode_change start - non-fatal validation via KilocodeConfig.handleInvalid
-    const parsed = Info.zod.safeParse(config)
-    if (parsed.success) {
+    // kilocode_change start - use Effect schema (propertyOrder: original) + non-fatal handleInvalid
+    try {
       result[config.name] = {
-        ...(parsed.data as Info),
+        ...(ConfigParse.effectSchema(Info, config, item) as Info),
         mode: "primary" as const,
       }
-      continue
+    } catch (err) {
+      if (ConfigError.InvalidError.isInstance(err)) {
+        await KilocodeConfig.handleInvalid("agent", item, err.data.issues ?? [], err, warnings)
+        continue
+      }
+      throw err
     }
-    await KilocodeConfig.handleInvalid("agent", item, parsed.error.issues, parsed.error, warnings)
     // kilocode_change end
   }
   return result

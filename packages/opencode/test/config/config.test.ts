@@ -164,16 +164,13 @@ test("loads shell config field", async () => {
 })
 
 test("updates config and preserves empty shell sentinel", async () => {
+  // kilocode_change - upstream hardcodes project config to config.json; Kilo writes to kilo.json
   await using tmp = await tmpdir({
     init: async (dir) => {
-      await writeConfig(
-        dir,
-        {
-          $schema: "https://opencode.ai/config.json",
-          shell: "bash",
-        },
-        "config.json",
-      )
+      await writeConfig(dir, {
+        $schema: "https://opencode.ai/config.json",
+        shell: "bash",
+      })
     },
   })
   await Instance.provide({
@@ -181,13 +178,14 @@ test("updates config and preserves empty shell sentinel", async () => {
     fn: async () => {
       await save({ shell: "" })
 
-      const writtenConfig = await Filesystem.readJson<{ shell?: string }>(path.join(tmp.path, "config.json"))
+      const writtenConfig = await Filesystem.readJson<{ shell?: string }>(path.join(tmp.path, "kilo.json"))
       expect(writtenConfig.shell).toBe("")
     },
   })
 })
 
 test("updates global config and omits empty shell key in json", async () => {
+  // kilocode_change - globalConfigFile() prefers kilo.json over opencode.json
   await using tmp = await tmpdir({
     init: async (dir) => {
       await writeConfig(dir, {
@@ -204,7 +202,7 @@ test("updates global config and omits empty shell key in json", async () => {
   try {
     await saveGlobal({ shell: "" })
 
-    const writtenConfig = await Filesystem.readJson<{ shell?: string }>(path.join(tmp.path, "opencode.json"))
+    const writtenConfig = await Filesystem.readJson<{ shell?: string }>(path.join(tmp.path, "kilo.json"))
     expect("shell" in writtenConfig).toBe(false)
   } finally {
     ;(Global.Path as { config: string }).config = prev

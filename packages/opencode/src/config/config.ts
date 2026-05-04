@@ -979,7 +979,8 @@ export const layer = Layer.effect(
       let next: Info
       if (!file.endsWith(".jsonc")) {
         const existing = ConfigParse.effectSchema(Info, ConfigParse.jsonc(before, file), file)
-        const merged = KilocodeConfig.mergeConfig(writable(existing), writable(config)) // kilocode_change
+        // kilocode_change - use `patch` (writableGlobal) so empty-string sentinels are stripped via undefined
+        const merged = KilocodeConfig.mergeConfig(writable(existing), patch)
         yield* fs.writeFileString(file, JSON.stringify(merged, null, 2)).pipe(Effect.orDie)
         next = merged
       } else {
