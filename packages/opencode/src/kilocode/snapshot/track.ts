@@ -50,7 +50,7 @@ import { ConfigParse } from "@/config/parse"
 import * as Log from "@opencode-ai/core/util/log"
 import { iife } from "@/util/iife"
 import { makeRuntime } from "@/effect/run-service"
-import type { Config } from "@/config"
+import type { Config } from "@/config/config"
 // Avoid an eager `import { Session }` here: session/index.ts indirectly
 // re-exports this module (via Snapshot.Service), so resolving
 // `Session.Service` at module load races with our own initialization and
@@ -368,7 +368,7 @@ export namespace KiloSnapshotTrack {
   let cachedSessionRt: SessionRuntime | undefined
   async function sessionRuntime(): Promise<SessionRuntime> {
     if (cachedSessionRt) return cachedSessionRt
-    const mod = await import("@/session")
+    const mod = await import("@/session/session")
     cachedSessionRt = makeRuntime(mod.Session.Service, mod.Session.defaultLayer) as unknown as SessionRuntime
     return cachedSessionRt
   }
