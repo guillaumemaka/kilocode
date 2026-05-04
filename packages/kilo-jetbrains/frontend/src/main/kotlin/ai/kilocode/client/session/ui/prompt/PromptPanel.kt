@@ -28,6 +28,8 @@ import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.event.FocusAdapter
 import java.awt.event.FocusEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.Icon
@@ -95,14 +97,12 @@ class PromptPanel(
         }
     }
 
-    private val button = JButton(SEND_ICON).apply {
-        UiStyle.Buttons.icon(this)
+    private val button: SendButton = SendButton().apply {
+        icon = SEND_ICON
         isFocusPainted = false
         toolTipText = KiloBundle.message("prompt.button.send")
-        isEnabled = false
-        maximumSize = JBDimension(JBUI.scale(UiStyle.Size.BUTTON_WIDTH), Short.MAX_VALUE.toInt())
-        preferredSize = JBUI.size(UiStyle.Size.BUTTON, UiStyle.Size.BUTTON)
         addActionListener {
+            if (!button.active) return@addActionListener
             if (busy) {
                 onAbort()
                 return@addActionListener
@@ -149,11 +149,11 @@ class PromptPanel(
             border = JBUI.Borders.emptyTop(UiStyle.Space.SM)
         }
         bar.add(mode)
-        bar.add(Box.createHorizontalStrut(UiStyle.Gap.xs()))
+        bar.add(Box.createHorizontalStrut(UiStyle.Gap.small()))
         bar.add(model)
-        bar.add(Box.createHorizontalStrut(UiStyle.Gap.xs()))
+        bar.add(Box.createHorizontalStrut(UiStyle.Gap.small()))
         bar.add(reasoning)
-        bar.add(Box.createHorizontalStrut(UiStyle.Gap.xs()))
+        bar.add(Box.createHorizontalStrut(UiStyle.Gap.small()))
         bar.add(reset)
         bar.add(Box.createHorizontalGlue())
         bar.add(button)
@@ -231,7 +231,57 @@ class PromptPanel(
     }
 
     private fun syncButton() {
-        button.isEnabled = busy || isSendEnabled
+        button.active = busy || isSendEnabled
+    }
+
+    private inner class SendButton : JButton() {
+        private var over = false
+        var active = false
+            set(value) {
+                if (field == value) return
+                field = value
+                repaint()
+            }
+
+        init {
+            UiStyle.Buttons.icon(this)
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseEntered(e: MouseEvent) {
+                    sync(true)
+                }
+
+                override fun mouseExited(e: MouseEvent) {
+                    sync(false)
+                }
+            })
+        }
+
+        override fun getPreferredSize() = JBUI.size(UiStyle.Size.BUTTON, UiStyle.Size.BUTTON)
+
+        override fun getMinimumSize() = preferredSize
+
+        override fun getMaximumSize() = preferredSize
+
+        override fun paintComponent(g: Graphics) {
+            if (over) {
+                val g2 = g.create() as Graphics2D
+                try {
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                    g2.color = JBUI.CurrentTheme.ActionButton.hoverBackground()
+                    val arc = JBUI.scale(JBUI.getInt("Button.arc", ARC))
+                    g2.fillRoundRect(0, 0, width, height, arc, arc)
+                } finally {
+                    g2.dispose()
+                }
+            }
+            super.paintComponent(g)
+        }
+
+        private fun sync(value: Boolean) {
+            if (over == value) return
+            over = value
+            repaint()
+        }
     }
 
     private inner class PromptShell : BorderLayoutPanel() {
