@@ -83,7 +83,7 @@ const all = (await Array.fromAsync(glob.scan({ cwd: path.join(root, "test") })))
 
 const matched =
   patterns.length > 0 ? all.filter((f) => patterns.some((p) => f.includes(p) || path.join("test", f).includes(p))) : all
-const files = matched.filter((f) => !skipped.has(f)) // kilocode_change
+const files = patterns.length > 0 ? matched : matched.filter((f) => !skipped.has(f)) // kilocode_change
 
 if (files.length === 0) {
   console.log("No test files found")
