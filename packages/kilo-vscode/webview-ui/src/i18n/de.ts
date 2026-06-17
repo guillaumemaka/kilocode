@@ -1345,10 +1345,10 @@ export const dict = {
   "settings.experimental.speechToText.title": "Sprache zu Text",
   "settings.experimental.speechToText.description":
     "Aktivieren Sie die Spracheingabe in Prompt-Feldern mit Ihrem Kilo-Konto über Kilo Gateway.",
-  "settings.experimental.speechToText.disabledDescription":
+  "settings.models.speechToText.disabledDescription":
     "Aktivieren Sie den Kilo-Anbieter und melden Sie sich an, um Speech to Text zu verwenden. Speech to Text wird derzeit nur mit Kilo Gateway unterstützt.",
-  "settings.experimental.speechToTextModel.title": "Sprache-zu-Text-Modell",
-  "settings.experimental.speechToTextModel.description":
+  "settings.models.speechToTextModel.title": "Sprache-zu-Text-Modell",
+  "settings.models.speechToTextModel.description":
     "Wählen Sie das Kilo Gateway-Transkriptionsmodell für die Spracheingabe.",
   "settings.experimental.continueOnDeny.title": "Bei Ablehnung fortfahren",
   "settings.experimental.continueOnDeny.description":
@@ -1550,10 +1550,6 @@ export const dict = {
 
   "settings.display.username.title": "Benutzername",
   "settings.display.username.description": "Benutzerdefinierter Benutzername in Gesprächen",
-  "settings.display.layout.title": "Layout",
-  "settings.display.layout.description": "Layout-Modus für die Chat-Oberfläche",
-  "settings.display.layout.auto": "Automatisch",
-  "settings.display.layout.stretch": "Gestreckt",
   "settings.display.fontSize.title": "Schriftgröße",
   "settings.display.fontSize.description": "Passen Sie die Schriftgröße der Kilo webview UI unabhängig von VS Code an.",
   "settings.display.reasoningAutoCollapse.title": "Reasoning automatisch einklappen",

@@ -1352,10 +1352,10 @@ export const dict = {
   "settings.experimental.speechToText.title": "Transcription vocale",
   "settings.experimental.speechToText.description":
     "Activez la saisie vocale dans les champs de prompt en utilisant votre compte Kilo via Kilo Gateway.",
-  "settings.experimental.speechToText.disabledDescription":
+  "settings.models.speechToText.disabledDescription":
     "Activez et connectez-vous au fournisseur Kilo pour utiliser Speech to Text. Speech to Text n'est actuellement pris en charge qu'avec Kilo Gateway.",
-  "settings.experimental.speechToTextModel.title": "Modèle de transcription vocale",
-  "settings.experimental.speechToTextModel.description":
+  "settings.models.speechToTextModel.title": "Modèle de transcription vocale",
+  "settings.models.speechToTextModel.description":
     "Choisissez le modèle de transcription Kilo Gateway pour la saisie vocale.",
   "settings.experimental.continueOnDeny.title": "Continuer en cas de refus",
   "settings.experimental.continueOnDeny.description":
@@ -1562,10 +1562,6 @@ export const dict = {
 
   "settings.display.username.title": "Nom d'utilisateur",
   "settings.display.username.description": "Nom d'utilisateur personnalisé dans les conversations",
-  "settings.display.layout.title": "Disposition",
-  "settings.display.layout.description": "Mode de disposition pour l'interface de chat",
-  "settings.display.layout.auto": "Automatique",
-  "settings.display.layout.stretch": "Étiré",
   "settings.display.fontSize.title": "Taille de la police",
   "settings.display.fontSize.description":
     "Ajustez la taille de la police de la webview UI de Kilo indépendamment de VS Code.",

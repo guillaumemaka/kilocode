@@ -1323,10 +1323,10 @@ export const dict = {
   "settings.experimental.speechToText.title": "Spraak naar tekst",
   "settings.experimental.speechToText.description":
     "Schakel spraakinvoer in promptvelden in met uw Kilo-account via Kilo Gateway.",
-  "settings.experimental.speechToText.disabledDescription":
+  "settings.models.speechToText.disabledDescription":
     "Schakel de Kilo-provider in en meld u aan om Speech to Text te gebruiken. Speech to Text wordt momenteel alleen ondersteund met Kilo Gateway.",
-  "settings.experimental.speechToTextModel.title": "Spraak-naar-tekst-model",
-  "settings.experimental.speechToTextModel.description": "Kies het Kilo Gateway-transcriptiemodel voor spraakinvoer.",
+  "settings.models.speechToTextModel.title": "Spraak-naar-tekst-model",
+  "settings.models.speechToTextModel.description": "Kies het Kilo Gateway-transcriptiemodel voor spraakinvoer.",
   "settings.experimental.continueOnDeny.title": "Doorgaan bij weigering",
   "settings.experimental.continueOnDeny.description":
     "Ga door met de agent loop wanneer een toestemming wordt geweigerd",
@@ -1494,10 +1494,6 @@ export const dict = {
 
   "settings.display.username.title": "Gebruikersnaam",
   "settings.display.username.description": "Aangepaste gebruikersnaam weergegeven in gesprekken",
-  "settings.display.layout.title": "Lay-out",
-  "settings.display.layout.description": "Lay-outmodus voor de chatinterface",
-  "settings.display.layout.auto": "Auto",
-  "settings.display.layout.stretch": "Uitrekken",
   "settings.display.fontSize.title": "Lettergrootte",
   "settings.display.fontSize.description": "Pas de lettergrootte van de Kilo webview UI onafhankelijk van VS Code aan.",
   "settings.display.reasoningAutoCollapse.title": "Redenering automatisch inklappen",

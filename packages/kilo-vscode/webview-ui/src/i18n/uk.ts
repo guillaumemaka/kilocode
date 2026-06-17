@@ -1315,11 +1315,10 @@ export const dict = {
   "settings.experimental.speechToText.title": "Мовлення в текст",
   "settings.experimental.speechToText.description":
     "Увімкніть голосове введення в полях запитів, використовуючи ваш обліковий запис Kilo через Kilo Gateway.",
-  "settings.experimental.speechToText.disabledDescription":
+  "settings.models.speechToText.disabledDescription":
     "Увімкніть провайдер Kilo та виконайте вхід, щоб використовувати Speech to Text. Наразі Speech to Text підтримується лише з Kilo Gateway.",
-  "settings.experimental.speechToTextModel.title": "Модель мовлення в текст",
-  "settings.experimental.speechToTextModel.description":
-    "Виберіть модель транскрипції Kilo Gateway для голосового введення.",
+  "settings.models.speechToTextModel.title": "Модель мовлення в текст",
+  "settings.models.speechToTextModel.description": "Виберіть модель транскрипції Kilo Gateway для голосового введення.",
   "settings.experimental.continueOnDeny.title": "Продовжувати при відхиленні",
   "settings.experimental.continueOnDeny.description": "Продовжувати цикл агента, коли дозвіл відхилено",
   "settings.experimental.mcpTimeout.title": "Тайм-аут MCP (мс)",
@@ -1482,10 +1481,6 @@ export const dict = {
 
   "settings.display.username.title": "Ім'я користувача",
   "settings.display.username.description": "Власне ім'я користувача, що відображається в чатах",
-  "settings.display.layout.title": "Макет",
-  "settings.display.layout.description": "Режим макету для інтерфейсу чату",
-  "settings.display.layout.auto": "Автоматично",
-  "settings.display.layout.stretch": "Розтягнути",
   "settings.display.fontSize.title": "Розмір шрифту",
   "settings.display.fontSize.description": "Налаштуйте розмір шрифту webview UI для Kilo незалежно від VS Code.",
   "settings.display.reasoningAutoCollapse.title": "Автоматично згортати міркування",

@@ -1316,10 +1316,10 @@ export const dict = {
   "settings.experimental.speechToText.title": "Sesten metne",
   "settings.experimental.speechToText.description":
     "Kilo Gateway üzerinden Kilo hesabınızı kullanarak komut alanlarında sesli girişi etkinleştirin.",
-  "settings.experimental.speechToText.disabledDescription":
+  "settings.models.speechToText.disabledDescription":
     "Speech to Text kullanmak için Kilo sağlayıcısını etkinleştirin ve giriş yapın. Speech to Text şu anda yalnızca Kilo Gateway ile desteklenmektedir.",
-  "settings.experimental.speechToTextModel.title": "Sesten metne modeli",
-  "settings.experimental.speechToTextModel.description": "Sesli giriş için Kilo Gateway transkripsiyon modelini seçin.",
+  "settings.models.speechToTextModel.title": "Sesten metne modeli",
+  "settings.models.speechToTextModel.description": "Sesli giriş için Kilo Gateway transkripsiyon modelini seçin.",
   "settings.experimental.continueOnDeny.title": "Reddetme Durumunda Devam Et",
   "settings.experimental.continueOnDeny.description": "Bir izin reddedildiğinde ajan döngüsüne devam et",
   "settings.experimental.mcpTimeout.title": "MCP Zaman Aşımı (ms)",
@@ -1483,10 +1483,6 @@ export const dict = {
 
   "settings.display.username.title": "Kullanıcı Adı",
   "settings.display.username.description": "Sohbetlerde görüntülenen özel kullanıcı adı",
-  "settings.display.layout.title": "Düzen",
-  "settings.display.layout.description": "Sohbet arayüzü için düzen modu",
-  "settings.display.layout.auto": "Otomatik",
-  "settings.display.layout.stretch": "Genişlet",
   "settings.display.fontSize.title": "Yazı Tipi Boyutu",
   "settings.display.fontSize.description": "Kilo webview UI yazı tipi boyutunu VS Code'dan bağımsız olarak ayarlayın.",
   "settings.display.reasoningAutoCollapse.title": "Akıl yürütmeyi otomatik daralt",

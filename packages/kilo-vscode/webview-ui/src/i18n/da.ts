@@ -1322,10 +1322,10 @@ export const dict = {
   "settings.experimental.speechToText.title": "Tale til tekst",
   "settings.experimental.speechToText.description":
     "Aktivér stemmeinput i prompt-felter ved hjælp af din Kilo-konto gennem Kilo Gateway.",
-  "settings.experimental.speechToText.disabledDescription":
+  "settings.models.speechToText.disabledDescription":
     "Aktivér og log ind på Kilo-udbyderen for at bruge Speech to Text. Speech to Text understøttes i øjeblikket kun med Kilo Gateway.",
-  "settings.experimental.speechToTextModel.title": "Model til tale til tekst",
-  "settings.experimental.speechToTextModel.description": "Vælg Kilo Gateway-transskriptionsmodellen til stemmeinput.",
+  "settings.models.speechToTextModel.title": "Model til tale til tekst",
+  "settings.models.speechToTextModel.description": "Vælg Kilo Gateway-transskriptionsmodellen til stemmeinput.",
   "settings.experimental.continueOnDeny.title": "Fortsæt ved afvisning",
   "settings.experimental.continueOnDeny.description": "Fortsæt agentløkken, når en tilladelse afvises",
   "settings.experimental.mcpTimeout.title": "MCP-timeout (ms)",
@@ -1519,10 +1519,6 @@ export const dict = {
 
   "settings.display.username.title": "Brugernavn",
   "settings.display.username.description": "Brugerdefineret brugernavn i samtaler",
-  "settings.display.layout.title": "Layout",
-  "settings.display.layout.description": "Layouttilstand for chatgrænsefladen",
-  "settings.display.layout.auto": "Automatisk",
-  "settings.display.layout.stretch": "Stræk",
   "settings.display.fontSize.title": "Skriftstørrelse",
   "settings.display.fontSize.description": "Juster skriftstørrelsen for Kilo webview UI uafhængigt af VS Code.",
   "settings.display.reasoningAutoCollapse.title": "Skjul ræsonnement automatisk",
