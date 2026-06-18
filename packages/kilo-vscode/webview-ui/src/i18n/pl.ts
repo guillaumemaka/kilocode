@@ -101,17 +101,8 @@ export const dict = {
 
   "dialog.provider.search.placeholder": "Szukaj dostawców",
   "dialog.provider.empty": "Nie znaleziono dostawców",
-  "dialog.provider.group.popular": "Popularne",
   "dialog.provider.group.other": "Inne",
   "dialog.provider.tag.recommended": "Zalecane",
-  "dialog.provider.opencode.note": "Wybrane modele, w tym Claude, GPT, Gemini i więcej",
-  "dialog.provider.anthropic.note": "Połącz z Claude Pro/Max lub kluczem API",
-  "dialog.provider.deepseek.note": "Modele DeepSeek do zadań wymagających rozumowania i kodowania",
-  "dialog.provider.openai.note": "Połącz z ChatGPT Pro/Plus lub kluczem API",
-  "dialog.provider.google.note": "Modele Gemini do szybkich, strukturalnych odpowiedzi",
-  "dialog.provider.openrouter.note": "Dostęp do wszystkich obsługiwanych modeli od jednego dostawcy",
-  "dialog.provider.vercel.note": "Ujednolicony dostęp do modeli AI z inteligentnym routingiem",
-  "dialog.provider.copilot.note": "Połącz z Copilot lub kluczem API",
 
   "dialog.model.select.title": "Wybierz model",
   "dialog.model.search.placeholder": "Szukaj modeli",
@@ -1565,6 +1556,8 @@ export const dict = {
   "settings.aboutKiloCode.legacyMigration.title": "Migracja starszej wersji",
   "settings.aboutKiloCode.legacyMigration.description":
     "Migruj ustawienia z poprzedniej instalacji Kilo Code, w tym klucze API dostawców i domyślny model.",
+  "settings.aboutKiloCode.rooImport.description": "Importuj historię rozmów z instalacji Roo Code.",
+  "settings.aboutKiloCode.rooImport.button": "Importuj sesje z Roo Code",
 
   // Screen 1 — What's New
   "migration.whatsNew.title": "Co nowego w Kilo Code",
