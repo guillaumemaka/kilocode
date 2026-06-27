@@ -2,7 +2,7 @@ import type { ProviderAuthAuthorization, ProviderAuthMethod } from "@kilocode/sd
 import type { DiffSourceCapabilities, DiffSourceDescriptor } from "../../../../src/diff/sources/types"
 import type { PartBatch, PartRemove, PartUpdate } from "../../../../src/shared/stream-messages"
 import type { SessionMode } from "../../context/worktree-mode"
-import type { MarketplaceItem, MarketplaceInstalledMetadata } from "../marketplace"
+import type { MarketplaceItem, MarketplaceInstalledMetadata, MarketplaceRelevanceMetadata } from "../marketplace"
 import type { ConnectionState, ServerInfo, SessionStatus } from "./connection"
 import type { FileAttachment, Part } from "./parts"
 import type {
@@ -14,6 +14,7 @@ import type {
   SessionUpdate,
 } from "./sessions"
 import type { PermissionRequest } from "./permissions"
+import type { AnacondaDesktopExtensionMessage } from "../../../../src/shared/anaconda-desktop-messages"
 import type { QuestionRequest, SuggestionRequest, TodoItem } from "./questions"
 import type { ModelSelection, Provider, ProviderAuthState } from "./providers"
 import type { AgentInfo, SkillInfo, SlashCommandInfo } from "./agents"
@@ -656,6 +657,16 @@ export interface SandboxStatusMessage {
   requestID?: string
 }
 
+export interface SandboxDefaultStatusMessage {
+  type: "sandboxDefaultStatus"
+  desired: boolean
+  enabled: boolean
+  available: boolean
+  reason?: string
+  revision: number
+  requestID?: string
+}
+
 export interface SandboxStatusErrorMessage {
   type: "sandboxStatusError"
   sessionID: string
@@ -909,6 +920,7 @@ export interface MarketplaceDataMessage {
   type: "marketplaceData"
   marketplaceItems: MarketplaceItem[]
   marketplaceInstalledMetadata: MarketplaceInstalledMetadata
+  marketplaceRelevance: MarketplaceRelevanceMetadata
   errors?: string[]
   showAgentMigrationBanner?: boolean
 }
@@ -918,6 +930,11 @@ export interface MarketplaceInstallResultMessage {
   success: boolean
   slug: string
   error?: string
+}
+
+export interface OpenInstallModalMessage {
+  type: "openInstallModal"
+  mpItem: MarketplaceItem
 }
 
 export interface MarketplaceRemoveResultMessage {
@@ -1067,6 +1084,7 @@ export type ExtensionMessage =
   | AgentManagerKeybindingsMessage
   | AutoApproveStateMessage
   | SandboxStatusMessage
+  | SandboxDefaultStatusMessage
   | SandboxStatusErrorMessage
   | AgentManagerMultiVersionProgressMessage
   | AgentManagerSetSessionModelMessage
@@ -1120,10 +1138,12 @@ export type ExtensionMessage =
   | MarketplaceDataMessage
   | MarketplaceInstallResultMessage
   | MarketplaceRemoveResultMessage
+  | OpenInstallModalMessage
   | ProviderOAuthReadyMessage
   | ProviderConnectedMessage
   | ProviderDisconnectedMessage
   | ProviderActionErrorMessage
+  | AnacondaDesktopExtensionMessage
   | CustomProviderModelsFetchedMessage
   | RecentsLoadedMessage
   | FavoritesLoadedMessage

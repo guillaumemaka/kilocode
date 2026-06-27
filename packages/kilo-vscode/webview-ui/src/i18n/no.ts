@@ -1,7 +1,13 @@
-import { dict as en } from "./en"
+import { anacondaDesktopDict, dict as en } from "./en"
 type Keys = keyof typeof en
 
 export const dict = {
+  ...anacondaDesktopDict,
+  "provider.anaconda.action.checkAgain": "Sjekk igjen",
+  "provider.anaconda.state.noServer_one":
+    "1 nedlastet tekstgenereringsmodell er tilgjengelig. Start en modellserver i Anaconda Desktop. Modeller med støtte for verktøykall anbefales på det sterkeste.",
+  "provider.anaconda.state.noServer_other":
+    "{{count}} nedlastede tekstgenereringsmodeller er tilgjengelige. Start en modellserver i Anaconda Desktop. Modeller med støtte for verktøykall anbefales på det sterkeste.",
   "command.category.suggested": "Foreslått",
   "command.category.view": "Visning",
   "command.category.project": "Prosjekt",
@@ -177,6 +183,7 @@ export const dict = {
   "model.tag.free": "Gratis",
   "model.tag.dataCollected": "Data kan brukes til trening",
   "model.tag.latest": "Nyeste",
+  "model.group.auto": "Automatiske modeller",
   "model.group.recommended": "Anbefalt",
   "model.group.favorites": "Favoritter",
   "model.group.collapse": "Skjul {{group}}",
@@ -204,6 +211,7 @@ export const dict = {
   "model.preview.label.average": "Est. snittkostnad",
   "model.preview.label.context": "Kontekst",
   "model.preview.group.terminalBench": "Terminal Bench 2.0",
+  "model.preview.group.autoEfficientChoices": "Modellvalg",
   "model.preview.label.completion": "Fullføring",
   "model.preview.label.costAttempt": "Kostnad / forsøk",
   "model.preview.value.notSupported": "Ikke støttet",
@@ -1210,6 +1218,7 @@ export const dict = {
   "settings.aboutKiloCode.resetSettings.description":
     "Dette tilbakestiller kun VS Code-utvidelsesspecifikke innstillinger til standardverdiene. Innstillinger som deles med CLI, som modi og regler for automatisk godkjenning, lagres i CLI-konfigurasjonen og vil ikke tilbakestilles.",
   "settings.aboutKiloCode.resetSettings.button": "Tilbakestill alle innstillinger",
+  "settings.aboutKiloCode.resetSettings.notificationsButton": "Reset Read Notifications",
   "settings.aboutKiloCode.settingsTransfer.title": "Overføring av innstillinger",
   "settings.aboutKiloCode.settingsTransfer.description":
     "Eksporter eller importer innstillingene dine for å overføre dem mellom VS Code-instanser.",
@@ -1301,6 +1310,9 @@ export const dict = {
     "Aktiver og logg på Kilo-leverandøren for å bruke Speech to Text. Speech to Text støttes for øyeblikket bare med Kilo Gateway.",
   "settings.models.speechToTextModel.title": "Tale-til-tekst-modell",
   "settings.models.speechToTextModel.description": "Velg Kilo Gateway-transkripsjonsmodellen for taleinndata.",
+  "settings.experimental.nativeNotebookTools.title": "Innebygde notatbok-verktøy",
+  "settings.experimental.nativeNotebookTools.description":
+    "Aktiver eksperimentelle verktøy for å lese, redigere og kjøre VS Code-notatbøker",
   "settings.experimental.continueOnDeny.title": "Fortsett ved avvisning",
   "settings.experimental.continueOnDeny.description": "Fortsett agentløkken når en tillatelse avvises",
   "settings.sandboxing.title": "Kjøring i sandkasse",
