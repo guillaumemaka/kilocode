@@ -384,6 +384,7 @@ export const dict = {
     "Нажмите, чтобы ограничить запись в файловую систему. Доступ к сети останется разрешённым согласно настройкам песочницы.",
 
   "speechToText.tooltip.start": "Начать голосовой ввод с Kilo Gateway",
+  "speechToText.tooltip.starting": "Запуск микрофона... Пока не говорите.",
   "speechToText.tooltip.stop": "Остановить захват звука",
   "speechToText.tooltip.transcribing": "Распознавание... Нажмите для отмены.",
   "speechToText.tooltip.error": "Ошибка голосового ввода. Нажмите, чтобы очистить.",
@@ -1244,6 +1245,8 @@ export const dict = {
 
   "common.retry": "Повторить",
   "common.refresh": "Обновить",
+  "common.reload": "Перезагрузить",
+  "common.reloadDescription": "Перезагрузить конфигурацию, навыки, агентов и команды с диска",
 
   "profile.title": "Профиль",
   "profile.notLoggedIn": "Не авторизован",
@@ -1441,6 +1444,10 @@ export const dict = {
   "settings.sandboxing.network.title": "Ограничить доступ к сети",
   "settings.sandboxing.network.description":
     "Блокировать исходящий доступ к сети для команд, инициированных моделью, и HTTP-инструментов. Локальные серверы MCP и хуки плагинов не подпадают под это ограничение. Трафик к провайдерам и моделям для инференса остаётся доступным.",
+
+  "settings.sandboxing.writablePaths.title": "Дополнительные пути для записи",
+  "settings.sandboxing.writablePaths.description":
+    "Дополнительные пути файловой системы, в которые разрешена запись в песочнице (например, /tmp, /var/log). Они объединяются с путями записи по умолчанию при активной песочнице.",
   "settings.experimental.mcpTimeout.title": "Таймаут MCP (мс)",
   "settings.experimental.mcpTimeout.description": "Таймаут запросов MCP-сервера в миллисекундах",
   "settings.experimental.remote.title": "Управление Remote",

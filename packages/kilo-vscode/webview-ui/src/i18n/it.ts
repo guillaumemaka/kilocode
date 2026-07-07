@@ -1006,6 +1006,8 @@ export const dict = {
   "deviceAuth.error.detailsTitle": "Dettagli errore accesso",
   "common.retry": "Riprova",
   "common.refresh": "Aggiorna",
+  "common.reload": "Ricarica",
+  "common.reloadDescription": "Ricarica configurazione, competenze, agenti e comandi dal disco",
   "profile.title": "Profilo",
   "profile.notLoggedIn": "Accesso non effettuato",
   "profile.action.login": "Accedi con Kilo Code",
@@ -1229,6 +1231,10 @@ export const dict = {
   "settings.sandboxing.network.title": "Limita l'accesso alla rete",
   "settings.sandboxing.network.description":
     "Blocca l'accesso in uscita alla rete per i comandi avviati dal modello e gli strumenti HTTP. I server MCP locali e gli hook dei plugin operano al di fuori di questa restrizione. Il traffico verso i provider e per l'inferenza dei modelli rimane disponibile.",
+
+  "settings.sandboxing.writablePaths.title": "Percorsi di scrittura aggiuntivi",
+  "settings.sandboxing.writablePaths.description":
+    "Percorsi aggiuntivi del file system in cui la sandbox consente la scrittura (es. /tmp, /var/log). Vengono uniti con i percorsi di scrittura predefiniti quando la sandbox è attiva.",
   "settings.experimental.mcpTimeout.title": "Timeout MCP (ms)",
   "settings.experimental.mcpTimeout.description": "Timeout per richieste server MCP in millisecondi",
   "settings.experimental.remote.title": "Controllo remoto",
@@ -1724,6 +1730,7 @@ export const dict = {
 
   // Speech to Text tooltips and errors
   "speechToText.tooltip.start": "Avvia input vocale con Kilo Gateway",
+  "speechToText.tooltip.starting": "Avvio del microfono... Attendi prima di parlare.",
   "speechToText.tooltip.stop": "Interrompi acquisizione",
   "speechToText.tooltip.transcribing": "Trascrizione... Fai clic per annullare.",
   "speechToText.tooltip.error": "Input vocale fallito. Fai clic per cancellare.",

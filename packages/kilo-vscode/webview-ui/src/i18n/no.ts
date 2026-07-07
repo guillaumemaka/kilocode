@@ -391,6 +391,7 @@ export const dict = {
     "Klikk for å begrense skrivetilgang til filsystemet. Nettverkstilgang er fortsatt tillatt av sandbox-innstillingene dine.",
 
   "speechToText.tooltip.start": "Start taleinndata med Kilo Gateway",
+  "speechToText.tooltip.starting": "Starter mikrofonen... Vent med å snakke.",
   "speechToText.tooltip.stop": "Stopp lydfangst",
   "speechToText.tooltip.transcribing": "Transkriberer... Klikk for å avbryte.",
   "speechToText.tooltip.error": "Taleinndata mislyktes. Klikk for å tømme.",
@@ -1202,6 +1203,8 @@ export const dict = {
 
   "common.retry": "Prøv igjen",
   "common.refresh": "Oppdater",
+  "common.reload": "Last inn på nytt",
+  "common.reloadDescription": "Last inn konfigurasjon, ferdigheter, agenter og kommandoer fra disk på nytt",
 
   "profile.title": "Profil",
   "profile.notLoggedIn": "Ikke pålogget",
@@ -1400,6 +1403,10 @@ export const dict = {
   "settings.sandboxing.network.title": "Begrens nettverkstilgang",
   "settings.sandboxing.network.description":
     "Blokker utgående nettverkstilgang fra kommandoer generert av modellen og HTTP-verktøy. Lokale MCP-servere og programtilleggskroker kjører utenfor denne begrensningen. Trafikk for leverandør- og modellinferens forblir tilgjengelig.",
+
+  "settings.sandboxing.writablePaths.title": "Ytterligere skrivbare baner",
+  "settings.sandboxing.writablePaths.description":
+    "Ytterligere filsystembaner som sandkassen tillater skriving til (f.eks. /tmp, /var/log). Disse flettes med de standardskrivbare banene når sandkassen er aktiv.",
   "settings.experimental.mcpTimeout.title": "MCP-tidsavbrudd (ms)",
   "settings.experimental.mcpTimeout.description": "Tidsavbrudd for MCP-serverforespørsler i millisekunder",
   "settings.experimental.remote.title": "Remote-kontroll",

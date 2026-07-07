@@ -377,6 +377,7 @@ export const dict = {
   "prompt.action.sandbox.description.disabledNetworkAllowed": "點擊以限制檔案系統寫入。沙盒設定仍允許網路存取。",
 
   "speechToText.tooltip.start": "使用 Kilo Gateway 開始語音輸入",
+  "speechToText.tooltip.starting": "正在啟動麥克風... 請稍後再說。",
   "speechToText.tooltip.stop": "停止擷取音訊",
   "speechToText.tooltip.transcribing": "正在轉錄... 點擊取消。",
   "speechToText.tooltip.error": "語音輸入失敗。點擊清除。",
@@ -1170,6 +1171,8 @@ export const dict = {
 
   "common.retry": "重試",
   "common.refresh": "重新整理",
+  "common.reload": "重新載入",
+  "common.reloadDescription": "重新載入磁碟上的設定、技能、智慧代理和命令",
 
   "profile.title": "個人資料",
   "profile.notLoggedIn": "尚未登入",
@@ -1358,6 +1361,10 @@ export const dict = {
   "settings.sandboxing.network.title": "限制網路存取",
   "settings.sandboxing.network.description":
     "封鎖模型發起的命令和 HTTP 工具的對外網路存取。本機 MCP 伺服器和外掛程式鉤子不受此限制。供應商與模型推論流量仍然可用。",
+
+  "settings.sandboxing.writablePaths.title": "額外可寫路徑",
+  "settings.sandboxing.writablePaths.description":
+    "沙盒允許寫入的額外檔案系統路徑（例如 /tmp、/var/log）。沙盒啟用後，這些路徑會與預設可寫路徑合併。",
   "settings.experimental.mcpTimeout.title": "MCP 逾時（毫秒）",
   "settings.experimental.mcpTimeout.description": "MCP 伺服器請求的逾時時間（毫秒）",
   "settings.experimental.remote.title": "Remote 控制",

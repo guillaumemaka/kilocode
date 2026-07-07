@@ -372,6 +372,10 @@ export interface RequestChatCompletionMessage {
   requestId: string
 }
 
+export interface SpeechToTextPrewarmMessage {
+  type: "speechToTextPrewarm"
+}
+
 export interface SpeechToTextStartMessage {
   type: "speechToTextStart"
   requestId: string
@@ -924,6 +928,10 @@ export interface RetryConnectionRequest {
   type: "retryConnection"
 }
 
+export interface ReloadRequest {
+  type: "reload"
+}
+
 // Open a sub-agent session in a read-only editor panel
 export interface OpenSubAgentViewerRequest {
   type: "openSubAgentViewer"
@@ -1232,6 +1240,7 @@ export type WebviewMessage =
   | ExportSessionTranscriptRequest
   | RequestAutocompleteSettingsMessage
   | RequestChatCompletionMessage
+  | SpeechToTextPrewarmMessage
   | SpeechToTextStartMessage
   | SpeechToTextStopMessage
   | SpeechToTextCancelMessage
@@ -1333,6 +1342,7 @@ export type WebviewMessage =
   | DiffViewerSetBaseBranchRequest
   | DiffVirtualSetMarkdownRenderRequest
   | RetryConnectionRequest
+  | ReloadRequest
   | OpenSubAgentViewerRequest
   | PreviewImageRequest
   | SaveImageRequest
