@@ -11979,6 +11979,9 @@
                   },
                   "previousMessage": {
                     "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
                   }
                 },
                 "required": ["path"],
@@ -13574,6 +13577,12 @@
                             "required": ["id", "name", "role"],
                             "additionalProperties": false
                           }
+                        },
+                        "selectedOrganizationId": {
+                          "type": "string"
+                        },
+                        "hasPersonalAccount": {
+                          "type": "boolean"
                         }
                       },
                       "required": ["email"],
