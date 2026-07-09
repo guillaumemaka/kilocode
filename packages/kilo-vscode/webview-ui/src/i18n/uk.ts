@@ -947,6 +947,7 @@ export const dict = {
   "provider.custom.models.name.label": "Назва",
   "provider.custom.models.name.placeholder": "Відображувана назва",
   "provider.custom.models.reasoning.label": "Міркування",
+  "provider.custom.models.modalities.image": "Зображення",
   "provider.custom.models.variants.label": "Варіанти",
   "provider.custom.models.variants.add": "Додати варіант",
   "provider.custom.models.variants.remove": "Видалити варіант",
@@ -1416,6 +1417,12 @@ export const dict = {
   "settings.experimental.codebaseSearch.title": "Пошук по кодовій базі",
   "settings.experimental.codebaseSearch.description":
     "Увімкнути пошук природною мовою на основі ШІ по всій кодовій базі",
+  "settings.experimental.imageGeneration.title": "Генерація зображень",
+  "settings.experimental.imageGeneration.description": "Увімкнути генерацію зображень за допомогою ШІ",
+  "settings.experimental.imageGenerationModel.title": "Модель зображень",
+  "settings.experimental.imageGenerationModel.description": "Модель генерації зображень",
+  "settings.experimental.imageGenerationModel.placeholder": "За замовчуванням (Auto Router)",
+
   "settings.experimental.speechToText.title": "Мовлення в текст",
   "settings.experimental.speechToText.description":
     "Увімкніть голосове введення в полях запитів, використовуючи ваш обліковий запис Kilo через Kilo Gateway.",
@@ -1436,6 +1443,12 @@ export const dict = {
   "settings.sandboxing.writablePaths.title": "Додаткові шляхи для запису",
   "settings.sandboxing.writablePaths.description":
     "Додаткові шляхи файлової системи, у які дозволено запис у пісочниці (наприклад, /tmp, /var/log). Вони об'єднуються зі шляхами запису за замовчуванням, коли пісочниця активна.",
+  "settings.experimental.swePruner.title": "SWE-Pruner",
+  "settings.experimental.swePruner.description":
+    "Увімкнути SWE-Pruner: обрізання з урахуванням завдання великих виводів інструментів читання, пошуку та оболонки, кероване фокус-питанням, наданим агентом",
+  "settings.experimental.swePrunerModel.title": "Модель SWE-Pruner",
+  "settings.experimental.swePrunerModel.description":
+    "Модель для обрізання виводу інструментів; за замовчуванням — налаштована мала модель",
   "settings.experimental.mcpTimeout.title": "Тайм-аут MCP (мс)",
   "settings.experimental.mcpTimeout.description": "Тайм-аут у мілісекундах для запитів до MCP-сервера",
   "settings.experimental.remote.title": "Керування Remote",
@@ -1447,8 +1460,8 @@ export const dict = {
   "settings.experimental.remote.inactive": "Неактивний",
   "settings.experimental.remote.hint": "Використовуйте /remote у чаті для перемикання",
   "settings.experimental.toolToggles": "Перемикачі інструментів",
-  "settings.experimental.sandbox.title": "Пісочниця",
-  "settings.experimental.sandbox.description":
+  "settings.sandboxing.enabled.title": "Пісочниця",
+  "settings.sandboxing.enabled.description":
     "Виконувати команди оболонки агента в пісочниці на рівні ОС, яка обмежує запис до каталогів стану проєкту та Kilo",
 
   "settings.agentBehaviour.defaultAgent.title": "Агент за замовчуванням",

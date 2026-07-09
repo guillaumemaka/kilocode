@@ -950,6 +950,7 @@ export const dict = {
   "provider.custom.models.name.label": "Naam",
   "provider.custom.models.name.placeholder": "Weergavenaam",
   "provider.custom.models.reasoning.label": "Redeneren",
+  "provider.custom.models.modalities.image": "Afbeelding",
   "provider.custom.models.variants.label": "Varianten",
   "provider.custom.models.variants.add": "Variant toevoegen",
   "provider.custom.models.variants.remove": "Variant verwijderen",
@@ -1427,6 +1428,12 @@ export const dict = {
   "settings.experimental.codebaseSearch.title": "Codebase Zoeken",
   "settings.experimental.codebaseSearch.description":
     "Schakel AI-aangedreven zoeken in natuurlijke taal door je codebase in",
+  "settings.experimental.imageGeneration.title": "Afbeeldingsgeneratie",
+  "settings.experimental.imageGeneration.description": "AI-afbeeldingsgeneratie inschakelen",
+  "settings.experimental.imageGenerationModel.title": "Afbeeldingsmodel",
+  "settings.experimental.imageGenerationModel.description": "Afbeeldingsgeneratiemodel",
+  "settings.experimental.imageGenerationModel.placeholder": "Standaard (Auto Router)",
+
   "settings.experimental.speechToText.title": "Spraak naar tekst",
   "settings.experimental.speechToText.description":
     "Schakel spraakinvoer in promptvelden in met uw Kilo-account via Kilo Gateway.",
@@ -1448,6 +1455,12 @@ export const dict = {
   "settings.sandboxing.writablePaths.title": "Extra schrijfbare paden",
   "settings.sandboxing.writablePaths.description":
     "Extra bestandssysteempaden waar de sandbox schrijftoestemming voor geeft (bijv. /tmp, /var/log). Deze worden samengevoegd met de standaard schrijfbare paden wanneer de sandbox actief is.",
+  "settings.experimental.swePruner.title": "SWE-Pruner",
+  "settings.experimental.swePruner.description":
+    "SWE-Pruner inschakelen: taakgericht snoeien van grote uitvoer van lees-, zoek- en shelltools, gestuurd door een focusvraag van de agent",
+  "settings.experimental.swePrunerModel.title": "SWE-Pruner-model",
+  "settings.experimental.swePrunerModel.description":
+    "Model dat wordt gebruikt om tooluitvoer te snoeien; standaard het geconfigureerde kleine model",
   "settings.experimental.mcpTimeout.title": "MCP Timeout (ms)",
   "settings.experimental.mcpTimeout.description": "Timeout voor MCP-serververzoeken in milliseconden",
   "settings.experimental.remote.title": "Remote-bediening",
@@ -1459,8 +1472,8 @@ export const dict = {
   "settings.experimental.remote.inactive": "Inactief",
   "settings.experimental.remote.hint": "Gebruik /remote in de chat om te schakelen",
   "settings.experimental.toolToggles": "Tool Schakelaars",
-  "settings.experimental.sandbox.title": "Sandbox",
-  "settings.experimental.sandbox.description":
+  "settings.sandboxing.enabled.title": "Sandbox",
+  "settings.sandboxing.enabled.description":
     "Shell-opdrachten van de agent uitvoeren in een sandbox op besturingssysteemniveau die schrijfbewerkingen beperkt tot de project- en Kilo-statusmappen",
 
   "settings.agentBehaviour.defaultAgent.title": "Standaard Agent",
