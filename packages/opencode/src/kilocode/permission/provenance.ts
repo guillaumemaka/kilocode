@@ -29,12 +29,21 @@ export namespace PermissionProvenance {
     rule?: { permission: string; pattern: string; action: Permission.Action }
   }
 
-  /** Scope that last set each config permission key (global XDG vs local project). */
-  export type Origins = Record<string, "global" | "local"> | undefined
+  export type Scope = "global" | "local"
 
-  /** Origin of a config-derived or agent-default rule, keyed by its permission. */
-  export function configSource(permission: string, origins: Origins): Source {
-    const scope = origins?.[permission]
+  /**
+   * Scope that last set each config permission pattern (global XDG vs local project).
+   *
+   * Keyed by permission then pattern, because global and project config can each contribute
+   * different patterns under the same key (e.g. global `bash: {"git status": allow}` and project
+   * `bash: {"npm test": allow}` both live under `bash`). A per-key scope would misreport the
+   * pattern the other scope contributed, so provenance is tracked per pattern.
+   */
+  export type Origins = Record<string, Record<string, Scope>> | undefined
+
+  /** Origin of a config-derived or agent-default rule, matched by permission + pattern. */
+  export function configSource(permission: string, pattern: string, origins: Origins): Source {
+    const scope = origins?.[permission]?.[pattern]
     if (scope === "global") return "global"
     if (scope === "local") return "project"
     return "agent"
@@ -45,7 +54,7 @@ export namespace PermissionProvenance {
    * These come from the agent's merged permission set.
    */
   export function tagAgent(ruleset: Permission.Ruleset, origins: Origins): SourcedRule[] {
-    return ruleset.map((rule) => ({ ...rule, source: configSource(rule.permission, origins) }))
+    return ruleset.map((rule) => ({ ...rule, source: configSource(rule.permission, rule.pattern, origins) }))
   }
 
   /**
@@ -82,7 +91,7 @@ export namespace PermissionProvenance {
     const rule = input.rule
     if (!rule) return { source: "default" }
     const source =
-      (rule as SourcedRule).source ?? (isYolo(rule) ? "yolo" : configSource(rule.permission, input.origins))
+      (rule as SourcedRule).source ?? (isYolo(rule) ? "yolo" : configSource(rule.permission, rule.pattern, input.origins))
     return {
       source,
       ...(source === "agent" ? { agent: input.agent } : {}),

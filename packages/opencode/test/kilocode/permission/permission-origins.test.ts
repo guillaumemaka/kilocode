@@ -60,12 +60,12 @@ test("project config permission keys are attributed to the local scope", async (
         Config.Service.use((svc) => svc.get()).pipe(Effect.scoped, Effect.provide(testLayer)),
       )
       expect(cfg.permission?.bash).toEqual({ "echo *": "allow" })
-      expect(cfg.permission_origins?.bash).toBe("local")
+      expect(cfg.permission_origins?.bash).toEqual({ "echo *": "local" })
     },
   })
 })
 
-test("a scalar project bash permission is still attributed to the local scope", async () => {
+test("a scalar project bash permission maps to the '*' pattern under the local scope", async () => {
   await using tmp = await tmpdir()
   const dir = path.join(tmp.path, "a")
   const kilo = path.join(dir, ".kilo")
@@ -78,7 +78,7 @@ test("a scalar project bash permission is still attributed to the local scope", 
       const cfg = await Effect.runPromise(
         Config.Service.use((svc) => svc.get()).pipe(Effect.scoped, Effect.provide(testLayer)),
       )
-      expect(cfg.permission_origins?.bash).toBe("local")
+      expect(cfg.permission_origins?.bash).toEqual({ "*": "local" })
     },
   })
 })

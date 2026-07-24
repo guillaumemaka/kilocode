@@ -8,10 +8,16 @@ import { KiloSessionPrompt } from "../../../src/kilocode/session/prompt"
 import { SessionID } from "../../../src/session/schema"
 
 describe("PermissionProvenance", () => {
-  test("configSource maps the scope of a permission key", () => {
-    expect(PermissionProvenance.configSource("edit", { edit: "global" })).toBe("global")
-    expect(PermissionProvenance.configSource("edit", { edit: "local" })).toBe("project")
-    expect(PermissionProvenance.configSource("edit", undefined)).toBe("agent")
+  test("configSource maps the scope of a permission + pattern", () => {
+    expect(PermissionProvenance.configSource("edit", "*", { edit: { "*": "global" } })).toBe("global")
+    expect(PermissionProvenance.configSource("edit", "*", { edit: { "*": "local" } })).toBe("project")
+    expect(PermissionProvenance.configSource("edit", "*", undefined)).toBe("agent")
+    // Different patterns under one key can come from different scopes.
+    const mixed = { bash: { "git status": "global" as const, "npm test": "local" as const } }
+    expect(PermissionProvenance.configSource("bash", "git status", mixed)).toBe("global")
+    expect(PermissionProvenance.configSource("bash", "npm test", mixed)).toBe("project")
+    // A pattern not present under the key falls back to the agent default.
+    expect(PermissionProvenance.configSource("bash", "rm -rf", mixed)).toBe("agent")
   })
 
   test("evaluate returns the winning rule object, preserving its source tag", () => {
@@ -46,7 +52,7 @@ describe("PermissionProvenance", () => {
     const out = PermissionProvenance.classify({
       rule: { permission: "edit", pattern: "src/*", action: "allow" },
       agent: "build",
-      origins: { edit: "local" },
+      origins: { edit: { "src/*": "local" } },
     })
     expect(out.source).toBe("project")
   })
@@ -55,15 +61,17 @@ describe("PermissionProvenance", () => {
     expect(PermissionProvenance.classify({ agent: "build", origins: undefined })).toEqual({ source: "default" })
   })
 
-  test("tagAgent stamps each rule with its config origin, defaulting to agent", () => {
+  test("tagAgent stamps each rule by permission + pattern, defaulting to agent", () => {
     const tagged = PermissionProvenance.tagAgent(
       [
-        { permission: "bash", pattern: "*", action: "allow" },
+        { permission: "bash", pattern: "git status", action: "allow" },
+        { permission: "bash", pattern: "npm test", action: "allow" },
         { permission: "edit", pattern: "*", action: "allow" },
       ],
-      { bash: "local" },
+      // Global and project each contribute a different pattern under the same bash key.
+      { bash: { "git status": "global", "npm test": "local" } },
     )
-    expect(tagged.map((r) => r.source)).toEqual(["project", "agent"])
+    expect(tagged.map((r) => r.source)).toEqual(["global", "project", "agent"])
   })
 
   test("tagSession marks the broad allow as yolo and other rules as session", () => {
@@ -163,9 +171,18 @@ describe("askPermission returns provenance", () => {
   test("untagged rule falls back to config origins", async () => {
     const out = await run(
       { manual: false, rule: { permission: "edit", pattern: "src/*", action: "allow" } },
-      { edit: "local" },
+      { edit: { "src/*": "local" } },
     )
     expect(out.source).toBe("project")
+  })
+
+  test("global and project patterns under the same key are attributed independently", async () => {
+    // global: bash "git status" allow; project: bash "npm test" allow -> both live under bash.
+    const origins = { bash: { "git status": "global" as const, "npm test": "local" as const } }
+    const fromGlobal = await run({ manual: false, rule: { permission: "bash", pattern: "git status", action: "allow" } }, origins)
+    expect(fromGlobal.source).toBe("global")
+    const fromProject = await run({ manual: false, rule: { permission: "bash", pattern: "npm test", action: "allow" } }, origins)
+    expect(fromProject.source).toBe("project")
   })
 
   test("every rule passed to ask is tagged, even the guardPermissions re-append for modes", async () => {
