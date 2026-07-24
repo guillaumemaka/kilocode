@@ -9,7 +9,13 @@
 
 import { Component, For, Show, createMemo, type JSX } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import { Part, PART_MAPPING, ToolRegistry, ToolApprovalProvider, resolveToolApproval } from "@kilocode/kilo-ui/message-part"
+import {
+  Part,
+  PART_MAPPING,
+  ToolRegistry,
+  ToolApprovalProvider,
+  resolveToolApproval,
+} from "@kilocode/kilo-ui/message-part"
 import type { MessageFeedbackControls } from "@kilocode/kilo-ui/message-part"
 import type {
   AssistantMessage as SDKAssistantMessage,
