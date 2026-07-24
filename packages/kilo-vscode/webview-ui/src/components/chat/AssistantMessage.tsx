@@ -9,7 +9,7 @@
 
 import { Component, For, Show, createMemo, type JSX } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import { Part, PART_MAPPING, ToolRegistry, ToolApprovalProvider, toolApprovalFrom } from "@kilocode/kilo-ui/message-part"
+import { Part, PART_MAPPING, ToolRegistry, ToolApprovalProvider, resolveToolApproval } from "@kilocode/kilo-ui/message-part"
 import type { MessageFeedbackControls } from "@kilocode/kilo-ui/message-part"
 import type {
   AssistantMessage as SDKAssistantMessage,
@@ -119,10 +119,11 @@ type ToolStateProps = {
 function TodoToolCard(props: { part: ToolPart; forceOpen?: boolean }) {
   const render = ToolRegistry.render(props.part.tool)
   const state = () => props.part.state as ToolStateProps
+  const language = useLanguage()
   return (
     <Show when={render}>
       {(renderFn) => (
-        <ToolApprovalProvider value={() => toolApprovalFrom(state()?.metadata)}>
+        <ToolApprovalProvider value={() => resolveToolApproval(state()?.metadata, language.t)}>
           <Dynamic
             component={renderFn()}
             input={state()?.input ?? {}}
@@ -145,10 +146,11 @@ function TodoToolCard(props: { part: ToolPart; forceOpen?: boolean }) {
 function BashToolCard(props: { part: ToolPart; defaultOpen: boolean; forceOpen?: boolean }) {
   const render = ToolRegistry.render(props.part.tool)
   const state = () => props.part.state as ToolStateProps
+  const language = useLanguage()
   return (
     <Show when={render}>
       {(card) => (
-        <ToolApprovalProvider value={() => toolApprovalFrom(state()?.metadata)}>
+        <ToolApprovalProvider value={() => resolveToolApproval(state()?.metadata, language.t)}>
           <Dynamic
             component={card() as unknown as Component<Record<string, unknown>>}
             input={state()?.input ?? {}}

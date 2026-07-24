@@ -5,7 +5,6 @@ import { createStore } from "solid-js/store"
 import { Collapsible } from "./collapsible"
 import { Icon, type IconProps } from "./icon" // kilocode_change: added Icon
 import { TextShimmer } from "./text-shimmer"
-import { useToolApproval, ToolApprovalLine } from "./tool-approval" // kilocode_change
 
 export type TriggerTitle = {
   title: string
@@ -93,11 +92,7 @@ export function BasicTool(props: BasicToolProps) {
   const ready = () => state.ready
   const pending = () => props.status === "pending" || props.status === "running"
   const hasChildren = () => (props.defer ? "children" in props : props.children)
-  // kilocode_change start - surface why a call was allowed inside the expanded body
-  const approval = useToolApproval()
-  const hasApproval = () => approval() !== undefined
-  const hasDetails = () => (props.hasDetails ?? !!hasChildren()) || hasApproval()
-  // kilocode_change end
+  const hasDetails = () => props.hasDetails ?? !!hasChildren() // kilocode_change
 
   let cancelReady: (() => void) | undefined
 
@@ -306,8 +301,7 @@ export function BasicTool(props: BasicToolProps) {
           </Collapsible.Trigger>
         )}
       </Show>
-      {/* kilocode_change start - render an approval line even when the tool has no other details */}
-      <Show when={props.animated && (hasChildren() || hasApproval()) && !props.hideDetails}>
+      <Show when={props.animated && hasChildren() && !props.hideDetails}>
         <div
           ref={contentRef}
           data-slot="collapsible-content"
@@ -317,20 +311,13 @@ export function BasicTool(props: BasicToolProps) {
             overflow: initialOpen ? "visible" : "hidden",
           }}
         >
-          <Show when={!props.defer || ready()}>
-            <Show when={approval()}>{(value) => <ToolApprovalLine approval={value()} />}</Show>
-            {props.children}
-          </Show>
+          <Show when={!props.defer || ready()}>{props.children}</Show>
         </div>
       </Show>
-      {/* kilocode_change end */}
       {/* kilocode_change start */}
       <Show when={!props.animated && (hasChildren() || hasDetails()) && !props.hideDetails}>
         <Collapsible.Content onAnimationEnd={end}>
-          <Show when={!props.defer || ready()}>
-            <Show when={approval()}>{(value) => <ToolApprovalLine approval={value()} />}</Show>
-            {props.children}
-          </Show>
+          <Show when={!props.defer || ready()}>{props.children}</Show>
         </Collapsible.Content>
       </Show>
       {/* kilocode_change end */}

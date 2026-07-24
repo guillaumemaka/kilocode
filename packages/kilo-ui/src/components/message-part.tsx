@@ -47,8 +47,8 @@ import { checksum } from "@opencode-ai/core/util/encode"
 import { Tooltip } from "./tooltip"
 import { IconButton } from "./icon-button"
 import { TextShimmer } from "@opencode-ai/ui/text-shimmer"
-import { ToolApprovalProvider, toolApprovalFrom } from "@opencode-ai/ui/tool-approval"
-export { ToolApprovalProvider, toolApprovalFrom } from "@opencode-ai/ui/tool-approval"
+import { ToolApprovalProvider, resolveToolApproval } from "./tool-approval"
+export { ToolApprovalProvider, resolveToolApproval } from "./tool-approval"
 import { GrowBox } from "./grow-box"
 import { COLLAPSIBLE_SPRING } from "./motion"
 import { busy, createThrottledValue, useToolFade, useContextToolPending } from "./tool-utils"
@@ -1309,7 +1309,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
             }}
           </Match>
           <Match when={true}>
-            <ToolApprovalProvider value={() => toolApprovalFrom(meta())}>
+            <ToolApprovalProvider value={() => resolveToolApproval(meta(), i18n.t as (k: string, p?: Record<string, string | number | boolean>) => string)}>
               <Dynamic
                 component={render()}
                 input={input()}

@@ -147,18 +147,6 @@ export const dict: Record<string, string> = {
   "ui.toolErrorCard.failed": "Failed",
   "ui.toolErrorCard.copyError": "Copy error",
 
-  // kilocode_change start
-  "ui.approval.auto": "Auto-approved",
-  "ui.approval.manual": "Approved by you",
-  "ui.approval.rule": "matched `{{permission}}` rule `{{pattern}}`",
-  "ui.approval.source.agent": "by the {{agent}} agent",
-  "ui.approval.source.agent.default": "by the agent",
-  "ui.approval.source.global": "by your global config",
-  "ui.approval.source.project": "by the project config",
-  "ui.approval.source.yolo": "by auto-approve (YOLO) mode",
-  "ui.approval.source.default": "by default",
-  // kilocode_change end
-
   "ui.common.file.one": "file",
   "ui.common.file.other": "files",
   "ui.common.question.one": "question",
@@ -181,7 +169,6 @@ export const dict: Record<string, string> = {
   "ui.message.collapse": "Collapse message",
   "ui.message.copy": "Copy",
   "ui.message.copyMessage": "Copy message",
-  "ui.message.deleteQueued": "Delete queued message", // kilocode_change
   "ui.message.forkMessage": "Fork to new session",
   "ui.message.revertMessage": "Revert to here",
   "ui.message.copyResponse": "Copy response",
