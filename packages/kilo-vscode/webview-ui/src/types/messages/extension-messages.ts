@@ -20,7 +20,7 @@ import type { AnacondaDesktopExtensionMessage } from "../../../../src/shared/ana
 import type { QuestionRequest, SuggestionRequest, TodoItem } from "./questions"
 import type { ModelSelection, ModelUsageMap, Provider, ProviderAuthState } from "./providers"
 import type { SpeechToTextModelDef } from "../../../../src/speech-to-text/models"
-import type { AgentInfo, AgentRequirementResult, SkillInfo, SlashCommandInfo } from "./agents"
+import type { AgentInfo, SkillInfo, SlashCommandInfo } from "./agents"
 import type {
   BrowserSettings,
   Config,
@@ -39,7 +39,7 @@ import type {
   LocalGitStats,
   ManagedSessionState,
   PRStatus,
-  ReviewComment,
+  ReviewCommentEntry,
   RunStatus,
   SectionState,
   TerminalDestination,
@@ -305,13 +305,35 @@ export interface AppendChatBoxMessage {
 
 export interface AppendReviewCommentsMessage {
   type: "appendReviewComments"
-  comments: ReviewComment[]
+  comments: ReviewCommentEntry[]
   autoSend?: boolean
+}
+
+export interface DocumentResultMessage {
+  type: "document.result"
+  sessionId: string
+  contextKey?: string
+  file: string
+  requestedFile?: string
+  content?: string
+  kind?: "text" | "image"
+  mime?: string
+  data?: string
+  error?: string
+}
+
+export interface DocumentOpenMessage {
+  type: "document.open"
+  sessionId?: string
+  contextKey: string
+  file: string
+  line?: number
+  column?: number
 }
 
 export interface AppendReviewCommentsToTerminalMessage {
   type: "appendReviewCommentsToTerminal"
-  comments: ReviewComment[]
+  comments: ReviewCommentEntry[]
   autoSend?: boolean
   targetTerminalId: string
 }
@@ -410,15 +432,6 @@ export interface AgentsLoadedMessage {
 export interface SkillsLoadedMessage {
   type: "skillsLoaded"
   skills: SkillInfo[]
-}
-
-export interface AgentRequirementsLoadedMessage {
-  type: "agentRequirementsLoaded"
-  result: AgentRequirementResult
-}
-
-export interface AgentRequirementsInvalidatedMessage {
-  type: "agentRequirementsInvalidated"
 }
 
 export interface CommandsLoadedMessage {
@@ -763,7 +776,6 @@ export interface AgentProjectSnapshot {
   active: boolean
   expanded: boolean
   initialized: boolean
-  trusted: boolean
   missing: boolean
 }
 
@@ -978,6 +990,19 @@ export interface AgentManagerWorktreeDiffFileMessage {
   diff: WorktreeFileDiff | null
 }
 
+export interface AgentManagerDocumentMessage {
+  type: "agentManager.document"
+  sessionId: string
+  contextKey?: string
+  file: string
+  requestedFile?: string
+  content?: string
+  kind?: "text" | "image"
+  mime?: string
+  data?: string
+  error?: string
+}
+
 // Agent Manager: Diff loading state (extension → webview)
 export interface AgentManagerWorktreeDiffLoadingMessage {
   type: "agentManager.worktreeDiffLoading"
@@ -1130,6 +1155,16 @@ export interface DiffViewerDiffFileMessage {
 
 export interface DiffViewerMarkdownRenderMessage {
   type: "diffViewer.markdownRender"
+  render: boolean
+}
+
+export interface DiffViewerInitialFileMessage {
+  type: "diffViewer.initialFile"
+  file?: string
+}
+
+export interface DiffViewerInitialMarkdownMessage {
+  type: "diffViewer.initialMarkdown"
   render: boolean
 }
 
@@ -1289,7 +1324,14 @@ export interface ClipboardWriteResultMessage {
   error?: string
 }
 
+export interface AgentManagerFocusContextRequestedMessage {
+  type: "agentManager.focusContextRequested"
+}
+
 export type ExtensionMessage =
+  | DocumentResultMessage
+  | DocumentOpenMessage
+  | AgentManagerFocusContextRequestedMessage
   | ReadyMessage
   | FontSizeChangedMessage
   | GitStatusMessage
@@ -1336,8 +1378,6 @@ export type ExtensionMessage =
   | ProvidersLoadedMessage
   | AgentsLoadedMessage
   | SkillsLoadedMessage
-  | AgentRequirementsLoadedMessage
-  | AgentRequirementsInvalidatedMessage
   | CommandsLoadedMessage
   | AutocompleteSettingsLoadedMessage
   | ChatCompletionResultMessage
@@ -1409,6 +1449,7 @@ export type ExtensionMessage =
   | WorkspaceDirectoryChangedMessage
   | AgentManagerWorktreeDiffMessage
   | AgentManagerWorktreeDiffFileMessage
+  | AgentManagerDocumentMessage
   | AgentManagerWorktreeDiffLoadingMessage
   | AgentManagerWorktreeDiffNoticeMessage
   | AgentManagerApplyWorktreeDiffResultMessage
@@ -1440,6 +1481,8 @@ export type ExtensionMessage =
   | DiffViewerRevertFileResultMessage
   | DiffViewerDiffFileMessage
   | DiffViewerMarkdownRenderMessage
+  | DiffViewerInitialFileMessage
+  | DiffViewerInitialMarkdownMessage
   | SetAvailableSourcesMessage
   | DiffViewerCapabilitiesMessage
   | DiffViewerNoticeMessage
