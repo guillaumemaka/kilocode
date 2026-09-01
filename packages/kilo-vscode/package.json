@@ -197,11 +197,6 @@
         "category": "Kilo Code"
       },
       {
-        "command": "kilo-code.new.openMigrationWizard",
-        "title": "Migrate Settings from Legacy Version",
-        "category": "Kilo Code"
-      },
-      {
         "command": "kilo-code.new.showMemory",
         "title": "Show Project Memory",
         "category": "Kilo Code"
@@ -1079,7 +1074,7 @@
         "kilo-code.new.agentManager.terminalButtonDestination": {
           "type": "string",
           "scope": "application",
-          "default": "vscode",
+          "default": "agentManager",
           "enum": [
             "vscode",
             "agentManager"
