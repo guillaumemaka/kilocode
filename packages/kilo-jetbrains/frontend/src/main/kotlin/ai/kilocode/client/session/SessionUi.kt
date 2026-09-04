@@ -348,7 +348,10 @@ class SessionUi(
         // for clicks inside it. Republish here — SessionUi is an ancestor of the whole session — so
         // the reused Kilo.StopSession action works from any right-click. Nearest-provider-wins keeps
         // PromptPanel authoritative inside its own subtree, and both publish the same instance anyway.
-        if (this::prompt.isInitialized) sink[PromptDataKeys.SEND] = prompt
+        if (this::prompt.isInitialized) {
+            sink[PromptDataKeys.SEND] = prompt
+            sink[PromptDataKeys.SELECTORS] = prompt
+        }
     }
 
     @RequiresEdt
@@ -503,7 +506,15 @@ class SessionUi(
             val owner = manager
             val newWorktree = if (owner?.supportsNewWorktree == true) owner::newWorktree else null
             val move = if (owner?.supportsMoveToWorktree == true) ::moveToWorktree else null
-            dock = BranchDock(openDiff = ::openBranchChanges, onMove = move, onNewWorktree = newWorktree)
+            // Editor-tab hosts that show the dock (the worktree editor) report the branch, its PR, and
+            // its changes in their own header at the top of the tab, so their dock is the action row
+            // alone rather than a second place those counts appear.
+            dock = BranchDock(
+                openDiff = ::openBranchChanges,
+                onMove = move,
+                onNewWorktree = newWorktree,
+                header = owner?.hostedInEditorTab != true,
+            )
         }
 
         scroll = SessionScroll(root, sessionContent, messageBody, blankBody)
@@ -584,8 +595,10 @@ class SessionUi(
         root.content.add(sessionContent, BorderLayout.CENTER)
         if (!readonly) {
             // In the sidebar tool window the bottom panel fills the full width; editor tabs keep the
-            // readable-width centering used across the transcript.
-            val aligned = if (manager?.hostedInEditorTab == true) {
+            // readable-width centering used across the transcript — for the dock as much as the
+            // prompt, so the strip above the prompt does not run wider than the session it belongs to.
+            val tab = manager?.hostedInEditorTab == true
+            val aligned = if (tab) {
                 prompt.align(
                     HAlign.CENTER,
                     VAlign.FIT,
@@ -595,7 +608,18 @@ class SessionUi(
                 prompt.align(HAlign.FIT, VAlign.FIT)
             }
             val container = Stack.vertical()
-            dock?.let { container.next(it) }
+            dock?.let {
+                val row = if (tab) {
+                    it.align(
+                        HAlign.CENTER,
+                        VAlign.FIT,
+                        maxW = { SessionUiStyle.SessionLayout.readableWidth(it, style.transcriptFont) },
+                    )
+                } else {
+                    it
+                }
+                container.next(row)
+            }
             container.next(aligned)
             bottom = container
             root.content.add(container, BorderLayout.SOUTH)
