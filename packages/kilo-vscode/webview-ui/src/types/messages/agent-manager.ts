@@ -1,4 +1,4 @@
-export type WorktreeErrorCode = "git_not_found" | "not_git_repo" | "lfs_missing"
+export type WorktreeErrorCode = "git_not_found" | "not_git_repo" | "lfs_missing" | "no_commits"
 
 export interface BaseUpdateRequest {
   type: "agentManager.updateFromBase"
@@ -77,9 +77,13 @@ export type {
   PRCommentReply,
   PRReviewer,
   PRConversationComment,
+  PRReaction,
+  PRReactionContent,
 } from "../../../agent-manager/pr/pr-types"
 
 export interface PRStatus {
+  id?: string
+  viewerDidAuthor?: boolean
   number: number
   baseRefOid?: string
   headRefOid?: string
@@ -119,6 +123,17 @@ export interface RunStatus {
   startedAt?: string
   finishedAt?: string
   error?: string
+}
+
+export interface CaffeinationState {
+  enabled: boolean
+  active: boolean
+  available: boolean
+  error?: string
+}
+
+export interface AgentManagerCaffeinationMessage extends CaffeinationState {
+  type: "agentManager.caffeination"
 }
 
 export interface ManagedSessionState {

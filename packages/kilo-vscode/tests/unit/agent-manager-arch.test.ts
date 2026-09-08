@@ -59,12 +59,10 @@ const TSX_FILES = [
   path.join(ROOT, "webview-ui/agent-manager/SidebarSectionHeader.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/SidebarSearchMenu.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/SidebarToggleButton.tsx"),
-  path.join(ROOT, "webview-ui/agent-manager/WorktreeSectionActions.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/ProjectsSection.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/ProjectSidebarBody.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/ProjectList.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/ProjectActions.tsx"),
-  path.join(ROOT, "webview-ui/agent-manager/SidebarBody.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/Skeleton.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/TabBar.tsx"),
   path.join(ROOT, "webview-ui/agent-manager/ClosableTab.tsx"),
@@ -465,6 +463,19 @@ describe("Agent Manager Worktree Actions", () => {
     expect(action).toContain('msg.action === "newSideTerminal"')
     expect(action).toContain("termHandlers.addSide()")
     expect(action).not.toContain('msg.action === "newMainTerminal"')
+  })
+
+  it("keeps Cmd+W terminal handling before the empty-worktree fallback", () => {
+    const source = fs.readFileSync(TSX_FILE, "utf-8")
+    const start = source.indexOf("const closeActiveTab = () =>")
+    const end = source.indexOf("// Close the currently selected worktree", start)
+    const action = source.slice(start, end)
+
+    expect(start).toBeGreaterThanOrEqual(0)
+    expect(end).toBeGreaterThan(start)
+    expect(action).toContain("termHandlers.closeFocused()")
+    expect(action).toContain("termHandlers.closeActive()")
+    expect(action).toContain("if (tabs.length === 0)")
   })
 
   it("forwards the quick-worktree command to immediate creation", () => {

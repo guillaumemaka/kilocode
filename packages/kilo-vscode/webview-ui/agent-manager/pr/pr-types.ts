@@ -5,6 +5,23 @@ export type PRState = "open" | "draft" | "merged" | "closed"
 export type ReviewDecision = "approved" | "changes_requested" | "pending"
 export type CheckStatus = "success" | "failure" | "pending" | "skipped" | "cancelled"
 export type AggregateCheckStatus = "success" | "failure" | "pending" | "none"
+export const PR_REACTION_CONTENT = [
+  "THUMBS_UP",
+  "THUMBS_DOWN",
+  "LAUGH",
+  "HOORAY",
+  "CONFUSED",
+  "HEART",
+  "ROCKET",
+  "EYES",
+] as const
+export type PRReactionContent = (typeof PR_REACTION_CONTENT)[number]
+
+export interface PRReaction {
+  content: PRReactionContent
+  count: number
+  viewerHasReacted: boolean
+}
 
 export interface PRCheck {
   name: string
@@ -14,12 +31,20 @@ export interface PRCheck {
 }
 
 export interface PRCommentReply {
+  id?: string
+  canEdit?: boolean
+  canDelete?: boolean
   author: string
   body: string
   avatar?: string
+  createdAt?: number
+  url?: string
+  reactions?: PRReaction[]
 }
 
 export interface PRComment {
+  canEdit?: boolean
+  canDelete?: boolean
   id: string
   threadId: string
   author: string
@@ -48,6 +73,7 @@ export interface PRComment {
   previewUnavailable?: boolean
   after?: string[]
   replies?: PRCommentReply[]
+  reactions?: PRReaction[]
 }
 
 export type ReviewerState = "approved" | "changes_requested" | "pending" | "commented"
@@ -59,6 +85,9 @@ export interface PRReviewer {
 }
 
 export interface PRConversationComment {
+  kind?: "issue" | "review"
+  canEdit?: boolean
+  canDelete?: boolean
   id: string
   author: string
   avatar?: string
@@ -67,4 +96,5 @@ export interface PRConversationComment {
   url?: string
   state?: ReviewerState
   isBot?: boolean
+  reactions?: PRReaction[]
 }

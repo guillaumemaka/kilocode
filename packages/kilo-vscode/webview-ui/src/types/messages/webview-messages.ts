@@ -12,7 +12,9 @@ import type { RefreshProviderUsageMessage, RequestProviderUsageMessage } from ".
 import type { AnacondaDesktopWebviewMessage } from "../../../../src/shared/anaconda-desktop-messages"
 import type { RequestMigrationDataMessage, StartMigrationMessage } from "./migration"
 import type { MemoryShowMessage, MemoryOperationMessage, RequestMemoryMessage } from "./memory"
+import type { RequestSessionBoardMessage, ResetSessionBoardMessage } from "./board"
 import type { Activity } from "../../utils/session-activity"
+import type { PRReactionContent } from "../../../agent-manager/pr/pr-types"
 
 // ============================================
 // Messages FROM webview TO extension
@@ -742,6 +744,7 @@ export interface CloseSessionRequest {
 /** Persist a non-worktree session to agent-manager.json (worktreeId = null). */
 export interface PersistSessionRequest {
   type: "agentManager.persistSession"
+  projectId?: string
   sessionId: string
   draftID?: string
 }
@@ -1018,6 +1021,15 @@ export interface SetSidebarCollapsedRequest {
   collapsed: boolean
 }
 
+export interface RequestCaffeinationMessage {
+  type: "agentManager.requestCaffeination"
+}
+
+export interface SetCaffeinationRequest {
+  type: "agentManager.setCaffeination"
+  enabled: boolean
+}
+
 // Persist review diff style preference
 export interface SetReviewDiffStyleRequest {
   type: "agentManager.setReviewDiffStyle"
@@ -1113,6 +1125,15 @@ export interface CommentActionMessage {
   projectId?: string
   worktreeId: string
   threadId: string
+}
+
+export interface CommentReactionMessage {
+  type: "agentManager.commentReaction"
+  projectId?: string
+  worktreeId: string
+  commentId: string
+  reaction: PRReactionContent
+  add: boolean
 }
 
 export interface ApplyWorktreeDiffMessage {
@@ -1542,6 +1563,8 @@ export type WebviewMessage =
   | ResumeSessionRequest
   | AbortRequest
   | RequestBackgroundJobsMessage
+  | RequestSessionBoardMessage
+  | ResetSessionBoardMessage
   | CancelBackgroundJobMessage
   | PromoteBackgroundJobMessage
   | RevertSessionRequest
@@ -1686,6 +1709,8 @@ export type WebviewMessage =
   | SetWorktreeOrderRequest
   | SetSessionsCollapsedRequest
   | SetSidebarCollapsedRequest
+  | RequestCaffeinationMessage
+  | SetCaffeinationRequest
   | SetReviewDiffStyleRequest
   | SetReviewMarkdownRenderRequest
   | PersistVariantRequest
@@ -1704,6 +1729,7 @@ export type WebviewMessage =
   | RefreshPRMessage
   | OpenPRMessage
   | CommentActionMessage
+  | CommentReactionMessage
   | RequestMigrationDataMessage
   | StartMigrationMessage
   | ApplyWorktreeDiffMessage

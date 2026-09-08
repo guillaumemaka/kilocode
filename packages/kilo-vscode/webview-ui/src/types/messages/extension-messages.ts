@@ -1,6 +1,6 @@
 import type { ProviderAuthAuthorization, ProviderAuthMethod } from "@kilocode/sdk/v2/client"
 import type { DiffSourceCapabilities, DiffSourceDescriptor } from "../../../../src/diff/sources/types"
-import type { PRComment } from "../../../agent-manager/pr/pr-types"
+import type { PRComment, PRReactionContent } from "../../../agent-manager/pr/pr-types"
 import type { PartBatch, PartRemove, PartUpdate } from "../../../../src/shared/stream-messages"
 import type { MarketplaceItem, MarketplaceInstalledMetadata, MarketplaceRelevanceMetadata } from "../marketplace"
 import type { ConnectionState, ServerInfo, SessionStatus } from "./connection"
@@ -62,6 +62,7 @@ import type { ProviderUsageLoadedMessage } from "./provider-usage"
 import type {
   AgentManagerApplyWorktreeDiffConflict,
   AgentManagerApplyWorktreeDiffStatus,
+  AgentManagerCaffeinationMessage,
   BranchInfo,
   ContinueInWorktreeStatus,
   LocalGitStats,
@@ -85,6 +86,7 @@ import type {
   MigrationSessionProgressMessage,
 } from "./migration"
 import type { MemoryEventMessage, MemoryLoadedMessage, MemoryOperationResultMessage } from "./memory"
+import type { SessionBoardLoadedMessage } from "./board"
 
 // ============================================
 // Messages FROM extension TO webview
@@ -693,7 +695,6 @@ export interface ClaudeCompatSettingLoadedMessage {
 
 export interface ExtensionSettings {
   maxCost?: number
-  multiProject?: boolean
   [key: string]: unknown
 }
 
@@ -896,7 +897,6 @@ export interface AgentProjectSnapshot {
 // Project catalog push from extension to webview
 export interface AgentManagerProjectsMessage {
   type: "agentManager.projects"
-  multiProject: boolean
   projects: AgentProjectSnapshot[]
 }
 
@@ -1200,6 +1200,17 @@ export interface AgentManagerPRErrorMessage {
   error: "gh_missing" | "gh_auth" | "fetch_failed"
 }
 
+export interface AgentManagerCommentReactionResultMessage {
+  type: "agentManager.commentReactionResult"
+  projectId?: string
+  worktreeId: string
+  commentId: string
+  reaction: PRReactionContent
+  add: boolean
+  success: boolean
+  error?: string
+}
+
 // Sidebar: Live worktree diff stats (extension → webview)
 export interface WorktreeStatsLoadedMessage {
   type: "worktreeStatsLoaded"
@@ -1262,6 +1273,8 @@ export interface DiffViewerContextMessage {
 export interface DiffViewerPRCommentsMessage {
   type: "diffViewer.prComments"
   comments: PRComment[]
+  target?: import("../../../../src/shared/pr-comment-actions").PRTarget
+  threads?: string[]
 }
 
 export interface DiffViewerFocusCommentMessage {
@@ -1517,6 +1530,14 @@ export interface AgentManagerBrowserDevtoolsMessage {
 }
 
 export type ExtensionMessage =
+  | {
+      type: "agentManager.resolveCommentResult" | "agentManager.unresolveCommentResult"
+      projectId?: string
+      worktreeId: string
+      threadId: string
+      success: boolean
+      error?: string
+    }
   | { type: "sessionAcknowledged"; sessionID: string; eventID: string }
   | { type: "webviewActiveChanged"; active: boolean }
   | DocumentResultMessage
@@ -1626,6 +1647,7 @@ export type ExtensionMessage =
   | AgentManagerSelectionActivatedMessage
   | AgentManagerProjectSessionsMessage
   | AgentManagerRunStatusMessage
+  | AgentManagerCaffeinationMessage
   | AgentManagerKeybindingsMessage
   | AutoApproveStateMessage
   | SandboxStatusMessage
@@ -1660,6 +1682,7 @@ export type ExtensionMessage =
   | AgentManagerLocalStatsMessage
   | AgentManagerPRStatusMessage
   | AgentManagerPRErrorMessage
+  | AgentManagerCommentReactionResultMessage
   | AgentManagerTerminalCreatedMessage
   | AgentManagerTerminalRestartedMessage
   | AgentManagerTerminalFontChangedMessage
@@ -1716,3 +1739,4 @@ export type ExtensionMessage =
   | MemoryEventMessage
   | MemoryOperationResultMessage
   | BackgroundJobsLoadedMessage
+  | SessionBoardLoadedMessage

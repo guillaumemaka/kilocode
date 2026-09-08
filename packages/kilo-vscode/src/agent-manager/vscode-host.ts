@@ -18,6 +18,7 @@ import { openFileInEditor, getWorkspaceRoot } from "../review-utils"
 import { TelemetryProxy, type TelemetryEventName } from "../services/telemetry"
 import type { AutoApproveController } from "../commands/toggle-auto-approve"
 import type { RemoteStatusService } from "../services/RemoteStatusService"
+import type { CaffeinationService } from "../services/caffeination"
 
 const INTRO_KEY = "kilo.agentManager.introDismissed"
 
@@ -36,6 +37,7 @@ export class VscodeHost implements Host {
     private readonly connectionService: KiloConnectionService,
     private readonly context: vscode.ExtensionContext,
     private readonly remoteService: RemoteStatusService,
+    private readonly caffeination?: Pick<CaffeinationService, "getState" | "onChange" | "setEnabled">,
   ) {}
 
   setDiffVirtualProvider(provider: DiffVirtualProvider): void {
@@ -72,6 +74,7 @@ export class VscodeHost implements Host {
       worktreeDirectories?: () => string[]
       workspaceRoot?: () => string | undefined
       projectId?: () => string | undefined
+      sessionProject?: () => string | undefined
     },
   ): PanelContext {
     return this.wirePanel(panel, opts)
@@ -84,6 +87,7 @@ export class VscodeHost implements Host {
       worktreeDirectories?: () => string[]
       workspaceRoot?: () => string | undefined
       projectId?: () => string | undefined
+      sessionProject?: () => string | undefined
     },
   ): PanelContext {
     panel.webview.options = {
@@ -137,8 +141,23 @@ export class VscodeHost implements Host {
       provider.setDiffVirtualProvider(this.diffVirtual)
     }
     provider.setRemoteService(this.remoteService)
+    const snapshot = () => {
+      if (this.caffeination) {
+        void panel.webview.postMessage({ type: "agentManager.caffeination", ...this.caffeination.getState() })
+      }
+    }
+    const unsubscribe = this.caffeination?.onChange(snapshot)
+    panel.onDidDispose(() => unsubscribe?.())
     provider.attachToWebview(panel.webview, {
       onBeforeMessage: async (msg) => {
+        if (msg.type === "agentManager.setCaffeination") {
+          if (typeof msg.enabled === "boolean") await this.caffeination?.setEnabled(msg.enabled)
+          return null
+        }
+        if (msg.type === "agentManager.requestCaffeination") {
+          snapshot()
+          return null
+        }
         if (msg.type !== "agentManager.setIntroDismissed") return opts.onBeforeMessage(msg)
         if (typeof msg.dismissed === "boolean") await this.context.globalState.update(INTRO_KEY, msg.dismissed)
         return null
@@ -158,7 +177,7 @@ export class VscodeHost implements Host {
       listSessions: (dir) => this.listProjectSessions(dir),
       trackSession: (id) => provider.trackSession(id),
       refreshSessions: () => provider.refreshSessions(),
-      registerSession: (s) => provider.registerSession(s),
+      registerSession: (s) => provider.registerSession(s, false, opts.sessionProject?.()),
       recoverPendingPrompts: () => provider.recoverPendingPrompts(),
       onFollowupAdopted: (cb) => provider.onFollowupAdopted(cb),
       acknowledgeDraft: (draftID, sessionID) => provider.acknowledgeDraft(draftID, sessionID),
@@ -240,6 +259,12 @@ export class VscodeHost implements Host {
     return getWorkspaceRoot()
   }
 
+  dirtyFiles(): string[] {
+    return vscode.workspace.textDocuments
+      .filter((doc) => doc.isDirty && doc.uri.scheme === "file")
+      .map((doc) => doc.uri.fsPath)
+  }
+
   async pickFolder(): Promise<string | undefined> {
     const uris = await vscode.window.showOpenDialog({
       canSelectFiles: false,
@@ -249,10 +274,6 @@ export class VscodeHost implements Host {
       title: "Add Project to Agent Manager",
     })
     return uris?.[0]?.fsPath
-  }
-
-  multiProject(): boolean {
-    return vscode.workspace.getConfiguration("kilo-code.new.experimental").get("multiProject", false)
   }
 
   browserAutomation(): boolean {
@@ -273,12 +294,6 @@ export class VscodeHost implements Host {
 
   onDidChangeWorkspaceFolders(cb: () => void): Disposable {
     return vscode.workspace.onDidChangeWorkspaceFolders(() => cb())
-  }
-
-  onDidChangeMultiProject(cb: (enabled: boolean) => void): Disposable {
-    return vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("kilo-code.new.experimental.multiProject")) cb(this.multiProject())
-    })
   }
 
   isTrusted(): boolean {
