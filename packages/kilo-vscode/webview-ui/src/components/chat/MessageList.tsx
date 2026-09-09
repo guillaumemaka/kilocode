@@ -18,6 +18,7 @@ import {
   on,
   onCleanup,
 } from "solid-js"
+import { IconButton } from "@kilocode/kilo-ui/icon-button"
 import { Icon } from "@kilocode/kilo-ui/icon"
 import { Spinner } from "@kilocode/kilo-ui/spinner"
 import { relativizeProjectPath } from "@kilocode/kilo-ui/message-part"
@@ -88,6 +89,7 @@ interface MessageListProps {
   onShowHistory?: () => void
   onForkMessage?: (sessionId: string, messageId: string) => void
   onEditMessage?: (sessionID: string, messageID: string) => void
+  onScrollToBottomReady?: (handler: (() => void) | undefined) => void
   /** Non-tool question requests to render inline at the bottom of the message list */
   questions?: () => QuestionRequest[]
   /** Non-tool suggestion requests to render inline at the bottom of the message list */
@@ -125,6 +127,8 @@ export const MessageList: Component<MessageListProps> = (props) => {
   const autoScroll = createAutoScroll({
     working: () => session.status() !== "idle",
   })
+  props.onScrollToBottomReady?.(() => autoScroll.resume())
+  onCleanup(() => props.onScrollToBottomReady?.(undefined))
   const [announcement, setAnnouncement] = createSignal("")
   createEffect(
     (prev: { sid?: string; working: boolean }) => {
@@ -1224,6 +1228,15 @@ export const MessageList: Component<MessageListProps> = (props) => {
     }),
   )
 
+  // Clicking Show on the session that is already selected leaves
+  // currentSessionID untouched, so the effect above never re-arms. Arm the same
+  // restore pass from the request itself; it resolves to a scroll-to-bottom.
+  createEffect(
+    on(session.scrollBottomID, (id) => {
+      if (id && id === session.currentSessionID()) setPendingRestore(id)
+    }),
+  )
+
   createEffect(() => {
     const id = pendingRestore()
     if (!id || session.loading()) return
@@ -1232,6 +1245,11 @@ export const MessageList: Component<MessageListProps> = (props) => {
       if (pendingRestore() !== id) return
       const el = scrollEl()
       if (!el) return
+      if (session.consumeScrollBottom(id)) {
+        autoScroll.forceScrollToBottom()
+        setPendingRestore(undefined)
+        return
+      }
       const state = getScroll(id)
       const anchor = resolveAnchor(state, keys())
       const handle = virtualizer()
@@ -1417,13 +1435,14 @@ export const MessageList: Component<MessageListProps> = (props) => {
       />
 
       <Show when={!introduction() && autoScroll.userScrolled()}>
-        <button
+        <IconButton
+          icon="arrow-down-to-line"
+          variant="ghost"
+          size="small"
           class="scroll-to-bottom-button"
           onClick={() => autoScroll.resume()}
           aria-label={language.t("session.messages.scrollToBottom")}
-        >
-          <Icon name="arrow-down-to-line" />
-        </button>
+        />
       </Show>
     </div>
   )
