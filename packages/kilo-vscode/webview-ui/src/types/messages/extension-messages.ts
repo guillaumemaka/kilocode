@@ -19,6 +19,7 @@ import type { AgentManagerSidebarTarget } from "./webview-messages"
 import type { PermissionRequest } from "./permissions"
 import type { AnacondaDesktopExtensionMessage } from "../../../../src/shared/anaconda-desktop-messages"
 import type { BrowserFeedbackData, BrowserReference } from "../../../../src/shared/browser-feedback"
+import type { PRMergeResult } from "../../../../src/shared/pr-comment-actions"
 
 export type { BrowserReference } from "../../../../src/shared/browser-feedback"
 
@@ -794,6 +795,11 @@ export interface AutoApprovalReasonSettingLoadedMessage {
   visible: boolean
 }
 
+export interface PushFixesSettingLoadedMessage {
+  type: "pushFixesSettingLoaded"
+  enabled: boolean
+}
+
 export interface WorkStyleLoadedMessage {
   type: "workStyleLoaded"
   style: WorkStyleState
@@ -921,6 +927,15 @@ export interface AgentManagerProjectsMessage {
 export interface AgentManagerSelectionActivatedMessage {
   type: "agentManager.selectionActivated"
   target: AgentManagerSidebarTarget
+}
+
+/** Host request to select a managed session and scroll its chat to the latest message. */
+export interface AgentManagerRevealSessionMessage {
+  type: "agentManager.revealSession"
+  projectId: string
+  /** Absent when the session lives in the project's Local tabs. */
+  worktreeId?: string
+  sessionId: string
 }
 
 export interface AgentManagerProjectSessionsMessage {
@@ -1650,6 +1665,7 @@ export type ExtensionMessage =
   | TimelineSettingLoadedMessage
   | ThroughputSettingLoadedMessage
   | AutoApprovalReasonSettingLoadedMessage
+  | PushFixesSettingLoadedMessage
   | WorkStyleLoadedMessage
   | WorkStyleAppliedMessage
   | WorkStyleApplyFailedMessage
@@ -1664,6 +1680,7 @@ export type ExtensionMessage =
   | AgentManagerWorktreeDeletedMessage
   | AgentManagerProjectsMessage
   | AgentManagerSelectionActivatedMessage
+  | AgentManagerRevealSessionMessage
   | AgentManagerProjectSessionsMessage
   | AgentManagerRunStatusMessage
   | AgentManagerCaffeinationMessage
@@ -1703,6 +1720,7 @@ export type ExtensionMessage =
   | AgentManagerPRStatusMessage
   | AgentManagerPRErrorMessage
   | AgentManagerCommentReactionResultMessage
+  | PRMergeResult
   | AgentManagerTerminalCreatedMessage
   | AgentManagerTerminalRestartedMessage
   | AgentManagerTerminalFontChangedMessage
