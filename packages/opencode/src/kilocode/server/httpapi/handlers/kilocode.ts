@@ -24,6 +24,14 @@ import { AgentManager } from "@/kilocode/agent-manager/service"
 import type { RequestID as NotebookRequestID } from "@/kilocode/notebook/protocol"
 import { Notebook } from "@/kilocode/notebook/service"
 import { ModelUsage } from "@/kilocode/session/model-usage"
+import * as MarketplaceApi from "@/kilocode/marketplace/api"
+import * as MarketplaceDetection from "@/kilocode/marketplace/detection"
+import * as MarketplaceInstaller from "@/kilocode/marketplace/installer"
+import {
+  MarketplaceInstallPayload,
+  MarketplaceRemovePayload,
+  type MarketplaceRemoveResult,
+} from "@/kilocode/marketplace/schema"
 import { ProviderUsage } from "@opencode-ai/core/kilocode/provider-usage"
 import { Location } from "@opencode-ai/core/location"
 import { LocationServiceMap } from "@opencode-ai/core/location-services"
@@ -42,6 +50,7 @@ import { Drained } from "@opencode-ai/schema/kilocode/session-drain"
 import { SessionID } from "@/session/schema"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { KiloSnapshotCleanup } from "@/kilocode/snapshot/cleanup"
+import { clearPtys } from "@/kilocode/worktree/pty-cleanup"
 import { Snapshot } from "@/snapshot"
 import { KiloSnapshotPrepare } from "@/kilocode/snapshot/prepare"
 import { Global } from "@opencode-ai/core/global"
@@ -57,6 +66,7 @@ import {
   RemoveCommandPayload,
   RemoveSkillPayload,
   RemoveSnapshotPayload,
+  TeardownWorktreePayload,
   ResumeSessionPayload,
   DrainSessionPayload,
   BackgroundJobInfo,
@@ -275,6 +285,94 @@ export const kilocodeHandlers = HttpApiBuilder.group(InstanceHttpApi, "kilocode"
       return true
     })
 
+    const marketplaceList = Effect.fn("KilocodeHttpApi.marketplaceList")(function* () {
+      const started = Date.now()
+      const instance = yield* InstanceState.context
+      yield* Effect.logInfo("marketplace request", { endpoint: "list", directory: instance.directory })
+      const items = yield* Effect.promise(() => MarketplaceApi.fetchAll())
+      const entries = yield* skills.all()
+      const installed = yield* Effect.promise(() =>
+        MarketplaceDetection.detect({ directory: instance.directory, worktree: instance.worktree, skills: entries }),
+      )
+      yield* Effect.logInfo("marketplace request complete", {
+        endpoint: "list",
+        directory: instance.directory,
+        outcome: "success",
+        count: items.items.length,
+        errors: items.errors.length,
+        durationMs: Date.now() - started,
+      })
+      return {
+        items: items.items,
+        installed,
+        ...(items.errors.length > 0 ? { errors: items.errors } : {}),
+      }
+    })
+
+    const marketplaceInstall = Effect.fn("KilocodeHttpApi.marketplaceInstall")(function* (ctx: {
+      payload: typeof MarketplaceInstallPayload.Type
+    }) {
+      const started = Date.now()
+      const instance = yield* InstanceState.context
+      const target = ctx.payload.target ?? "project"
+      yield* Effect.logInfo("marketplace request", {
+        endpoint: "install",
+        directory: instance.directory,
+        itemId: ctx.payload.item.id,
+        itemType: ctx.payload.item.type,
+        target,
+        parameterKeys: Object.keys(ctx.payload.parameters ?? {}),
+        parameterCount: Object.keys(ctx.payload.parameters ?? {}).length,
+      })
+      const result = yield* MarketplaceInstaller.install(
+        { config, agents, skills, directory: instance.directory, worktree: instance.worktree },
+        ctx.payload,
+      )
+      if (result.success) yield* store.dispose(instance)
+      yield* Effect.logInfo("marketplace request complete", {
+        endpoint: "install",
+        directory: instance.directory,
+        itemId: ctx.payload.item.id,
+        itemType: ctx.payload.item.type,
+        target,
+        outcome: result.success ? "success" : "failure",
+        error: result.error,
+        durationMs: Date.now() - started,
+      })
+      return result
+    })
+
+    const marketplaceRemove = Effect.fn("KilocodeHttpApi.marketplaceRemove")(function* (ctx: {
+      payload: typeof MarketplaceRemovePayload.Type
+    }) {
+      const started = Date.now()
+      const instance = yield* InstanceState.context
+      yield* Effect.logInfo("marketplace request", {
+        endpoint: "remove",
+        directory: instance.directory,
+        itemId: ctx.payload.item.id,
+        itemType: ctx.payload.item.type,
+        scope: ctx.payload.scope,
+      })
+      const result: MarketplaceRemoveResult = yield* MarketplaceInstaller.remove(
+        { config, agents, skills, directory: instance.directory, worktree: instance.worktree },
+        ctx.payload.item,
+        ctx.payload.scope,
+      )
+      if (result.success) yield* store.dispose(instance)
+      yield* Effect.logInfo("marketplace request complete", {
+        endpoint: "remove",
+        directory: instance.directory,
+        itemId: ctx.payload.item.id,
+        itemType: ctx.payload.item.type,
+        scope: ctx.payload.scope,
+        outcome: result.success ? "success" : "failure",
+        error: result.error,
+        durationMs: Date.now() - started,
+      })
+      return result
+    })
+
     const removeSnapshot = Effect.fn("KilocodeHttpApi.removeSnapshot")(function* (ctx: {
       payload: typeof RemoveSnapshotPayload.Type
     }) {
@@ -287,6 +385,36 @@ export const kilocodeHandlers = HttpApiBuilder.group(InstanceHttpApi, "kilocode"
         fs,
         flock,
       }).pipe(Effect.mapError(() => new HttpApiError.BadRequest({})))
+    })
+
+    // Agent Manager deletes a worktree through the project root instance. Listing PTYs or
+    // disposing through the worktree's own `directory` would boot an instance for a directory
+    // that is about to disappear, which costs close to a second in large repositories.
+    const teardownWorktree = Effect.fn("KilocodeHttpApi.teardownWorktree")(function* (ctx: {
+      payload: typeof TeardownWorktreePayload.Type
+    }) {
+      const instance = yield* InstanceState.context
+      // Lexical checks only, like KiloSnapshotCleanup.remove: a symlinked `.kilo/worktrees` in an
+      // untrusted repository must not widen the directories this endpoint can tear down.
+      // `contains` rejects `..` and absolute escapes; one component rejects nested paths.
+      const managed = path.resolve(instance.worktree, ".kilo", "worktrees")
+      const worktree = path.resolve(ctx.payload.worktree)
+      const child = path.relative(managed, worktree).split(path.sep).filter(Boolean)
+      if (!path.isAbsolute(ctx.payload.worktree) || !FSUtil.contains(managed, worktree) || child.length !== 1)
+        return yield* Effect.fail(new HttpApiError.BadRequest({}))
+      // disposeDirectory follows symlinks, so a symlinked `.kilo`, `.kilo/worktrees`, or worktree
+      // could reach an instance outside the project. The project root itself is already canonical.
+      const links = yield* Effect.forEach([path.dirname(managed), managed, worktree], (target) =>
+        fs.readLink(target).pipe(
+          Effect.as(true),
+          Effect.catch(() => Effect.succeed(false)),
+        ),
+      )
+      if (links.some(Boolean)) return yield* Effect.fail(new HttpApiError.BadRequest({}))
+      yield* clearPtys(worktree, yield* WorkspaceRef)
+      const loaded = (yield* store.list()).some((item) => path.resolve(item.directory) === worktree)
+      yield* store.disposeDirectory(worktree)
+      return { disposed: loaded }
     })
 
     const providerUsage = Effect.fn("KilocodeHttpApi.providerUsage")(function* () {
@@ -411,7 +539,11 @@ export const kilocodeHandlers = HttpApiBuilder.group(InstanceHttpApi, "kilocode"
       .handle("removeCommand", removeCommand)
       .handle("removeSkill", removeSkill)
       .handle("removeAgent", removeAgent)
+      .handle("marketplaceList", marketplaceList)
+      .handle("marketplaceInstall", marketplaceInstall)
+      .handle("marketplaceRemove", marketplaceRemove)
       .handle("removeSnapshot", removeSnapshot)
+      .handle("teardownWorktree", teardownWorktree)
       .handle("prepareSnapshot", () =>
         Effect.gen(function* () {
           const started = performance.now()
