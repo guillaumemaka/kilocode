@@ -111,6 +111,7 @@ import {
   scrollDrafts,
 } from "../../utils/draft-store"
 import { ReviewComments } from "./ReviewComments"
+import { useRunningAgents } from "./AgentStack"
 import { BrowserReferences } from "./BrowserReferences"
 import { CodeContextChips } from "./CodeContextChips"
 import {
@@ -246,7 +247,11 @@ function MentionItemContent(props: { item: MentionResult }) {
       <span class="file-mention-name">
         {item.type === "folder" ? `${fileName(item.value)}/` : fileName(item.value)}
       </span>
-      <span class="file-mention-dir">{dirName(item.value)}</span>
+      {/* Without the folder name, two roots holding the same relative path render identically. */}
+      <Show when={item.root}>{(root) => <span class="file-mention-root">{root()}</span>}</Show>
+      {/* Shown relative to its own folder: the badge already names the folder, and
+          the absolute form would spell out the local filesystem layout instead. */}
+      <span class="file-mention-dir">{dirName(item.relative ?? item.value)}</span>
     </>
   )
 }
@@ -822,6 +827,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     (isBusy() || session.currentSession()?.goal?.active) &&
     !hasInput() &&
     speech.state() !== "recording"
+  // Stop only ends the main agent's turn. Say so while background agents run.
+  const agents = useRunningAgents()
+  const stopLabel = () => language.t(agents().length > 0 ? "prompt.action.stop.background" : "prompt.action.stop")
   const isAtEnd = () =>
     textareaRef ? atEnd(textareaRef.selectionStart, textareaRef.selectionEnd, textareaRef.value.length) : false
   const highlightMentions = () => {
@@ -1977,6 +1985,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                     <div
                       class="file-mention-item"
                       data-type={item.type}
+                      title={"root" in item ? item.value : undefined}
                       classList={{ "file-mention-item--active": index() === mention.mentionIndex() }}
                       onMouseDown={(e) => {
                         e.preventDefault()
@@ -2285,7 +2294,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
               </Tooltip>
             }
           >
-            <Tooltip value={language.t("prompt.action.stop")} placement="top" openDelay={0}>
+            <Tooltip value={stopLabel()} placement="top" openDelay={0}>
               <IconButton
                 icon="stop"
                 variant="ghost"
