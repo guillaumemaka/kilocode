@@ -43,6 +43,7 @@ export const dict = {
   "agentManager.settings.worktreePool.title": "آماده‌سازی از پیش worktreeها",
   "agentManager.settings.worktreePool.description":
     "یک worktree آماده را در پس‌زمینه فراهم کنید تا نشست‌های جدید Agent Manager سریع‌تر شروع شوند. برای هر پروژه باز، یک checkout روی دیسک فضای اضافی مصرف می‌کند.",
+  "agentManager.hints.switchSession": "تغییر نشست",
   "agentManager.settings.project.title": "پروژه",
   "agentManager.settings.project.description":
     "repository موردنظر را انتخاب کنید تا تنظیمات worktree آن را ویرایش کنید.",
@@ -89,6 +90,9 @@ export const dict = {
   "agentManager.worktree.copyPath": "کپی مسیر",
   "agentManager.worktree.openInVscode": "باز کردن در VS Code",
   "agentManager.worktree.rename": "تغییر نام",
+  "agentManager.worktree.pin": "سنجاق کردن",
+  "agentManager.worktree.unpin": "برداشتن سنجاق",
+  "agentManager.worktree.pinned": "سنجاق‌شده",
   "agentManager.worktree.newSection": "بخش جدید",
   "agentManager.worktree.ungrouped": "بدون گروه",
   "agentManager.section.rename": "تغییر نام بخش",
@@ -102,6 +106,7 @@ export const dict = {
   "agentManager.hoverCard.worktree": "Worktree",
   "agentManager.hoverCard.base": "پایه",
   "agentManager.hoverCard.sessions": "جلسات",
+  "agentManager.hoverCard.section": "بخش",
   "agentManager.hoverCard.files": "فایل‌ها",
   "agentManager.hoverCard.changes": "تغییرات",
   "agentManager.hoverCard.commits": "کامیت‌ها",

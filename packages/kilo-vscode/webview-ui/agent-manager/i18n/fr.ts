@@ -47,6 +47,7 @@ export const dict = {
   "agentManager.settings.worktreePool.title": "Préchauffer les worktrees",
   "agentManager.settings.worktreePool.description":
     "Prépare en arrière-plan un worktree prêt à l'emploi afin que les nouvelles sessions Agent Manager démarrent plus vite. Utilise de l'espace disque supplémentaire pour un checkout par projet ouvert.",
+  "agentManager.hints.switchSession": "Changer de session",
   "agentManager.settings.project.title": "Projet",
   "agentManager.settings.project.description":
     "Choisissez le repository dont vous souhaitez modifier les paramètres du worktree.",
@@ -94,6 +95,9 @@ export const dict = {
   "agentManager.worktree.copyPath": "Copier le chemin",
   "agentManager.worktree.openInVscode": "Ouvrir dans VS Code",
   "agentManager.worktree.rename": "Renommer",
+  "agentManager.worktree.pin": "Épingler",
+  "agentManager.worktree.unpin": "Détacher",
+  "agentManager.worktree.pinned": "Épinglés",
   "agentManager.worktree.newSection": "Nouvelle section",
   "agentManager.worktree.ungrouped": "Non groupé",
   "agentManager.section.rename": "Renommer la section",
@@ -106,6 +110,7 @@ export const dict = {
   "agentManager.hoverCard.worktree": "Worktree",
   "agentManager.hoverCard.base": "Base",
   "agentManager.hoverCard.sessions": "Sessions",
+  "agentManager.hoverCard.section": "Section",
   "agentManager.hoverCard.files": "Fichiers",
   "agentManager.hoverCard.changes": "Modifications",
   "agentManager.hoverCard.commits": "Commits",

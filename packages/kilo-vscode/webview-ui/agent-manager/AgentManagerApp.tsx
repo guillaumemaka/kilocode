@@ -69,6 +69,7 @@ import { ChatView } from "../src/components/chat"
 import HistoryView from "../src/components/history/HistoryView"
 import { NewWorktreeDialog } from "./NewWorktreeDialog"
 import { createIntro } from "./intro/AgentManagerIntro"
+import { createShortcutHints } from "./ShortcutHints"
 import { useBaseUpdate } from "./update-from-base"
 import { createModeRouter } from "./mode-router"
 import * as modifier from "./modifier"
@@ -762,6 +763,7 @@ const AgentManagerContent: Component = () => {
       all.filter(isKnownRootSession).map((s) => s.id),
       trackedSessionInventory(managedSessions(), all),
       isPending,
+      session.sessionsProject() === currentProjectId(),
     )
     if (!next) return
     for (const id of next.forget) vscode.postMessage({ type: "agentManager.forgetSession", sessionId: id })
@@ -1152,8 +1154,8 @@ const AgentManagerContent: Component = () => {
       if (msg?.type !== "action") return
       if (msg.action === "sessionPrevious") projectNav.step("up")
       else if (msg.action === "sessionNext") projectNav.step("down")
-      else if (msg.action === "tabPrevious") navigateTab("left")
-      else if (msg.action === "tabNext") navigateTab("right")
+      else if (msg.action === "tabPrevious" && document.hasFocus()) navigateTab("left")
+      else if (msg.action === "tabNext" && document.hasFocus()) navigateTab("right")
       else if (msg.action === "terminalPrevious") cycleTerminal("previous")
       else if (msg.action === "terminalNext") cycleTerminal("next")
       else if (msg.action === "search") {
@@ -1785,9 +1787,21 @@ const AgentManagerContent: Component = () => {
     requestChatFocus()
   }
 
+  const hints = createShortcutHints({
+    kb,
+    selection,
+    registry,
+    activePR,
+    sidePanel,
+    nav: () => buildProjectNavEntries(projectList(), projectStates()),
+    activeProjectId,
+    activity,
+  })
   const intro = createIntro({
+    hints: hints.list,
     base: repoDefaultBranch,
     git: isGitRepo,
+    sessions: projectSessionsLive.current,
     onCreateWorktree: showNewWorktreeDialog,
     onSelectSession: selectChatSession,
     onShowHistory: () => openHistory(),
@@ -2309,6 +2323,7 @@ const AgentManagerContent: Component = () => {
                     focusOnDraftChange={focusOnDraftChange}
                     onFocusChange={focusCtl.prompt}
                     resolveEmbeddedTerminal={resolveTerminal}
+                    manager={hints.manager}
                   />
                   <Show when={readOnly()}>
                     <div class="am-readonly-banner">
